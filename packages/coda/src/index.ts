@@ -25,4 +25,4 @@ export * from './forge';
 export * from './workflow';
 
 // L7: Pi Integration
-// export default function(pi: PiAPI) { ... }
+export * from './pi';
