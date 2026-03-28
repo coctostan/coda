@@ -5,13 +5,9 @@
  * The LLM never writes directly to `.coda/` — these tools validate
  * and write on its behalf.
  *
- * Plan 01 exports (CRUD tools):
- * - codaCreate — create new mdbase records
- * - codaRead — read records with optional section filtering
- * - codaUpdate — update frontmatter fields
- * - codaEditBody — section-aware body editing
- *
- * Plan 02 will add: codaAdvance, codaStatus, codaRunTests, writeGate
+ * CRUD tools: codaCreate, codaRead, codaUpdate, codaEditBody
+ * Lifecycle tools: codaAdvance, codaStatus, codaRunTests
+ * Interceptor: checkWriteGate, isTestFile
  */
 
 // Type definitions
@@ -25,6 +21,13 @@ export type {
   UpdateResult,
   EditBodyInput,
   EditBodyResult,
+  AdvanceInput,
+  AdvanceResult,
+  StatusResult,
+  RunTestsInput,
+  RunTestsResult,
+  WriteGateCheck,
+  WriteGateResult,
 } from './types';
 
 // CRUD tools
@@ -32,3 +35,11 @@ export { codaCreate, toSlug } from './coda-create';
 export { codaRead } from './coda-read';
 export { codaUpdate } from './coda-update';
 export { codaEditBody } from './coda-edit-body';
+
+// Lifecycle tools
+export { codaAdvance } from './coda-advance';
+export { codaStatus } from './coda-status';
+export { codaRunTests } from './coda-run-tests';
+
+// Write-gate interceptor
+export { checkWriteGate, isTestFile } from './write-gate';

@@ -79,3 +79,73 @@ export interface EditBodyResult extends ToolResult {
   /** Human-readable summary of the change */
   diff_summary: string;
 }
+
+/** Input for coda_advance — request a phase transition. */
+export interface AdvanceInput {
+  /** Target phase to transition to */
+  target_phase: string;
+}
+
+/** Result from coda_advance. */
+export interface AdvanceResult extends ToolResult {
+  /** Phase before the transition */
+  previous_phase?: string;
+  /** Phase after the transition (on success) */
+  new_phase?: string;
+  /** Name of the gate that blocked (on failure) */
+  gate_name?: string;
+  /** Reason the gate blocked (on failure) */
+  reason?: string;
+}
+
+/** Result from coda_status. */
+export interface StatusResult extends ToolResult {
+  /** Currently focused issue slug */
+  focus_issue: string | null;
+  /** Current lifecycle phase */
+  phase: string | null;
+  /** Active task number */
+  current_task: number | null;
+  /** Completed task numbers */
+  completed_tasks: number[];
+  /** TDD write-gate state */
+  tdd_gate: string;
+  /** Human-readable suggestion for next action */
+  next_action: string;
+}
+
+/** Input for coda_run_tests — execute test command. */
+export interface RunTestsInput {
+  /** Test mode: tdd affects gate, suite does not */
+  mode: 'tdd' | 'suite';
+  /** Optional file/pattern filter */
+  pattern?: string;
+}
+
+/** Result from coda_run_tests. */
+export interface RunTestsResult extends ToolResult {
+  /** Process exit code */
+  exit_code: number;
+  /** Whether tests passed */
+  passed: boolean;
+  /** Truncated stdout+stderr output */
+  output: string;
+  /** Command that was executed */
+  command: string;
+}
+
+/** Input for write-gate check. */
+export interface WriteGateCheck {
+  /** File path being written to */
+  path: string;
+  /** Type of write operation */
+  operation: 'write' | 'edit';
+}
+
+/** Result from write-gate check. */
+export interface WriteGateResult {
+  /** Whether the write is allowed */
+  allowed: boolean;
+  /** Reason the write was blocked (on block) */
+  reason?: string;
+}

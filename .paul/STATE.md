@@ -5,21 +5,21 @@
 See: .paul/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 3 (M3: Tool Layer) — Plan 01 created
+**Current focus:** Phase 3, Plan 02 — lifecycle tools + write-gate
 
 ## Current Position
 
 Milestone: v0.1 Initial Release
-Phase: 3 of 8 (M3: Tool Layer) — Planning
-Plan: 03-01 created, awaiting approval (CRUD tools + spec alignment)
+Phase: 3 of 8 (M3: Tool Layer) — In Progress
+Plan: 03-02 created, awaiting approval
 Status: PLAN created, ready for APPLY
-Last activity: 2026-03-28 — Created .paul/phases/03-tool-layer/03-01-PLAN.md
+Last activity: 2026-03-28 — Created .paul/phases/03-tool-layer/03-02-PLAN.md
 
 Progress:
 - Milestone: [██░░░░░░░░] 25%
 - Phase 1: [██████████] 100% ✓
 - Phase 2: [██████████] 100% ✓
-- Phase 3: [░░░░░░░░░░] 0%
+- Phase 3: [█████░░░░░] 50% (Plan 1/2)
 
 ## Loop Position
 
@@ -31,35 +31,26 @@ PLAN ──▶ APPLY ──▶ UNIFY
 
 ## Accumulated Context
 
-### Codebase Mapped
-Date: 2026-03-28
-Documents: .paul/codebase/ (8 files)
-
 ### Decisions
 | Decision | Phase | Impact |
 |----------|-------|--------|
 | Manual YAML parser instead of external dependency | Phase 1 | Zero external deps in @coda/core |
-| Bun type hoisting via copy to node_modules/@types | Phase 1 | Workaround for tsc with Bun's module resolution |
-| Zero internal dependencies for state engine | Phase 2 | Clean layer separation — state doesn't import data |
-| GitHub repo created at coctostan/coda | Phase 3 | github-flow workflow enabled |
-
-### Deferred Issues
-None.
-
-### Blockers/Concerns
-None.
+| Bun type hoisting via copy to node_modules/@types | Phase 1 | Workaround for tsc |
+| Zero internal dependencies for state engine | Phase 2 | Clean layer separation |
+| GitHub repo at coctostan/coda, github-flow | Phase 3 | auto_push + auto_pr |
+| Spec alignment items closed | Phase 3 | Review gaps resolved |
 
 ### Git State
-Branch: main
+Branch: feature/03-tool-layer
 Remote: https://github.com/coctostan/coda.git
-Last commit: b5f1352
+Last commit: 969956e
 
 ## Session Continuity
 
 Last session: 2026-03-28
-Stopped at: Plan 03-01 created
+Stopped at: Plan 03-02 created
 Next action: Review and approve plan, then run /paul:apply
-Resume file: .paul/phases/03-tool-layer/03-01-PLAN.md
+Resume file: .paul/phases/03-tool-layer/03-02-PLAN.md
 
 ---
 *STATE.md — Updated after every significant action*

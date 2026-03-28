@@ -48,7 +48,7 @@
   },
   "guided_workflow": {
     "auto_present": {
-      "plan_review": false,
+      "plan_review": true,
       "apply_approval": false,
       "continue_to_unify": true,
       "checkpoint_decision": true,
