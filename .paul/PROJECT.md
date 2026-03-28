@@ -10,26 +10,26 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Attribute | Value |
 |-----------|-------|
 | Version | 0.1.0 |
-| Status | Discovery / Onboarding |
+| Status | Active Development |
 | Last Updated | 2026-03-28 |
 
 **Current system summary:**
 - Scaffolded monorepo with 5 packages (core, coda, muse, lens, helm)
 - Extensive specs: `docs/coda-spec-v7.md` (1900+ lines), `docs/v0.1/` (8 layer docs)
-- All package entrypoints are comment-only stubs — no runtime implementation yet
-- Bun runtime, TypeScript strict mode, no tests or build scripts
-- Strict layered architecture defined but not enforced by code
+- Core package fully implemented: data layer, state engine (67 tests)
+- Coda package: tool layer (51 tests) + module prompts (11 tests)
+- 129 tests passing, TypeScript strict, zero external deps
 
 ## Scope Snapshot
 ### Validated
 - [x] Data layer — mdbase records, YAML frontmatter, section ops (Phase 1)
 - [x] State engine — phase transitions, gates, atomic persist (Phase 2)
 - [x] Tool layer — 7 coda_* tools + write-gate (Phase 3)
+- [x] Two modules — Todd (TDD enforcement) + Walt (quality check) prompts with TS loaders (Phase 4)
+- [x] FORGE design layer — greenfield scaffold + ref docs + milestone (Phase 5)
 ### Active
-- [ ] Two modules — Todd + Walt prompts (M4)
+- [ ] Workflow engine (M6)
 ### Planned
-- [ ] FORGE design layer (coda L5)
-- [ ] Workflow engine (coda L6)
 - [ ] Pi integration (coda L7)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
@@ -59,4 +59,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Created: 2026-03-28*
+*Last updated: 2026-03-28 after Phase 5*
