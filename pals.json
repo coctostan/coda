@@ -23,13 +23,18 @@
     "rev": { "enabled": true, "description": "Thorough code review via subagent", "model": null, "pr_review": false, "pr_review_block_on_critical": true }
   },
   "git": {
-    "workflow": "none",
-    "remote": null,
-    "branching": "feature-per-phase",
+    "workflow": "github-flow",
+    "remote": "https://github.com/coctostan/coda.git",
+    "base_branch": "main",
+    "merge_method": "squash",
     "worktree_isolation": false,
-    "auto_push": false,
-    "auto_pr": false,
-    "ci_checks": false
+    "auto_push": true,
+    "auto_pr": true,
+    "ci_checks": false,
+    "delete_branch_on_merge": true,
+    "update_branch_when_behind": true,
+    "require_pr_before_next_phase": false,
+    "require_reviews": false
   },
   "integrations": {
     "sonarqube": { "enabled": false, "project_key": "" }
