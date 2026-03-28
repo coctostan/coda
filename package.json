@@ -8,5 +8,9 @@
   "scripts": {
     "test": "bun test",
     "test:watch": "bun test --watch"
+  },
+  "devDependencies": {
+    "@mariozechner/pi-coding-agent": "^0.63.1",
+    "@sinclair/typebox": "^0.34.49"
   }
 }

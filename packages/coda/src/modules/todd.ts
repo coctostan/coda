@@ -5,11 +5,12 @@
  * for injection by the workflow engine at pre-build hook points.
  */
 
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
-
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 /** Path to the repo root (4 levels up from packages/coda/src/modules/) */
-const REPO_ROOT = resolve(import.meta.dir, '..', '..', '..', '..');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(__dirname, '..', '..', '..', '..');
 
 /** The full Todd TDD enforcement prompt, loaded from markdown data file */
 export const TODD_PROMPT: string = readFileSync(

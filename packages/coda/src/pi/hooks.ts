@@ -2,83 +2,115 @@
  * @module pi/hooks
  * Hook registration for the CODA Pi extension.
  *
- * Registers lifecycle hooks:
- * - before_agent_start: injects phase-specific context
- * - tool_call: enforces .coda/ write protection and TDD gate
- * - agent_end: signals BUILD loop completion
+ * Registers lifecycle hooks for state initialization, context injection,
+ * and `.coda/` write protection.
  */
 
-import type { PiAPI, HookContext, HookResult, StateProvider } from './types';
-import { getPhaseContext } from '../workflow';
+import { join, resolve, sep } from 'node:path';
+import { loadState } from '@coda/core';
+import { isToolCallEventType } from '@mariozechner/pi-coding-agent';
+import type { ExtensionAPI } from '@mariozechner/pi-coding-agent';
 import { checkWriteGate } from '../tools';
+import { getPhaseContext } from '../workflow';
+import type { CodaExtensionState, StateProvider } from './types';
 
 /**
- * Register all CODA lifecycle hooks with the Pi API.
+ * Register all CODA lifecycle hooks with Pi.
  *
  * @param pi - The Pi extension API
  * @param codaRoot - Path to the `.coda/` directory
- * @param stateProvider - Provides access to current CODA state
  */
-export function registerHooks(
-  pi: PiAPI,
-  codaRoot: string,
-  stateProvider: StateProvider
-): void {
-  // before_agent_start: inject phase-specific context
-  pi.on('before_agent_start', (_ctx: HookContext): HookResult => {
-    const state = stateProvider.getState();
-    if (!state?.focus_issue || !state?.phase) {
+export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
+  const statePath = join(codaRoot, 'state.json');
+  const extensionState: CodaExtensionState = {
+    statePath,
+    currentState: null,
+  };
+
+  const stateProvider: StateProvider = {
+    getState: () => extensionState.currentState,
+    refreshState: () => {
+      extensionState.currentState = loadState(extensionState.statePath);
+      return extensionState.currentState;
+    },
+  };
+
+  pi.on('session_start', async () => {
+    stateProvider.refreshState();
+  });
+
+  pi.on('before_agent_start', async () => {
+    const state = stateProvider.refreshState();
+    if (!state?.focus_issue || !state.phase) {
       return {};
     }
 
     const phaseContext = getPhaseContext(state.phase, codaRoot, state.focus_issue, state);
-
     return {
       systemPrompt: phaseContext.systemPrompt,
-      message: phaseContext.context,
+      message: {
+        customType: 'coda-context',
+        content: phaseContext.context,
+        display: true,
+        details: {
+          focusIssue: state.focus_issue,
+          phase: state.phase,
+        },
+      },
     };
   });
 
-  // tool_call: enforce .coda/ write protection and TDD gate
-  pi.on('tool_call', (ctx: HookContext): HookResult => {
-    if (!ctx.tool) return {};
-
-    const { name, args } = ctx.tool;
-    const path = args['path'] as string | undefined;
-
-    if (!path) return {};
-    if (name !== 'write' && name !== 'edit') return {};
-
-    // .coda/ write protection
-    if (path.startsWith('.coda/') || path.startsWith('.coda\\')) {
-      return {
-        block: true,
-        reason: 'Use coda_* tools to modify .coda/ files',
-      };
+  pi.on('tool_call', async (event, ctx) => {
+    if (isToolCallEventType('write', event)) {
+      return evaluateWriteGate('write', event.input.path, codaRoot, ctx.cwd, stateProvider);
     }
 
-    // TDD write-gate
-    const state = stateProvider.getState();
-    if (state?.tdd_gate === 'locked') {
-      const gateResult = checkWriteGate(
-        { operation: name as 'write' | 'edit', path },
-        { tdd_gate: state.tdd_gate }
-      );
-      if (!gateResult.allowed) {
-        return {
-          block: true,
-          reason: gateResult.reason ?? 'TDD gate locked. Write a failing test first.',
-        };
-      }
+    if (isToolCallEventType('edit', event)) {
+      return evaluateWriteGate('edit', event.input.path, codaRoot, ctx.cwd, stateProvider);
     }
 
     return {};
   });
+}
 
-  // agent_end: signal BUILD loop completion
-  pi.on('agent_end', (_ctx: HookContext): HookResult => {
-    // In production, this resolves the build loop completion promise.
-    // The actual resolver is set by the build loop at runtime.
+/** Evaluate CODA write protections for a write-like tool call. */
+function evaluateWriteGate(
+  operation: 'write' | 'edit',
+  path: string,
+  codaRoot: string,
+  cwd: string,
+  stateProvider: StateProvider
+): { block?: boolean; reason?: string } {
+  if (isProtectedCodaPath(path, codaRoot, cwd)) {
+    return {
+      block: true,
+      reason: 'Use coda_* tools to modify .coda/ files',
+    };
+  }
+
+  const state = stateProvider.refreshState() ?? stateProvider.getState();
+  if (state?.tdd_gate !== 'locked') {
     return {};
-  });
+  }
+
+  const gateResult = checkWriteGate({ operation, path }, { tdd_gate: state.tdd_gate });
+  if (gateResult.allowed) {
+    return {};
+  }
+
+  return {
+    block: true,
+    reason: gateResult.reason ?? 'TDD gate locked. Write a failing test first.',
+  };
+}
+
+/** Return whether a write targets `.coda/` directly or by absolute path. */
+function isProtectedCodaPath(path: string, codaRoot: string, cwd: string): boolean {
+  if (path.startsWith('.coda/') || path.startsWith('.coda\\')) {
+    return true;
+  }
+
+  const absolutePath = resolve(cwd, path);
+  const absoluteCodaRoot = resolve(codaRoot);
+  return absolutePath === absoluteCodaRoot || absolutePath.startsWith(`${absoluteCodaRoot}${sep}`);
 }

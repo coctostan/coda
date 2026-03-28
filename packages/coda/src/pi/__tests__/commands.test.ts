@@ -1,57 +1,45 @@
 import { describe, expect, test } from 'bun:test';
+import type { ExtensionAPI, RegisteredCommand, ToolDefinition } from '@mariozechner/pi-coding-agent';
 import { registerCommands } from '../commands';
 import { registerTools } from '../tools';
-import type { PiAPI, CommandConfig, ToolSchema, ToolHandler } from '../types';
 
-/** Mock PiAPI that tracks registrations. */
+type MockHook = (event: unknown, ctx: unknown) => Promise<unknown> | unknown;
+
+/** Mock ExtensionAPI that tracks registrations. */
 function createMockPi() {
-  const commands: Array<{ name: string; config: CommandConfig }> = [];
-  const tools: Array<{ name: string; schema: ToolSchema; handler: ToolHandler }> = [];
-  const hooks: Array<{ event: string; handler: unknown }> = [];
+  const commands: Array<{ name: string; options: Omit<RegisteredCommand, 'name'> }> = [];
+  const tools: ToolDefinition[] = [];
+  const hooks: Array<{ event: string; handler: MockHook }> = [];
 
-  const pi: PiAPI = {
-    registerCommand(name: string, config: CommandConfig) {
-      commands.push({ name, config });
+  const pi = {
+    registerCommand(name: string, options: Omit<RegisteredCommand, 'name'>) {
+      commands.push({ name, options });
     },
-    registerTool(name: string, schema: ToolSchema, handler: ToolHandler) {
-      tools.push({ name, schema, handler });
+    registerTool(tool: ToolDefinition) {
+      tools.push(tool);
     },
-    on(event: string, handler: unknown) {
+    on(event: string, handler: MockHook) {
       hooks.push({ event, handler });
     },
-    newSession: async () => {},
-    sendUserMessage: async () => {},
-  };
+  } as unknown as ExtensionAPI;
 
   return { pi, commands, tools, hooks };
 }
 
 describe('Pi Commands', () => {
-  test('registerCommands registers 5 commands', () => {
+  test('registerCommands registers the coda command', () => {
     const { pi, commands } = createMockPi();
     registerCommands(pi, '/tmp/test/.coda');
-    expect(commands.length).toBe(5);
+    expect(commands.length).toBe(1);
   });
 
-  test('registered commands include expected names', () => {
+  test('registered command uses the real Pi command shape', () => {
     const { pi, commands } = createMockPi();
     registerCommands(pi, '/tmp/test/.coda');
-    const names = commands.map((c) => c.name);
-    expect(names).toContain('/coda');
-    expect(names).toContain('/coda forge');
-    expect(names).toContain('/coda new');
-    expect(names).toContain('/coda advance');
-    expect(names).toContain('/coda build');
-  });
 
-  test('each command has name, description, and handler', () => {
-    const { pi, commands } = createMockPi();
-    registerCommands(pi, '/tmp/test/.coda');
-    for (const cmd of commands) {
-      expect(cmd.name.length).toBeGreaterThan(0);
-      expect(cmd.config.description.length).toBeGreaterThan(0);
-      expect(typeof cmd.config.handler).toBe('function');
-    }
+    expect(commands[0]?.name).toBe('coda');
+    expect(commands[0]?.options.description).toBeTruthy();
+    expect(typeof commands[0]?.options.handler).toBe('function');
   });
 });
 
@@ -65,7 +53,8 @@ describe('Pi Tools', () => {
   test('registered tools include all coda_* tool names', () => {
     const { pi, tools } = createMockPi();
     registerTools(pi, '/tmp/test/.coda');
-    const names = tools.map((t) => t.name);
+
+    const names = tools.map((tool) => tool.name);
     expect(names).toContain('coda_create');
     expect(names).toContain('coda_read');
     expect(names).toContain('coda_update');
@@ -75,12 +64,15 @@ describe('Pi Tools', () => {
     expect(names).toContain('coda_run_tests');
   });
 
-  test('each tool has schema with description and handler', () => {
+  test('each tool has label, description, parameters, and execute function', () => {
     const { pi, tools } = createMockPi();
     registerTools(pi, '/tmp/test/.coda');
+
     for (const tool of tools) {
-      expect(tool.schema.description.length).toBeGreaterThan(0);
-      expect(typeof tool.handler).toBe('function');
+      expect(tool.label.length).toBeGreaterThan(0);
+      expect(tool.description.length).toBeGreaterThan(0);
+      expect(tool.parameters).toBeTruthy();
+      expect(typeof tool.execute).toBe('function');
     }
   });
 });

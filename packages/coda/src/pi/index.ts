@@ -3,27 +3,16 @@
  * L7 Pi Integration — CODA extension entry point.
  *
  * Wires CODA into Pi by registering commands, tools, and hooks.
- * All logic delegates to lower layers (M1-M6).
  */
 
-import type { PiAPI, StateProvider } from './types';
+import { join } from 'node:path';
+import type { ExtensionAPI } from '@mariozechner/pi-coding-agent';
 import { registerCommands } from './commands';
-import { registerTools } from './tools';
 import { registerHooks } from './hooks';
-import { loadState } from '@coda/core';
+import { registerTools } from './tools';
 
 // Types
-export type {
-  PiAPI,
-  CommandConfig,
-  CommandHandler,
-  ToolSchema,
-  ToolHandler,
-  HookContext,
-  HookResult,
-  HookHandler,
-  StateProvider,
-} from './types';
+export type { CodaExtensionState, StateProvider } from './types';
 
 // Registrations
 export { registerCommands } from './commands';
@@ -31,23 +20,15 @@ export { registerTools } from './tools';
 export { registerHooks } from './hooks';
 
 /**
- * Initialize CODA as a Pi extension.
- *
- * Registers all commands, tools, and hooks with the Pi API.
- * This is the extension entry point.
+ * Register CODA with Pi using the current working directory's `.coda/` folder.
  *
  * @param pi - The Pi extension API
- * @param codaRoot - Path to the `.coda/` directory
  */
-export function initializeCoda(pi: PiAPI, codaRoot: string): void {
-  // Create state provider backed by file I/O
-  const stateProvider: StateProvider = {
-    getState: () => loadState(codaRoot),
-  };
-
+export function codaExtension(pi: ExtensionAPI): void {
+  const codaRoot = join(process.cwd(), '.coda');
   registerCommands(pi, codaRoot);
   registerTools(pi, codaRoot);
-  registerHooks(pi, codaRoot, stateProvider);
+  registerHooks(pi, codaRoot);
 }
 
-export default initializeCoda;
+export default codaExtension;

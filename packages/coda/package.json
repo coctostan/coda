@@ -4,7 +4,7 @@
   "description": "CODA — Compounding Orchestrated Development Architecture. Project lifecycle engine with FORGE design layer.",
   "keywords": ["pi-package"],
   "pi": {
-    "extensions": ["./extensions"]
+    "extensions": ["./src/pi/index.ts"]
   },
   "dependencies": {
     "@coda/core": "workspace:*"
@@ -13,7 +13,8 @@
     "@mariozechner/pi-ai": "*",
     "@mariozechner/pi-agent-core": "*",
     "@mariozechner/pi-coding-agent": "*",
-    "@mariozechner/pi-tui": "*"
+    "@mariozechner/pi-tui": "*",
+    "@sinclair/typebox": "*"
   },
   "devDependencies": {
     "@types/bun": "latest",

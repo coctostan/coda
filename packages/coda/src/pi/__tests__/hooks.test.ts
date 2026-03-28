@@ -1,32 +1,52 @@
-import { describe, expect, test } from 'bun:test';
-import { registerHooks } from '../hooks';
-import { initializeCoda } from '../index';
-import type { PiAPI, CommandConfig, ToolSchema, ToolHandler, HookHandler, HookContext, HookResult, StateProvider } from '../types';
+import { afterEach, describe, expect, test } from 'bun:test';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+  RegisteredCommand,
+  ToolDefinition,
+} from '@mariozechner/pi-coding-agent';
 import type { CodaState } from '@coda/core';
+import { registerHooks } from '../hooks';
+import { codaExtension } from '../index';
 
-/** Create a mock PiAPI that tracks registrations and captures hook handlers. */
+type MockHook = (event: unknown, ctx: ExtensionContext) => Promise<unknown> | unknown;
+type BeforeAgentStartResult = {
+  systemPrompt?: string;
+  message?: {
+    customType?: string;
+    display?: boolean;
+  };
+};
+type ToolCallResult = {
+  block?: boolean;
+  reason?: string;
+};
+
+/** Create a mock ExtensionAPI that tracks registrations and captures hook handlers. */
 function createMockPi() {
-  const commands: Array<{ name: string; config: CommandConfig }> = [];
-  const tools: Array<{ name: string; schema: ToolSchema; handler: ToolHandler }> = [];
-  const hooks: Map<string, HookHandler> = new Map();
+  const commands: Array<{ name: string; options: Omit<RegisteredCommand, 'name'> }> = [];
+  const tools: ToolDefinition[] = [];
+  const hooks: Map<string, MockHook> = new Map();
 
-  const pi: PiAPI = {
-    registerCommand(name: string, config: CommandConfig) {
-      commands.push({ name, config });
+  const pi = {
+    registerCommand(name: string, options: Omit<RegisteredCommand, 'name'>) {
+      commands.push({ name, options });
     },
-    registerTool(name: string, schema: ToolSchema, handler: ToolHandler) {
-      tools.push({ name, schema, handler });
+    registerTool(tool: ToolDefinition) {
+      tools.push(tool);
     },
-    on(event: string, handler: HookHandler) {
+    on(event: string, handler: MockHook) {
       hooks.set(event, handler);
     },
-    newSession: async () => {},
-    sendUserMessage: async () => {},
-  };
+  } as unknown as ExtensionAPI;
 
   return { pi, commands, tools, hooks };
 }
 
+/** Build a valid CodaState with optional overrides. */
 function makeState(overrides: Partial<CodaState> = {}): CodaState {
   return {
     version: 1,
@@ -42,90 +62,171 @@ function makeState(overrides: Partial<CodaState> = {}): CodaState {
   };
 }
 
+/** Create a temporary `.coda/` directory with an optional state file. */
+function createTempCodaRoot(state: CodaState | null = null): { projectRoot: string; codaRoot: string } {
+  const projectRoot = mkdtempSync(join(tmpdir(), 'coda-pi-'));
+  const codaRoot = join(projectRoot, '.coda');
+  mkdirSync(codaRoot, { recursive: true });
+
+  if (state) {
+    writeFileSync(join(codaRoot, 'state.json'), JSON.stringify(state, null, 2), 'utf-8');
+  }
+
+  tempRoots.push(projectRoot);
+  return { projectRoot, codaRoot };
+}
+
+/** Create a minimal ExtensionContext for hook execution. */
+function createMockContext(cwd: string): ExtensionContext {
+  return {
+    cwd,
+    hasUI: true,
+    ui: {
+      notify() {},
+    },
+    sessionManager: {} as ExtensionContext['sessionManager'],
+    modelRegistry: {} as ExtensionContext['modelRegistry'],
+    model: undefined,
+    isIdle: () => true,
+    abort() {},
+    hasPendingMessages: () => false,
+    shutdown() {},
+    getContextUsage: () => undefined,
+    compact() {},
+    getSystemPrompt: () => 'system prompt',
+  } as unknown as ExtensionContext;
+}
+
+const tempRoots: string[] = [];
+
+afterEach(() => {
+  while (tempRoots.length > 0) {
+    const root = tempRoots.pop();
+    if (root) {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }
+});
+
 describe('Pi Hooks', () => {
-  test('registerHooks registers 3 hooks', () => {
+  test('registerHooks registers session_start, before_agent_start, and tool_call hooks', () => {
     const { pi, hooks } = createMockPi();
-    const provider: StateProvider = { getState: () => null };
-    registerHooks(pi, '/tmp/.coda', provider);
+    registerHooks(pi, '/tmp/.coda');
+
     expect(hooks.size).toBe(3);
+    expect(hooks.has('session_start')).toBe(true);
     expect(hooks.has('before_agent_start')).toBe(true);
     expect(hooks.has('tool_call')).toBe(true);
-    expect(hooks.has('agent_end')).toBe(true);
   });
 
-  test('before_agent_start returns context when issue is focused', () => {
+  test('before_agent_start returns Pi message context when an issue is focused', async () => {
     const { pi, hooks } = createMockPi();
-    const provider: StateProvider = { getState: () => makeState({ phase: 'specify' }) };
-    registerHooks(pi, '/tmp/.coda', provider);
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ phase: 'specify' }));
+    registerHooks(pi, codaRoot);
 
-    const handler = hooks.get('before_agent_start')!;
-    const result = handler({});
-    // Should return systemPrompt and message (even if .coda/ doesn't exist, graceful)
-    expect(result).toHaveProperty('systemPrompt');
-    expect(result).toHaveProperty('message');
+    const sessionStart = hooks.get('session_start');
+    const beforeAgentStart = hooks.get('before_agent_start');
+    const ctx = createMockContext(projectRoot);
+
+    await sessionStart?.({ type: 'session_start' }, ctx);
+    const result = await beforeAgentStart?.(
+      { type: 'before_agent_start', prompt: 'help', systemPrompt: 'base prompt' },
+      ctx
+    ) as BeforeAgentStartResult;
+
+    expect(result.systemPrompt).toBeTruthy();
+    expect(result.message).toMatchObject({
+      customType: 'coda-context',
+      display: true,
+    });
   });
 
-  test('before_agent_start returns empty when no issue focused', () => {
+  test('before_agent_start returns empty when no issue is focused', async () => {
     const { pi, hooks } = createMockPi();
-    const provider: StateProvider = { getState: () => makeState({ focus_issue: null }) };
-    registerHooks(pi, '/tmp/.coda', provider);
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ focus_issue: null }));
+    registerHooks(pi, codaRoot);
 
-    const handler = hooks.get('before_agent_start')!;
-    const result = handler({});
+    const beforeAgentStart = hooks.get('before_agent_start');
+    const result = await beforeAgentStart?.(
+      { type: 'before_agent_start', prompt: 'help', systemPrompt: 'base prompt' },
+      createMockContext(projectRoot)
+    ) as BeforeAgentStartResult;
+
     expect(result).toEqual({});
   });
 
-  test('tool_call blocks writes to .coda/ paths', () => {
+  test('tool_call blocks writes to .coda/ paths', async () => {
     const { pi, hooks } = createMockPi();
-    const provider: StateProvider = { getState: () => makeState({ tdd_gate: 'unlocked' }) };
-    registerHooks(pi, '/tmp/.coda', provider);
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'unlocked' }));
+    registerHooks(pi, codaRoot);
 
-    const handler = hooks.get('tool_call')!;
-    const ctx: HookContext = { tool: { name: 'write', args: { path: '.coda/issues/test.md' } } };
-    const result = handler(ctx);
-    expect(result).toHaveProperty('block', true);
-    expect(result).toHaveProperty('reason');
+    const toolCall = hooks.get('tool_call');
+    const result = await toolCall?.(
+      { type: 'tool_call', toolCallId: '1', toolName: 'write', input: { path: '.coda/issues/test.md', content: '' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+
+    expect(result).toMatchObject({
+      block: true,
+      reason: 'Use coda_* tools to modify .coda/ files',
+    });
   });
 
-  test('tool_call blocks non-test writes when tdd_gate locked', () => {
+  test('tool_call blocks non-test writes when tdd_gate is locked', async () => {
     const { pi, hooks } = createMockPi();
-    const provider: StateProvider = { getState: () => makeState({ tdd_gate: 'locked' }) };
-    registerHooks(pi, '/tmp/.coda', provider);
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'locked' }));
+    registerHooks(pi, codaRoot);
 
-    const handler = hooks.get('tool_call')!;
-    const ctx: HookContext = { tool: { name: 'write', args: { path: 'src/main.ts' } } };
-    const result = handler(ctx);
-    expect(result).toHaveProperty('block', true);
+    const toolCall = hooks.get('tool_call');
+    const result = await toolCall?.(
+      { type: 'tool_call', toolCallId: '1', toolName: 'write', input: { path: 'src/main.ts', content: '' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+
+    expect(result.block).toBe(true);
+    expect(result.reason).toBeTruthy();
   });
 
-  test('tool_call allows test file writes when tdd_gate locked', () => {
+  test('tool_call allows test file writes when tdd_gate is locked', async () => {
     const { pi, hooks } = createMockPi();
-    const provider: StateProvider = { getState: () => makeState({ tdd_gate: 'locked' }) };
-    registerHooks(pi, '/tmp/.coda', provider);
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'locked' }));
+    registerHooks(pi, codaRoot);
 
-    const handler = hooks.get('tool_call')!;
-    const ctx: HookContext = { tool: { name: 'write', args: { path: 'src/__tests__/main.test.ts' } } };
-    const result = handler(ctx);
-    expect((result as HookResult).block).not.toBe(true);
+    const toolCall = hooks.get('tool_call');
+    const result = await toolCall?.(
+      {
+        type: 'tool_call',
+        toolCallId: '1',
+        toolName: 'write',
+        input: { path: 'src/__tests__/main.test.ts', content: '' },
+      },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+
+    expect(result.block).not.toBe(true);
   });
 
-  test('tool_call allows all writes when tdd_gate unlocked', () => {
+  test('tool_call allows all writes when tdd_gate is unlocked', async () => {
     const { pi, hooks } = createMockPi();
-    const provider: StateProvider = { getState: () => makeState({ tdd_gate: 'unlocked' }) };
-    registerHooks(pi, '/tmp/.coda', provider);
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'unlocked' }));
+    registerHooks(pi, codaRoot);
 
-    const handler = hooks.get('tool_call')!;
-    const ctx: HookContext = { tool: { name: 'write', args: { path: 'src/main.ts' } } };
-    const result = handler(ctx);
-    expect((result as HookResult).block).not.toBe(true);
+    const toolCall = hooks.get('tool_call');
+    const result = await toolCall?.(
+      { type: 'tool_call', toolCallId: '1', toolName: 'write', input: { path: 'src/main.ts', content: '' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+
+    expect(result.block).not.toBe(true);
   });
 });
 
 describe('Pi Extension Entry Point', () => {
-  test('initializeCoda calls registerCommands, registerTools, registerHooks', () => {
+  test('codaExtension registers commands, tools, and hooks', () => {
     const { pi, commands, tools, hooks } = createMockPi();
-    initializeCoda(pi, '/tmp/.coda');
-    expect(commands.length).toBe(5);
+    codaExtension(pi);
+
+    expect(commands.length).toBe(1);
     expect(tools.length).toBe(7);
     expect(hooks.size).toBe(3);
   });
