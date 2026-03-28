@@ -22,7 +22,7 @@ export * from './modules';
 export * from './forge';
 
 // L6: Workflow Engine
-// export * from './workflow';
+export * from './workflow';
 
 // L7: Pi Integration
 // export default function(pi: PiAPI) { ... }
