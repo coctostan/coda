@@ -5,8 +5,8 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
 **v0.1 Initial Release** (v0.1.0)
-Status: In progress
-Phases: 7 of 8 complete
+Status: ✅ Complete
+Phases: 8 of 8 complete
 
 ## Phases
 
@@ -19,7 +19,7 @@ Phases: 7 of 8 complete
 | 5 | M5: Greenfield FORGE | 1 | ✅ Complete | 2026-03-28 |
 | 6 | M6: Workflow Engine | 1 | ✅ Complete | 2026-03-28 |
 | 7 | M7: Pi Integration | 1 | ✅ Complete | 2026-03-28 |
-| 8 | E2E Test | 1 | 🔵 Planning | - |
+| 8 | E2E Test | 1 | ✅ Complete | 2026-03-28 |
 
 ## Phase Details
 
@@ -70,4 +70,4 @@ Phases: 7 of 8 complete
 **Deliverable:** Full issue lifecycle on test project
 
 ---
-*Roadmap updated: 2026-03-28 after Phase 7*
+*Roadmap updated: 2026-03-28 after Phase 8 — Milestone v0.1 COMPLETE*

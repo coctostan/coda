@@ -5,16 +5,15 @@
 See: .paul/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 8 (E2E Test) — APPLY complete, ready for UNIFY
-
+**Current focus:** Phase 8 (E2E Test) — COMPLETE. Milestone v0.1 ready for completion.
 ## Current Position
 Milestone: v0.1 Initial Release
-Phase: 8 of 8 (E2E Test) — APPLY complete
-Plan: 08-01 executed (4/4 tasks PASS)
-Status: APPLY complete, ready for UNIFY
-Last activity: 2026-03-28 — Executed Plan 08-01 (Pi layer rewrite + E2E dogfood)
+Phase: 8 of 8 (E2E Test) — Complete
+Plan: 08-01 complete (SUMMARY written)
+Status: Loop complete, phase complete, milestone complete
+Last activity: 2026-03-28 — UNIFY complete for Plan 08-01
 Progress:
-- Milestone: [█████████░] 95%
+- Milestone: [██████████] 100% ✓
 - Phase 1: [██████████] 100% ✓
 - Phase 2: [██████████] 100% ✓
 - Phase 3: [██████████] 100% ✓
@@ -22,14 +21,14 @@ Progress:
 - Phase 5: [██████████] 100% ✓
 - Phase 6: [██████████] 100% ✓
 - Phase 7: [██████████] 100% ✓
-- Phase 8: [████████░░] 80%
+- Phase 8: [██████████] 100% ✓
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ○     [APPLY complete, ready for UNIFY]
+  ✓        ✓        ✓     [Loop complete — Phase 8 complete — Milestone v0.1 complete]
 ```
 
 ## Accumulated Context
@@ -53,14 +52,14 @@ PR: https://github.com/coctostan/coda/pull/5 (OPEN)
 ## Session Continuity
 
 Last session: 2026-03-28
-Stopped at: APPLY complete for Plan 08-01 (all 4 tasks passed)
-Next action: /paul:unify .paul/phases/08-e2e-test/08-01-PLAN.md
+Stopped at: UNIFY complete — all 8 phases done, milestone v0.1 complete
+Next action: /paul:milestone complete
+Resume file: .paul/phases/08-e2e-test/08-01-SUMMARY.md
 Resume context:
-- Pi layer rewritten against real ExtensionAPI (Task 1)
-- E2E test script written (Task 2)
-- Live E2E test executed: 6/6 steps passed (Task 3)
-- Findings report written with 2 critical issues found+fixed (Task 4)
-- 186 tests passing (119 coda + 67 core), tsc clean
+- All 8 phases complete (186 tests, tsc clean)
+- E2E validated: CODA extension loads and works in live Pi session
+- 2 critical issues found+fixed during E2E (import.meta.dir, @coda/core symlink)
+- PR #5 open on feature/07-pi-integration
 
 ---
 *STATE.md — Updated after every significant action*
