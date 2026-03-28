@@ -19,7 +19,7 @@ Phases: 7 of 8 complete
 | 5 | M5: Greenfield FORGE | 1 | ✅ Complete | 2026-03-28 |
 | 6 | M6: Workflow Engine | 1 | ✅ Complete | 2026-03-28 |
 | 7 | M7: Pi Integration | 1 | ✅ Complete | 2026-03-28 |
-| 8 | E2E Test | TBD | 🔵 Next | - |
+| 8 | E2E Test | 1 | 🔵 Planning | - |
 
 ## Phase Details
 

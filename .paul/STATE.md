@@ -5,15 +5,15 @@
 See: .paul/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 8 (E2E Test) — ready to plan
+**Current focus:** Phase 8 (E2E Test) — plan ready, awaiting approval
 
 ## Current Position
 
 Milestone: v0.1 Initial Release
-Phase: 8 of 8 (E2E Test)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-03-28 — Phase 7 complete, transitioned to Phase 8
+Phase: 8 of 8 (E2E Test) — Planning
+Plan: 08-01 created, awaiting approval
+Status: PLAN created, ready for APPLY
+Last activity: 2026-03-28 — Created Plan 08-01 (E2E Live Test)
 
 Progress:
 - Milestone: [████████░░] 87%
@@ -31,7 +31,7 @@ Progress:
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Ready for PLAN]
+  ✓        ○        ○     [Plan created, awaiting approval]
 ```
 
 ## Accumulated Context
@@ -54,13 +54,14 @@ PR: none
 ## Session Continuity
 
 Last session: 2026-03-28
-Stopped at: Phase 7 complete, ready to plan Phase 8
-Next action: /paul:plan for Phase 8 (E2E Test)
-Resume file: .paul/ROADMAP.md
+Stopped at: Plan 08-01 updated (added Task 1: rewrite Pi layer), awaiting APPLY approval
+Next action: /paul:resume → approve and run APPLY for Plan 08-01
+Resume file: .paul/HANDOFF-2026-03-28-e2e.md
 Resume context:
-- 7 phases complete (187 tests, 0 failures)
-- PR #5 open for Phase 7
-- Next: Phase 8 E2E Test (final phase!)
+- Plan 08-01 has 4 tasks: (1) rewrite Pi layer against real ExtensionAPI, (2) write E2E script, (3) execute script (checkpoint), (4) report findings
+- Smoke test revealed custom PiAPI doesn't match real ExtensionAPI — Task 1 fixes this
+- Pi extension docs and template loaded for reference
+- 187 tests passing, 7/8 phases complete
 
 ---
 *STATE.md — Updated after every significant action*
