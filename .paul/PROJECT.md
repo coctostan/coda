@@ -28,8 +28,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Two modules — Todd (TDD enforcement) + Walt (quality check) prompts with TS loaders (Phase 4)
 - [x] FORGE design layer — greenfield scaffold + ref docs + milestone (Phase 5)
 - [x] Workflow engine — context builder, phase runner, build loop (Phase 6)
+- [x] Pi integration — commands, tools, hooks, extension entry point (Phase 7)
 ### Active
-- [ ] Pi integration (M7)
+- [ ] E2E test (Phase 8)
 ### Planned
 - (none — all remaining work is active or validated)
 ### Out of Scope
@@ -60,4 +61,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-03-28 after Phase 6*
+*Last updated: 2026-03-28 after Phase 7*
