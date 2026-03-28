@@ -61,14 +61,23 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
   });
 
   pi.on('tool_call', async (event, ctx) => {
+    // Intercept bash commands targeting .coda/
+    if (isToolCallEventType('bash', event)) {
+      const cmd = event.input.command;
+      if (cmd && isBashWriteToCoda(cmd)) {
+        return {
+          block: true,
+          reason: 'Use coda_* tools to modify .coda/ files',
+        };
+      }
+      return {};
+    }
     if (isToolCallEventType('write', event)) {
       return evaluateWriteGate('write', event.input.path, codaRoot, ctx.cwd, stateProvider);
     }
-
     if (isToolCallEventType('edit', event)) {
       return evaluateWriteGate('edit', event.input.path, codaRoot, ctx.cwd, stateProvider);
     }
-
     return {};
   });
 }
@@ -113,4 +122,23 @@ function isProtectedCodaPath(path: string, codaRoot: string, cwd: string): boole
   const absolutePath = resolve(cwd, path);
   const absoluteCodaRoot = resolve(codaRoot);
   return absolutePath === absoluteCodaRoot || absolutePath.startsWith(`${absoluteCodaRoot}${sep}`);
+}
+
+/**
+ * Detect bash commands that write to `.coda/` via redirection or common write patterns.
+ *
+ * Catches: `> .coda/`, `>> .coda/`, `tee .coda/`, `cp ... .coda/`, `mv ... .coda/`,
+ * `printf ... > .coda/`, `echo ... > .coda/`, `cat ... > .coda/`
+ */
+function isBashWriteToCoda(command: string): boolean {
+  // Redirect operators targeting .coda/
+  if (/>>?\s*['"]?\.coda\//.test(command)) return true;
+  if (/>>?\s*['"]?\.coda\\/.test(command)) return true;
+  // tee writing to .coda/
+  if (/\btee\b.*\.coda\//.test(command)) return true;
+  // cp/mv with .coda/ as destination
+  if (/\b(?:cp|mv)\b.*\s\.coda\//.test(command)) return true;
+  // rm inside .coda/
+  if (/\brm\b.*\.coda\//.test(command)) return true;
+  return false;
 }

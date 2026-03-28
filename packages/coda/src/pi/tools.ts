@@ -6,6 +6,7 @@
  */
 
 import { join } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
 import { Type } from '@sinclair/typebox';
 import type { ExtensionAPI } from '@mariozechner/pi-coding-agent';
 import {
@@ -138,7 +139,8 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     description: 'Run tests in TDD or suite mode.',
     parameters: runTestsSchema,
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-      return createTextToolResult(codaRunTests(params, statePath, {}));
+      const config = loadCodaConfig(codaRoot);
+      return createTextToolResult(codaRunTests(params, statePath, config));
     },
   });
 }
@@ -152,4 +154,18 @@ function createTextToolResult<TDetails>(details: TDetails): {
     content: [{ type: 'text', text: JSON.stringify(details, null, 2) }],
     details,
   };
+}
+
+/** Load coda.json config from the .coda/ directory. */
+function loadCodaConfig(codaRoot: string): {
+  tdd_test_command?: string;
+  full_suite_command?: string;
+} {
+  const configPath = join(codaRoot, 'coda.json');
+  if (!existsSync(configPath)) return {};
+  try {
+    return JSON.parse(readFileSync(configPath, 'utf-8'));
+  } catch {
+    return {};
+  }
 }

@@ -219,6 +219,55 @@ describe('Pi Hooks', () => {
 
     expect(result.block).not.toBe(true);
   });
+
+  test('tool_call blocks bash commands that write to .coda/', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'unlocked' }));
+    registerHooks(pi, codaRoot);
+
+    const toolCall = hooks.get('tool_call');
+
+    // printf redirect
+    const r1 = await toolCall?.(
+      { type: 'tool_call', toolCallId: '1', toolName: 'bash', input: { command: "printf '%s' 'HACKED' > .coda/test.md" } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+    expect(r1.block).toBe(true);
+
+    // echo redirect
+    const r2 = await toolCall?.(
+      { type: 'tool_call', toolCallId: '2', toolName: 'bash', input: { command: 'echo hello >> .coda/issues/x.md' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+    expect(r2.block).toBe(true);
+
+    // cp to .coda/
+    const r3 = await toolCall?.(
+      { type: 'tool_call', toolCallId: '3', toolName: 'bash', input: { command: 'cp /tmp/x .coda/issues/y.md' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+    expect(r3.block).toBe(true);
+
+    // rm inside .coda/
+    const r4 = await toolCall?.(
+      { type: 'tool_call', toolCallId: '4', toolName: 'bash', input: { command: 'rm .coda/state.json' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+    expect(r4.block).toBe(true);
+  });
+
+  test('tool_call allows bash commands that do not write to .coda/', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'unlocked' }));
+    registerHooks(pi, codaRoot);
+
+    const toolCall = hooks.get('tool_call');
+    const result = await toolCall?.(
+      { type: 'tool_call', toolCallId: '1', toolName: 'bash', input: { command: 'cat .coda/state.json' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+    expect(result.block).not.toBe(true);
+  });
 });
 
 describe('Pi Extension Entry Point', () => {
