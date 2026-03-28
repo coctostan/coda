@@ -24,11 +24,10 @@ Enabling developers to build durable, maintainable software through disciplined 
 ### Validated
 - [x] Data layer — mdbase records, YAML frontmatter, section ops (Phase 1)
 - [x] State engine — phase transitions, gates, atomic persist (Phase 2)
+- [x] Tool layer — 7 coda_* tools + write-gate (Phase 3)
 ### Active
-- [ ] Tool layer — coda_* tools (coda L4)
-
+- [ ] Two modules — Todd + Walt prompts (M4)
 ### Planned
-- [ ] Module system (core L3)
 - [ ] FORGE design layer (coda L5)
 - [ ] Workflow engine (coda L6)
 - [ ] Pi integration (coda L7)
