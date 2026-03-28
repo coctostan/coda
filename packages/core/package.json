@@ -1,0 +1,13 @@
+{
+  "name": "@coda/core",
+  "version": "0.1.0",
+  "description": "Shared core: data layer, state engine, module system, eval engine",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "5.8"
+  }
+}

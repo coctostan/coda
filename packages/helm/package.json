@@ -1,0 +1,24 @@
+{
+  "name": "helm",
+  "version": "0.1.0",
+  "description": "HELM — Holistic Engineering Lifecycle Management. Multi-project workspace & operator layer.",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["./extensions"]
+  },
+  "dependencies": {
+    "@coda/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-agent-core": "*",
+    "@mariozechner/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "5.8"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

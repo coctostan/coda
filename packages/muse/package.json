@@ -1,0 +1,24 @@
+{
+  "name": "muse",
+  "version": "0.1.0",
+  "description": "MUSE — Modular Unstructured Scoping Engine. Ideation & incubation for pre-project thinking.",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["./extensions"]
+  },
+  "dependencies": {
+    "@coda/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-agent-core": "*",
+    "@mariozechner/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "5.8"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "lens",
+  "version": "0.1.0",
+  "description": "LENS — Layered Epistemic aNalysis System. Deep multi-domain codebase audit.",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["./extensions"]
+  },
+  "dependencies": {
+    "@coda/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-agent-core": "*",
+    "@mariozechner/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "5.8"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}
