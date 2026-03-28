@@ -5,23 +5,24 @@
 See: .paul/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 5 (M5: FORGE Design Layer) — ready to plan
+**Current focus:** Phase 6 (M6: Workflow Engine) — ready to plan
 
 ## Current Position
 
 Milestone: v0.1 Initial Release
-Phase: 5 of 8 (M5: FORGE Design Layer)
+Phase: 6 of 8 (M6: Workflow Engine)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-03-28 — Phase 4 complete, transitioned to Phase 5
+Last activity: 2026-03-28 — Phase 5 complete, transitioned to Phase 6
 
 Progress:
-- Milestone: [█████░░░░░] 50%
+- Milestone: [██████░░░░] 62%
 - Phase 1: [██████████] 100% ✓
 - Phase 2: [██████████] 100% ✓
 - Phase 3: [██████████] 100% ✓
 - Phase 4: [██████████] 100% ✓
-- Phase 5: [░░░░░░░░░░] 0%
+- Phase 5: [██████████] 100% ✓
+- Phase 6: [░░░░░░░░░░] 0%
 
 ## Loop Position
 
@@ -44,20 +45,20 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Prompts as .md data loaded by TS | Phase 4 | Follows AGENTS.md convention |
 
 ### Git State
-Branch: feature/04-two-modules
+Branch: feature/06-workflow-engine (pending creation)
 Remote: https://github.com/coctostan/coda.git
-PR: https://github.com/coctostan/coda/pull/2 (state: open)
+PR: none
 
 ## Session Continuity
 
 Last session: 2026-03-28
-Stopped at: Phase 4 complete, ready to plan Phase 5
-Next action: /paul:plan for Phase 5 (M5: FORGE)
+Stopped at: Phase 5 complete, ready to plan Phase 6
+Next action: /paul:plan for Phase 6 (M6: Workflow Engine)
 Resume file: .paul/ROADMAP.md
 Resume context:
-- 4 phases complete (129 tests, 0 failures)
-- PR #2 open for Phase 4
-- Next: M5 Greenfield FORGE design layer
+- 5 phases complete (149 tests, 0 failures)
+- PR #3 open for Phase 5
+- Next: M6 Workflow Engine
 
 ---
 *STATE.md — Updated after every significant action*

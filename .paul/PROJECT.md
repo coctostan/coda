@@ -26,10 +26,10 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] State engine — phase transitions, gates, atomic persist (Phase 2)
 - [x] Tool layer — 7 coda_* tools + write-gate (Phase 3)
 - [x] Two modules — Todd (TDD enforcement) + Walt (quality check) prompts with TS loaders (Phase 4)
+- [x] FORGE design layer — greenfield scaffold + ref docs + milestone (Phase 5)
 ### Active
-- [ ] FORGE design layer (M5)
+- [ ] Workflow engine (M6)
 ### Planned
-- [ ] Workflow engine (coda L6)
 - [ ] Pi integration (coda L7)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
@@ -59,4 +59,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-03-28 after Phase 4*
+*Last updated: 2026-03-28 after Phase 5*
