@@ -27,10 +27,11 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Tool layer — 7 coda_* tools + write-gate (Phase 3)
 - [x] Two modules — Todd (TDD enforcement) + Walt (quality check) prompts with TS loaders (Phase 4)
 - [x] FORGE design layer — greenfield scaffold + ref docs + milestone (Phase 5)
+- [x] Workflow engine — context builder, phase runner, build loop (Phase 6)
 ### Active
-- [ ] Workflow engine (M6)
+- [ ] Pi integration (M7)
 ### Planned
-- [ ] Pi integration (coda L7)
+- (none — all remaining work is active or validated)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -59,4 +60,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-03-28 after Phase 5*
+*Last updated: 2026-03-28 after Phase 6*
