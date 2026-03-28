@@ -15,6 +15,9 @@
 // L4: Tool Layer
 export * from './tools';
 
+// L4.5: Module Prompts
+export * from './modules';
+
 // L5: FORGE Design Layer
 // export * from './forge';
 
