@@ -120,4 +120,24 @@ describe('loadState', () => {
     expect(loaded?.tdd_gate).toBe('locked');
     expect(loaded?.enabled).toBe(true);
   });
+
+  test('atomic write safety: stale .tmp does not corrupt valid state', () => {
+    const statePath = join(tempDir, 'state.json');
+    const tmpPath = statePath + '.tmp';
+
+    // Persist a known-good state
+    const goodState = { ...createDefaultState(), focus_issue: 'good-issue', phase: 'build' as const };
+    persistState(goodState, statePath);
+
+    // Simulate a crashed/failed subsequent write — .tmp with different data
+    const corruptData = JSON.stringify({ ...createDefaultState(), focus_issue: 'corrupt', phase: 'done' });
+    writeFileSync(tmpPath, corruptData, 'utf-8');
+
+    // loadState should clean .tmp and return the ORIGINAL good state
+    const loaded = loadState(statePath);
+    expect(existsSync(tmpPath)).toBe(false);
+    expect(loaded).not.toBeNull();
+    expect(loaded?.focus_issue).toBe('good-issue');
+    expect(loaded?.phase).toBe('build');
+  });
 });

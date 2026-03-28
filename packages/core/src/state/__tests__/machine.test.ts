@@ -116,4 +116,22 @@ describe('transition', () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain('acceptance criteria');
   });
+
+  test('TDD gate unlock/relock cycle preserves through transitions', () => {
+    // Start locked (default)
+    const locked = stateAt('specify');
+    expect(locked.tdd_gate).toBe('locked');
+
+    // Unlock
+    const unlocked: CodaState = { ...locked, tdd_gate: 'unlocked' };
+    const r1 = transition(unlocked, 'plan', { issueAcCount: 1 });
+    expect(r1.success).toBe(true);
+    expect(r1.state?.tdd_gate).toBe('unlocked');
+
+    // Relock
+    const relocked: CodaState = { ...r1.state!, tdd_gate: 'locked' };
+    const r2 = transition(relocked, 'review', { planExists: true });
+    expect(r2.success).toBe(true);
+    expect(r2.state?.tdd_gate).toBe('locked');
+  });
 });
