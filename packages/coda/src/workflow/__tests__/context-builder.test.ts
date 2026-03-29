@@ -11,6 +11,9 @@ import {
   getPreviousTaskSummaries,
   loadRevisionInstructions,
   loadRevisionHistory,
+  loadVerificationFailure,
+  loadVerificationFailures,
+  getSourceTaskSummaries,
 } from '../context-builder';
 
 describe('Workflow Context Builder', () => {
@@ -212,5 +215,65 @@ describe('Workflow Context Builder', () => {
       expect(loadRevisionInstructions(codaRoot, 'my-feature')).toBe('');
       expect(loadRevisionHistory(codaRoot, 'my-feature')).toBe('');
     });
+
+
+  describe('verification failure artifacts', () => {
+    test('loads a single verification failure artifact by AC id', () => {
+      const failureDir = join(codaRoot, 'issues', 'my-feature', 'verification-failures');
+      mkdirSync(failureDir, { recursive: true });
+      writeFileSync(
+        join(failureDir, 'AC-2.yaml'),
+        [
+          'ac_id: AC-2',
+          'status: not-met',
+          'failed_checks:',
+          '  - type: artifact_missing',
+          '    detail: src/store.ts does not export saveTodo',
+          'source_tasks: [2]',
+          'relevant_files:',
+          '  - src/store.ts',
+          '  - tests/store.test.ts',
+        ].join('\n'),
+        'utf-8'
+      );
+
+      const failure = loadVerificationFailure(codaRoot, 'my-feature', 'AC-2');
+      expect(failure).not.toBeNull();
+      expect(failure!.acId).toBe('AC-2');
+      expect(failure!.failedChecks[0]?.type).toBe('artifact_missing');
+      expect(failure!.sourceTasks).toEqual([2]);
+      expect(failure!.relevantFiles).toEqual(['src/store.ts', 'tests/store.test.ts']);
+    });
+
+    test('loads all verification failures in sorted order', () => {
+      const failureDir = join(codaRoot, 'issues', 'my-feature', 'verification-failures');
+      mkdirSync(failureDir, { recursive: true });
+      writeFileSync(join(failureDir, 'AC-2.yaml'), 'ac_id: AC-2\nstatus: not-met\nsource_tasks: [2]\n', 'utf-8');
+      writeFileSync(join(failureDir, 'AC-1.yaml'), 'ac_id: AC-1\nstatus: not-met\nsource_tasks: [1]\n', 'utf-8');
+
+      const failures = loadVerificationFailures(codaRoot, 'my-feature');
+      expect(failures.map((failure) => failure.acId)).toEqual(['AC-1', 'AC-2']);
+    });
+
+    test('returns source task summaries for correction work', () => {
+      const taskDir = join(codaRoot, 'issues', 'my-feature', 'tasks');
+      mkdirSync(taskDir, { recursive: true });
+      writeRecord(join(taskDir, '01-task-one.md'), {
+        id: 1, issue: 'my-feature', title: 'Task One',
+        status: 'complete', kind: 'planned', covers_ac: [], depends_on: [],
+        files_to_modify: [], truths: [], artifacts: [], key_links: [],
+      }, '## Summary\nCompleted task one successfully.\n');
+      writeRecord(join(taskDir, '02-task-two.md'), {
+        id: 2, issue: 'my-feature', title: 'Task Two',
+        status: 'complete', kind: 'planned', covers_ac: [], depends_on: [],
+        files_to_modify: [], truths: [], artifacts: [], key_links: [],
+      }, '## Summary\nCompleted task two successfully.\n');
+
+      const summaries = getSourceTaskSummaries(codaRoot, 'my-feature', [2, 1]);
+      expect(summaries).toContain('Task One');
+      expect(summaries).toContain('Task Two');
+      expect(summaries.indexOf('Task One')).toBeLessThan(summaries.indexOf('Task Two'));
+    });
+  });
   });
 });

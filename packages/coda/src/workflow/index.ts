@@ -11,13 +11,25 @@
 export type { PhaseContext, BuildTaskContext, CarryForwardConfig } from './types';
 export { DEFAULT_CARRY_FORWARD } from './types';
 export type {
+  VerificationFailedCheck,
+  VerificationFailureArtifact,
+  VerifyAcResult,
+  VerificationResult,
+  VerifyRunnerOptions,
+  VerifyRunnerOutcome,
+  VerifyCorrectionsRequiredOutcome,
+  VerifyReadyOutcome,
+  VerifySuccessOutcome,
+  VerifyExhaustedOutcome,
+} from './types';
+export type {
   ReviewIssue,
   ReviewDecision,
   ReviewRunnerOptions,
   ReviewRunnerOutcome,
   ReviewApprovedOutcome,
   ReviewReviseRequiredOutcome,
-  ReviewReadyOutcome,
+  ReviewReadyOutcome as ReviewRunnerReadyOutcome,
   ReviewExhaustedOutcome,
 } from './review-runner';
 
@@ -30,6 +42,9 @@ export {
   loadRevisionInstructions,
   loadRevisionHistory,
   getPreviousTaskSummaries,
+  loadVerificationFailure,
+  loadVerificationFailures,
+  getSourceTaskSummaries,
 } from './context-builder';
 
 // Phase runner
@@ -40,3 +55,6 @@ export { buildTaskContext, getBuildSequence } from './build-loop';
 
 // Review loop
 export { runReviewRunner } from './review-runner';
+
+// Verify loop
+export { runVerifyRunner } from './verify-runner';

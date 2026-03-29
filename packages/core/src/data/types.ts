@@ -76,6 +76,8 @@ export interface TaskRecord {
   title: string;
   status: 'pending' | 'active' | 'complete' | 'blocked';
   kind: 'planned' | 'correction';
+  /** AC ID this correction task fixes, when kind is correction. */
+  fix_for_ac?: string;
   /** AC IDs this task covers */
   covers_ac: string[];
   depends_on: number[];

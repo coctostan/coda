@@ -7,7 +7,12 @@
  */
 
 import { getModulePrompts } from '../modules';
-import { loadTasks, getPreviousTaskSummaries } from './context-builder';
+import {
+  loadTasks,
+  getPreviousTaskSummaries,
+  loadVerificationFailure,
+  getSourceTaskSummaries,
+} from './context-builder';
 import type { BuildTaskContext } from './types';
 import { DEFAULT_CARRY_FORWARD } from './types';
 
@@ -56,6 +61,21 @@ export function buildTaskContext(
     contextParts.push(`## Truths\n${truths.join('\n')}`);
   }
 
+  if (task?.frontmatter.kind === 'correction' && task.frontmatter.fix_for_ac) {
+    const failure = loadVerificationFailure(codaRoot, issueSlug, task.frontmatter.fix_for_ac);
+    const sourceSummaries = failure
+      ? getSourceTaskSummaries(codaRoot, issueSlug, failure.sourceTasks)
+      : '';
+
+    if (failure) {
+      contextParts.push(formatVerificationFailure(failure));
+    }
+
+    if (sourceSummaries) {
+      contextParts.push(`## Source Task Summaries\n${sourceSummaries}`);
+    }
+  }
+
   if (prevSummaries) {
     contextParts.push(`## Previous Tasks\n${prevSummaries}`);
   }
@@ -64,10 +84,14 @@ export function buildTaskContext(
     contextParts.push(toddPrompts.join('\n'));
   }
 
+  const systemPrompt = task?.frontmatter.kind === 'correction' && task.frontmatter.fix_for_ac
+    ? `You are fixing a verification failure for ${task.frontmatter.fix_for_ac}. Follow TDD and stay narrowly focused on the unmet acceptance criterion.`
+    : `You are executing task ${String(taskId)}: ${taskTitle}. Follow TDD.`;
+
   return {
     taskId,
     taskTitle,
-    systemPrompt: `You are executing task ${String(taskId)}: ${taskTitle}. Follow TDD.`,
+    systemPrompt,
     context: contextParts.join('\n\n'),
   };
 }
@@ -90,4 +114,24 @@ export function getBuildSequence(
   return tasks
     .filter((t) => t.frontmatter.status === 'pending' || t.frontmatter.status === 'active')
     .map((t) => t.frontmatter.id);
+}
+
+function formatVerificationFailure(failure: {
+  acId: string;
+  failedChecks: Array<{ type: string; detail: string }>;
+  relevantFiles: string[];
+}): string {
+  const failedChecks = failure.failedChecks.length > 0
+    ? failure.failedChecks.map((check) => `- ${check.type}: ${check.detail}`).join('\n')
+    : '- verification failure recorded';
+
+  const relevantFiles = failure.relevantFiles.length > 0
+    ? failure.relevantFiles.map((file) => `- ${file}`).join('\n')
+    : '- none recorded';
+
+  return [
+    `## Verification Failure: ${failure.acId}`,
+    failedChecks,
+    `## Relevant Files\n${relevantFiles}`,
+  ].join('\n');
 }
