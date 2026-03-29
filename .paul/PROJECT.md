@@ -10,15 +10,16 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Attribute | Value |
 |-----------|-------|
 | Version | 0.2.0 |
-| Status | Milestone v0.2 in progress (Phase 12 complete, Phase 13 ready) |
+| Status | Milestone v0.2 in progress (Phase 14 complete, Phase 15 ready) |
 | Last Updated | 2026-03-29 |
 
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
 - `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, and v0.2 submode/loop primitives
 - `@coda/coda` ships tools, modules, FORGE, workflow engine, and Pi integration
-- Live Pi extension validated end-to-end against the real `ExtensionAPI`
-- 228 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
+- Phase 13 adds exhaustion-aware recovery controls plus durable `/coda back` and `/coda kill` operator commands
+- Phase 14 now threads submode-aware review/revise/verify/correct runtime metadata through the Pi hook, command, and status surfaces
+- 247 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
 
 ## Scope Snapshot
 ### Validated
@@ -34,11 +35,12 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Autonomous review/revise runner — deterministic structural review, revision instructions/history, and review-context injection (Phase 10 — v0.2)
 - [x] Autonomous verify/correct runner — deterministic failure artifacts, correction task generation, and correction-task BUILD context (Phase 11 — v0.2)
 - [x] Human review gate — durable `human_review_status`, review→build gating, and persisted human feedback routing (Phase 12 — v0.2)
+- [x] Exhaustion handling + rewind/kill controls — explicit exhausted outcomes, human recovery paths, and durable rewind/kill commands (Phase 13 — v0.2)
+- [x] Pi integration updates — submode-aware `before_agent_start`, command/status guidance, and workflow-owned runtime metadata for revise/correct flows (Phase 14 — v0.2)
 ### Active
-- [ ] Exhaustion handling + rewind/kill controls (Phase 13 — v0.2)
-- [ ] Pi integration updates for submode-aware execution (Phase 14 — v0.2)
 - [ ] E2E validation for all v0.2 autonomous-loop scenarios (Phase 15 — v0.2)
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
+- [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 ### Planned
 - [ ] Define v0.3 scope after v0.2 completion
@@ -59,12 +61,13 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.2 progress | 7 phases complete | 4 of 7 complete |
-| Test suite | Green | 228 passing, 0 failing |
+| Milestone v0.2 progress | 7 phases complete | 6 of 7 complete |
+| Test suite | Green | 247 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Review/verify primitives | Landed in core | PASS |
 | Human review gate | Durable pending/approval/change-request flow | PASS |
-| Pi validation | Live extension works in Pi | PASS from v0.1 baseline |
+| Exhaustion recovery controls | Durable pause, rewind, and kill behavior | PASS |
+| Pi validation | Live extension exposes submode-aware runtime context | PASS |
 
 ## Key Decisions
 | Decision | Rationale | Date | Status |
@@ -79,6 +82,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Deterministic structural review writes durable revision artifacts | Keep Phase 10 review/revise loop mechanical, auditable, and disk-backed before later human/LLM gates | 2026-03-29 | Active |
 | Deterministic verify failures become YAML artifacts and correction tasks | Keep the verify/correct loop mechanical, auditable, and reusable by BUILD without adding dependencies | 2026-03-29 | Active |
 | Human review state is persisted in existing plan frontmatter/body artifacts | Add durable human control without introducing new storage or widening Phase 12 scope | 2026-03-29 | Active |
+| Exhausted loops preserve artifacts and require explicit human recovery | Keep exhaustion handling auditable and prevent hidden auto-advancement | 2026-03-29 | Active |
+| Pi-facing runtime metadata is emitted from workflow-owned phase context | Keep Pi integration thin while exposing canonical phase/submode/task state to the extension surface | 2026-03-29 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -87,4 +92,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-03-29 after Phase 12*
+*Last updated: 2026-03-29 after Phase 14*

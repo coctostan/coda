@@ -6,7 +6,7 @@
  */
 import { join } from 'node:path';
 import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-coding-agent';
-import { codaAdvance, codaCreate, codaStatus } from '../tools';
+import { codaAdvance, codaBack, codaCreate, codaKill, codaStatus } from '../tools';
 import type { AdvanceInput, StatusResult } from '../tools';
 import { getBuildSequence } from '../workflow';
 
@@ -23,7 +23,7 @@ export function registerCommands(pi: ExtensionAPI, codaRoot: string): void {
   const statePath = join(codaRoot, 'state.json');
 
   pi.registerCommand('coda', {
-    description: 'Manage CODA lifecycle actions (status, forge, new, advance, build)',
+    description: 'Manage CODA lifecycle actions (status, forge, new, advance, back, kill, build)',
     handler: async (args, ctx) => {
       await handleCodaCommand(args, ctx, codaRoot, statePath);
     },
@@ -43,8 +43,9 @@ async function handleCodaCommand(
     case 'status': {
       const result = codaStatus(statePath, codaRoot);
       const phase = result.phase ?? 'none';
+      const submode = result.submode ? ` (${result.submode}${typeof result.loop_iteration === 'number' ? ` loop ${String(result.loop_iteration)}` : ''})` : '';
       const task = result.current_task === null ? 'none' : String(result.current_task);
-      ctx.ui.notify(`Phase: ${phase} | Task: ${task} | Next: ${result.next_action}`);
+      ctx.ui.notify(`Phase: ${phase}${submode} | Task: ${task} | Next: ${result.next_action}`);
       return;
     }
 
@@ -115,26 +116,71 @@ async function handleCodaCommand(
       return;
     }
 
+    case 'back': {
+      const status = codaStatus(statePath, codaRoot);
+      if (!status.focus_issue || !status.phase) {
+        ctx.ui.notify('No focused issue or phase to rewind from.', 'warning');
+        return;
+      }
+
+      const targetPhase = parsed.remainder.trim();
+      if (targetPhase.length === 0) {
+        ctx.ui.notify('Usage: /coda back <phase>', 'warning');
+        return;
+      }
+
+      const result = codaBack({ target_phase: targetPhase }, codaRoot, statePath);
+      if (!result.success) {
+        ctx.ui.notify(result.reason ?? result.error ?? 'Back failed.', 'error');
+        return;
+      }
+
+      ctx.ui.notify(`Rewound ${status.focus_issue} from ${result.previous_phase ?? status.phase} to ${result.new_phase ?? targetPhase}.`);
+      return;
+    }
+
+    case 'kill': {
+      const status = codaStatus(statePath, codaRoot);
+      if (!status.focus_issue) {
+        ctx.ui.notify('No focused issue to terminate.', 'warning');
+        return;
+      }
+
+      const result = codaKill(codaRoot, statePath);
+      if (!result.success) {
+        ctx.ui.notify(result.reason ?? result.error ?? 'Kill failed.', 'error');
+        return;
+      }
+
+      ctx.ui.notify(`Terminated ${status.focus_issue} and marked it wont-fix.`);
+      return;
+    }
+
     case 'build': {
       const status = codaStatus(statePath, codaRoot);
       if (!status.focus_issue) {
         ctx.ui.notify('No focused issue. Use /coda new first.', 'warning');
         return;
       }
-
       const sequence = getBuildSequence(codaRoot, status.focus_issue);
       if (sequence.length === 0) {
         ctx.ui.notify('No pending tasks. All tasks complete or no tasks found.');
         return;
       }
 
+      if (status.submode === 'correct') {
+        const taskLabel = status.current_task === null ? 'none' : String(status.current_task);
+        const taskTitle = status.task_title ? ` (${status.task_title})` : '';
+        ctx.ui.notify(`CORRECT loop ready for ${status.focus_issue}: task ${taskLabel}${taskTitle} pending. ${status.next_action}`);
+        return;
+      }
       ctx.ui.notify(`BUILD loop ready for ${status.focus_issue}: ${String(sequence.length)} task(s) pending.`);
       return;
     }
 
     default: {
       ctx.ui.notify(
-        'Usage: /coda [status|forge|new <type> <title>|advance [approve|changes <feedback>]|build]',
+        'Usage: /coda [status|forge|new <type> <title>|advance [approve|changes <feedback>]|back <phase>|kill|build]',
         'warning'
       );
     }

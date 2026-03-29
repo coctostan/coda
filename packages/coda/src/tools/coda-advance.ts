@@ -15,7 +15,9 @@ import {
 } from '@coda/core';
 import type { CodaState, GateCheckData, IssueRecord, Phase, PlanRecord } from '@coda/core';
 import { basename, join } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
+import { isLoopExhausted } from '../../../core/src/state/machine';
+import type { LoopIterationConfig } from '../../../core/src/state/types';
 import { codaEditBody } from './coda-edit-body';
 import type { AdvanceInput, AdvanceResult } from './types';
 
@@ -103,6 +105,17 @@ export function codaAdvance(
 
     const previousPhase = state.phase;
     const targetPhase = input.target_phase as Phase;
+
+    if (state.phase === 'review' && targetPhase === 'build' && isPhaseLoopExhausted(codaRoot, state)) {
+      const exhaustedReviewResult = handleExhaustedReviewApproval(codaRoot, statePath, state);
+      if (exhaustedReviewResult) {
+        return exhaustedReviewResult;
+      }
+    }
+
+    if (state.phase === 'verify' && targetPhase === 'unify' && isPhaseLoopExhausted(codaRoot, state)) {
+      return resumeVerifyAfterExhaustion(codaRoot, statePath, state);
+    }
 
     if (state.phase === 'review' && targetPhase === 'build') {
       const humanReviewResult = handleHumanReviewDecision(input, codaRoot, statePath, state);
@@ -216,6 +229,90 @@ function handleHumanReviewDecision(
   }
 
   return null;
+}
+function handleExhaustedReviewApproval(
+  codaRoot: string,
+  statePath: string,
+  state: CodaState
+): AdvanceResult | null {
+  if (!state.focus_issue) {
+    return { success: false, error: 'No focus issue set — focus an issue first' };
+  }
+
+  const planPath = getLatestPlanPath(codaRoot, state.focus_issue);
+  if (!planPath) {
+    return {
+      success: false,
+      previous_phase: state.phase ?? undefined,
+      reason: `No plan found for issue ${state.focus_issue}`,
+    };
+  }
+
+  updateFrontmatter<PlanRecord>(planPath, {
+    status: 'approved',
+    human_review_status: 'approved',
+  });
+
+  const gateData = gatherGateData(codaRoot, state.focus_issue);
+  const transitionResult = transition(state, 'build', gateData);
+  if (!transitionResult.success || !transitionResult.state) {
+    return {
+      success: false,
+      previous_phase: state.phase ?? undefined,
+      reason: transitionResult.error ?? 'Failed to advance exhausted review to build',
+    };
+  }
+
+  updateIssuePhase(codaRoot, state.focus_issue, 'build');
+  persistState(transitionResult.state, statePath);
+  return {
+    success: true,
+    previous_phase: state.phase ?? undefined,
+    new_phase: 'build',
+  };
+}
+
+function resumeVerifyAfterExhaustion(
+  codaRoot: string,
+  statePath: string,
+  state: CodaState
+): AdvanceResult {
+  if (!state.focus_issue) {
+    return { success: false, error: 'No focus issue set — focus an issue first' };
+  }
+
+  const nextState: CodaState = {
+    ...state,
+    phase: 'verify',
+    submode: 'verify',
+    loop_iteration: 0,
+    current_task: null,
+  };
+
+  updateIssuePhase(codaRoot, state.focus_issue, 'verify');
+  persistState(nextState, statePath);
+  return {
+    success: true,
+    previous_phase: state.phase ?? undefined,
+    new_phase: 'verify',
+  };
+}
+
+function resolveLoopConfig(codaRoot: string): LoopIterationConfig {
+  const configPath = join(codaRoot, 'coda.json');
+  if (!existsSync(configPath)) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(readFileSync(configPath, 'utf-8')) as LoopIterationConfig;
+  } catch {
+    return {};
+  }
+}
+
+function isPhaseLoopExhausted(codaRoot: string, state: CodaState): boolean {
+  return isLoopExhausted(state, resolveLoopConfig(codaRoot));
 }
 
 function getLatestPlanPath(codaRoot: string, issueSlug: string): string | null {

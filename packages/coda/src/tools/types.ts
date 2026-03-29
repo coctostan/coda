@@ -102,14 +102,28 @@ export interface AdvanceResult extends ToolResult {
   reason?: string;
 }
 
+/** Input for coda_back — rewind the focused issue to a prior phase. */
+export interface BackInput {
+  /** Prior phase to rewind to. */
+  target_phase: string;
+}
+
 /** Result from coda_status. */
 export interface StatusResult extends ToolResult {
   /** Currently focused issue slug */
   focus_issue: string | null;
   /** Current lifecycle phase */
   phase: string | null;
+  /** Active review/verify submode */
+  submode?: 'review' | 'revise' | 'verify' | 'correct' | null;
+  /** Current loop iteration for submode-aware flows */
+  loop_iteration?: number;
   /** Active task number */
   current_task: number | null;
+  /** Active task kind when known */
+  task_kind?: 'planned' | 'correction' | null;
+  /** Active task title when known */
+  task_title?: string | null;
   /** Completed task numbers */
   completed_tasks: number[];
   /** TDD write-gate state */

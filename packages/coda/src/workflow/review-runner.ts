@@ -95,7 +95,7 @@ export function runReviewRunner(
     return {
       outcome: 'exhausted',
       state,
-      issues: [],
+      issues: readRevisionIssues(revisionInstructionsPath),
       revisionInstructionsPath: existsSync(revisionInstructionsPath) ? revisionInstructionsPath : null,
     };
   }
@@ -294,6 +294,31 @@ function writeRevisionInstructions(
     iteration,
     issues_found: issues.length,
   }, `${body}\n`);
+}
+
+function readRevisionIssues(revisionInstructionsPath: string): ReviewIssue[] {
+  if (!existsSync(revisionInstructionsPath)) {
+    return [];
+  }
+
+  const record = readRecord<{ iteration: number; issues_found: number }>(revisionInstructionsPath);
+  return record.body
+    .split(/^## Issue \d+: /m)
+    .slice(1)
+    .map((section) => section.trim())
+    .filter((section) => section.length > 0)
+    .map((section) => {
+      const [titleLine = '', ...rest] = section.split('\n');
+      const fixIndex = rest.findIndex((line) => line.startsWith('**Fix:** '));
+      const detailsLines = fixIndex >= 0 ? rest.slice(0, fixIndex) : rest;
+      const fixLine = fixIndex >= 0 ? rest[fixIndex] ?? '' : '';
+
+      return {
+        title: titleLine.trim(),
+        details: detailsLines.join('\n').trim(),
+        fix: fixLine.replace('**Fix:** ', '').trim(),
+      };
+    });
 }
 
 function getRevisionInstructionsPath(codaRoot: string, issueSlug: string): string {

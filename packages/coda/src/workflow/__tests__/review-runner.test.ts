@@ -250,4 +250,26 @@ describe('Review Runner', () => {
     expect(result.revisionInstructionsPath).toBe(instructionsPath);
     expect(readFileSync(instructionsPath, 'utf-8')).toContain('unresolved');
   });
+
+  test('returns exhausted review issues from the current instructions so humans can act on them', () => {
+    const instructionsPath = join(codaRoot, 'issues', 'my-feature', 'revision-instructions.md');
+    writeFileSync(
+      instructionsPath,
+      '---\niteration: 3\nissues_found: 2\n---\n## Issue 1: unresolved coverage\nAC-2 still has no owner.\n**Fix:** assign coverage.\n\n## Issue 2: dependency order\nTask 2 still depends on a later task.\n**Fix:** reorder dependencies.\n',
+      'utf-8'
+    );
+
+    const result = runReviewRunner(codaRoot, 'my-feature', createReviewState({
+      submode: 'revise',
+      loop_iteration: 3,
+    }));
+
+    expect(result.outcome).toBe('exhausted');
+    if (result.outcome !== 'exhausted') throw new Error('Expected exhausted outcome');
+
+    expect(result.issues).toHaveLength(2);
+    expect(result.issues[0]?.title).toContain('unresolved coverage');
+    expect(result.issues[1]?.details).toContain('later task');
+    expect(result.revisionInstructionsPath).toBe(instructionsPath);
+  });
 });

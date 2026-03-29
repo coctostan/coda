@@ -54,7 +54,11 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
         display: true,
         details: {
           focusIssue: state.focus_issue,
-          phase: state.phase,
+          phase: phaseContext.metadata.phase,
+          submode: phaseContext.metadata.submode,
+          loopIteration: phaseContext.metadata.loopIteration,
+          currentTask: phaseContext.metadata.currentTask,
+          taskKind: phaseContext.metadata.taskKind,
         },
       },
     };

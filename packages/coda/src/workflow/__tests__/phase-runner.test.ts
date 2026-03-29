@@ -134,6 +134,12 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.systemPrompt).toContain('revis');
     expect(ctx.context).toContain('address review feedback');
     expect(ctx.context).toContain('Step by step');
+    expect(ctx.metadata).toMatchObject({
+      phase: 'review',
+      submode: 'revise',
+      loopIteration: 0,
+      currentTask: null,
+    });
   });
 
   test('build context includes current task + Todd prompt', () => {
@@ -198,6 +204,13 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.context).toContain('Fix AC-1');
     expect(ctx.context).toContain('setup path still fails verification');
     expect(ctx.context).toContain('Setup');
+    expect(ctx.metadata).toMatchObject({
+      phase: 'verify',
+      submode: 'correct',
+      loopIteration: 0,
+      currentTask: 3,
+      taskKind: 'correction',
+    });
   });
 
   test('unify context includes issue + plan + summaries + ref-system', () => {

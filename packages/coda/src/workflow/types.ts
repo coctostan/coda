@@ -3,9 +3,25 @@
  * Type definitions for the CODA workflow engine.
  */
 
-import type { CodaState, TaskRecord } from '@coda/core';
-
+import type { CodaState, Phase, TaskRecord } from '@coda/core';
+import type { Submode } from '../../../core/src/state/types';
 export type { Phase } from '@coda/core';
+
+/** Runtime metadata surfaced alongside assembled phase context. */
+export interface PhaseContextMetadata {
+  /** Active lifecycle phase. */
+  phase: Phase;
+  /** Active review/verify submode, if any. */
+  submode: Submode | null;
+  /** Current autonomous loop iteration for review/verify flows. */
+  loopIteration: number;
+  /** Active task number when task-scoped work is in progress. */
+  currentTask: number | null;
+  /** Active task kind when known. */
+  taskKind: TaskRecord['kind'] | null;
+  /** Active task title when known. */
+  taskTitle: string | null;
+}
 
 /** Context object returned by the phase runner for each lifecycle phase. */
 export interface PhaseContext {
@@ -13,10 +29,16 @@ export interface PhaseContext {
   systemPrompt: string;
   /** Assembled context string with relevant records and prompts. */
   context: string;
+  /** Runtime metadata needed by Pi-facing consumers. */
+  metadata: PhaseContextMetadata;
 }
 
-/** Extended context for BUILD phase tasks. */
-export interface BuildTaskContext extends PhaseContext {
+/** Extended context for BUILD phase tasks before runtime metadata is attached. */
+export interface BuildTaskContext {
+  /** System prompt describing the agent's role for the active task. */
+  systemPrompt: string;
+  /** Assembled context string with relevant task records and prompts. */
+  context: string;
   /** The task number being executed. */
   taskId: number;
   /** The task title for display. */

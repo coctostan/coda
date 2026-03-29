@@ -23,6 +23,7 @@ export type {
   EditBodyResult,
   AdvanceInput,
   AdvanceResult,
+  BackInput,
   StatusResult,
   RunTestsInput,
   RunTestsResult,
@@ -38,6 +39,8 @@ export { codaEditBody } from './coda-edit-body';
 
 // Lifecycle tools
 export { codaAdvance } from './coda-advance';
+export { codaBack } from './coda-back';
+export { codaKill } from './coda-kill';
 export { codaStatus } from './coda-status';
 export { codaRunTests } from './coda-run-tests';
 

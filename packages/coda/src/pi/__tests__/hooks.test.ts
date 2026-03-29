@@ -8,7 +8,7 @@ import type {
   RegisteredCommand,
   ToolDefinition,
 } from '@mariozechner/pi-coding-agent';
-import type { CodaState } from '@coda/core';
+import { createDefaultState, persistState, writeRecord, type CodaState } from '@coda/core';
 import { registerHooks } from '../hooks';
 import { codaExtension } from '../index';
 
@@ -17,7 +17,16 @@ type BeforeAgentStartResult = {
   systemPrompt?: string;
   message?: {
     customType?: string;
+    content?: string;
     display?: boolean;
+    details?: {
+      focusIssue?: string;
+      phase?: string;
+      submode?: string | null;
+      loopIteration?: number;
+      currentTask?: number | null;
+      taskKind?: string | null;
+    };
   };
 };
 type ToolCallResult = {
@@ -76,6 +85,122 @@ function createTempCodaRoot(state: CodaState | null = null): { projectRoot: stri
 
   tempRoots.push(projectRoot);
   return { projectRoot, codaRoot };
+}
+
+function setupSubmodeAwareCodaRoot(submode: 'revise' | 'correct'): { projectRoot: string; codaRoot: string } {
+  const base = createTempCodaRoot();
+  const { codaRoot } = base;
+
+  writeRecord(join(codaRoot, 'issues', 'my-feature.md'), {
+    title: 'My Feature',
+    issue_type: 'feature',
+    status: 'active',
+    phase: submode === 'revise' ? 'review' : 'verify',
+    priority: 3,
+    topics: ['workflow'],
+    acceptance_criteria: [{ id: 'AC-1', text: 'It works', status: submode === 'revise' ? 'pending' : 'not-met' }],
+    open_questions: [],
+    deferred_items: [],
+    human_review: false,
+  }, '## Description\nBuild a great feature.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'my-feature', 'plan-v1.md'), {
+    title: 'Implementation Plan',
+    issue: 'my-feature',
+    status: 'approved',
+    iteration: 1,
+    task_count: 3,
+    human_review_status: 'not-required',
+  }, '## Approach\nStep by step.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'my-feature', 'tasks', '01-setup.md'), {
+    id: 1,
+    issue: 'my-feature',
+    title: 'Setup',
+    status: 'complete',
+    kind: 'planned',
+    covers_ac: ['AC-1'],
+    depends_on: [],
+    files_to_modify: [],
+    truths: ['Use TypeScript'],
+    artifacts: [],
+    key_links: [],
+  }, '## Summary\nSetup complete.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'my-feature', 'tasks', '02-implement.md'), {
+    id: 2,
+    issue: 'my-feature',
+    title: 'Implement',
+    status: 'complete',
+    kind: 'planned',
+    covers_ac: ['AC-1'],
+    depends_on: [1],
+    files_to_modify: ['src/main.ts'],
+    truths: ['Follow TDD'],
+    artifacts: [],
+    key_links: [],
+  }, '## Summary\nImplementation complete.\n');
+
+  if (submode === 'revise') {
+    writeFileSync(
+      join(codaRoot, 'issues', 'my-feature', 'revision-instructions.md'),
+      '---\niteration: 2\nissues_found: 1\n---\n## Issue 1: address review feedback\n**Fix:** tighten the task order.\n',
+      'utf-8'
+    );
+
+    persistState({
+      ...createDefaultState(),
+      focus_issue: 'my-feature',
+      phase: 'review',
+      submode: 'revise',
+      loop_iteration: 2,
+    }, join(codaRoot, 'state.json'));
+
+    return base;
+  }
+
+  mkdirSync(join(codaRoot, 'issues', 'my-feature', 'verification-failures'), { recursive: true });
+  writeFileSync(
+    join(codaRoot, 'issues', 'my-feature', 'verification-failures', 'AC-1.yaml'),
+    [
+      'ac_id: AC-1',
+      'status: not-met',
+      'failed_checks:',
+      '  - type: test_failure',
+      '    detail: setup path still fails verification',
+      'source_tasks: [1]',
+      'relevant_files:',
+      '  - src/main.ts',
+    ].join('\n'),
+    'utf-8'
+  );
+
+  writeRecord(join(codaRoot, 'issues', 'my-feature', 'tasks', '03-fix-ac-1.md'), {
+    id: 3,
+    issue: 'my-feature',
+    title: 'Fix AC-1',
+    status: 'pending',
+    kind: 'correction',
+    fix_for_ac: 'AC-1',
+    covers_ac: ['AC-1'],
+    depends_on: [],
+    files_to_modify: ['src/main.ts'],
+    truths: ['AC-1 passes after correction'],
+    artifacts: [],
+    key_links: [],
+  }, 'Repair the failing acceptance criterion.\n');
+
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'my-feature',
+    phase: 'verify',
+    submode: 'correct',
+    loop_iteration: 1,
+    current_task: 3,
+    completed_tasks: [1, 2],
+  }, join(codaRoot, 'state.json'));
+
+  return base;
 }
 
 /** Create a minimal ExtensionContext for hook execution. */
@@ -140,6 +265,52 @@ describe('Pi Hooks', () => {
     expect(result.message).toMatchObject({
       customType: 'coda-context',
       display: true,
+    });
+  });
+
+  test('before_agent_start returns revise-specific context metadata', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = setupSubmodeAwareCodaRoot('revise');
+    registerHooks(pi, codaRoot);
+
+    const beforeAgentStart = hooks.get('before_agent_start');
+    const result = await beforeAgentStart?.(
+      { type: 'before_agent_start', prompt: 'help', systemPrompt: 'base prompt' },
+      createMockContext(projectRoot)
+    ) as BeforeAgentStartResult;
+
+    expect(result.systemPrompt).toContain('revis');
+    expect(result.message?.content).toContain('## Revision Instructions');
+    expect(result.message?.details).toMatchObject({
+      focusIssue: 'my-feature',
+      phase: 'review',
+      submode: 'revise',
+      loopIteration: 2,
+      currentTask: null,
+    });
+  });
+
+  test('before_agent_start returns correct-specific context metadata with task details', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = setupSubmodeAwareCodaRoot('correct');
+    registerHooks(pi, codaRoot);
+
+    const beforeAgentStart = hooks.get('before_agent_start');
+    const result = await beforeAgentStart?.(
+      { type: 'before_agent_start', prompt: 'help', systemPrompt: 'base prompt' },
+      createMockContext(projectRoot)
+    ) as BeforeAgentStartResult;
+
+    expect(result.systemPrompt).toContain('fixing a verification failure');
+    expect(result.message?.content).toContain('## Verification Failure: AC-1');
+    expect(result.message?.content).toContain('## Source Task Summaries');
+    expect(result.message?.details).toMatchObject({
+      focusIssue: 'my-feature',
+      phase: 'verify',
+      submode: 'correct',
+      loopIteration: 1,
+      currentTask: 3,
+      taskKind: 'correction',
     });
   });
 

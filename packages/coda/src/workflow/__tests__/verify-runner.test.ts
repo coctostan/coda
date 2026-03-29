@@ -229,4 +229,29 @@ describe('Verify Runner', () => {
       join(codaRoot, 'issues', 'my-feature', 'verification-failures', 'AC-2.yaml'),
     ]);
   });
+
+  test('returns exhausted verify details from persisted failure artifacts so humans can recover cleanly', () => {
+    writeFileSync(
+      join(codaRoot, 'issues', 'my-feature', 'verification-failures', 'AC-1.yaml'),
+      [
+        'ac_id: AC-1',
+        'status: not-met',
+        'failed_checks:',
+        '  - type: test_failure',
+        '    detail: happy-path regression still fails',
+        'source_tasks: [1]',
+        'relevant_files:',
+        '  - src/workflow.ts',
+      ].join('\n'),
+      'utf-8'
+    );
+
+    const result = runVerifyRunner(codaRoot, 'my-feature', createVerifyState({ loop_iteration: 3 }));
+    expect(result.outcome).toBe('exhausted');
+    if (result.outcome !== 'exhausted') throw new Error('Expected exhausted outcome');
+
+    expect(result.failureArtifacts).toEqual([
+      join(codaRoot, 'issues', 'my-feature', 'verification-failures', 'AC-1.yaml'),
+    ]);
+  });
 });
