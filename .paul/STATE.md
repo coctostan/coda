@@ -2,31 +2,27 @@
 
 ## Project Reference
 
-See: .paul/PROJECT.md (updated 2026-03-28)
+See: .paul/PROJECT.md (updated 2026-03-29)
+Version: v0.1.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 3 complete — transitioning to Phase 4 (Two Modules)
+**Current focus:** Milestone v0.1 complete. Awaiting next milestone definition.
 
 ## Current Position
-
-Milestone: v0.1 Initial Release
-Phase: 4 of 8 (M4: Two Modules) — Not started
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-03-28 — Phase 3 complete, transitioned to Phase 4
-
+Milestone: Awaiting next milestone
+Phase: None active
+Plan: None
+Status: Milestone v0.1 Initial Release complete — ready for next
+Last activity: 2026-03-29T00:06:14Z — Milestone completed
 Progress:
-- Milestone: [████░░░░░░] 37%
-- Phase 1: [██████████] 100% ✓
-- Phase 2: [██████████] 100% ✓
-- Phase 3: [██████████] 100% ✓
+- v0.1 Initial Release: [██████████] 100% ✓
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Ready for next PLAN]
+  ○        ○        ○     [Milestone complete - ready for next]
 ```
 
 ## Accumulated Context
@@ -38,20 +34,28 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Bun type hoisting workaround | Phase 1 | tsc compatibility |
 | Zero internal deps for state engine | Phase 2 | Clean layer separation |
 | GitHub repo coctostan/coda, github-flow | Phase 3 | auto_push + auto_pr |
-| Spec alignment items closed | Phase 3 | TDD gate + atomic safety tests |
-| codaAdvance gathers gate data from mdbase | Phase 3 | No separate gate data API needed |
+| Spec alignment items closed | Phase 3 | TDD gate + atomic safety |
+| Prompts as .md data loaded by TS | Phase 4 | Follows AGENTS.md convention |
+| Replace `import.meta.dir` with `import.meta.url` | Phase 8 | jiti compatibility for Pi extension loading |
+| Symlink `@coda/core` in node_modules | Phase 8 | jiti can't resolve Bun workspace deps |
 
 ### Git State
-Branch: feature/03-tool-layer (needs PR + merge)
+Branch: feature/07-pi-integration
 Remote: https://github.com/coctostan/coda.git
-Last commit: 49447d6
+PR: https://github.com/coctostan/coda/pull/5 (OPEN)
 
 ## Session Continuity
 
-Last session: 2026-03-28
-Stopped at: Phase 3 complete, ready to plan Phase 4
-Next action: Merge feature/03-tool-layer PR, then /paul:plan for Phase 4
-Resume file: .paul/ROADMAP.md
+Last session: 2026-03-29T00:06:14Z
+Stopped at: Milestone v0.1 Initial Release complete
+Next action: /paul:discuss-milestone or /paul:milestone
+Resume file: .paul/MILESTONES.md
+Resume context:
+- All 8 phases complete
+- Milestone history recorded in `.paul/MILESTONES.md`
+- Roadmap archived to `.paul/milestones/v0.1.0-ROADMAP.md`
+- Project artifacts updated for post-v0.1 state
+- Local git tag still needs verification/push if not already done
 
 ---
 *STATE.md — Updated after every significant action*
