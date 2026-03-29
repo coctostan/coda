@@ -6,13 +6,13 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.2 Autonomous Loops** (v0.2.0)
 Status: 🚧 In Progress
-Phases: 0 of 7 complete
+Phases: 1 of 7 complete
 
 ## Phases
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 9 | State Submodes + Loop Tracking | 1 | In Progress | - |
+| 9 | State Submodes + Loop Tracking | 1/1 | ✅ Complete | 2026-03-29 |
 | 10 | Review Runner | TBD | Not started | - |
 | 11 | Verify Runner + Correction Tasks | TBD | Not started | - |
 | 12 | Human Review Gate | TBD | Not started | - |
@@ -24,7 +24,7 @@ Phases: 0 of 7 complete
 
 ### Phase 9: State Submodes + Loop Tracking
 Focus: Add `submode`, `loop_iteration`, transition rules, exhaustion checks, config fields, and persistence/tests in `@coda/core`.
-Plans: `09-01-PLAN.md` (APPLY complete, awaiting UNIFY)
+Plans: `09-01-PLAN.md`, `09-01-SUMMARY.md`
 
 ### Phase 10: Review Runner
 Focus: Add `review-runner.ts`, structural checks, revision-instructions artifact, and the `review ↔ revise` autonomous loop.
@@ -74,4 +74,4 @@ Plans: TBD (defined during /paul:plan)
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-03-29 after APPLY for plan 09-01*
+*Roadmap updated: 2026-03-29 after Phase 9 completion*

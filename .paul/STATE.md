@@ -6,24 +6,24 @@ See: .paul/PROJECT.md (updated 2026-03-29)
 Version: v0.2.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 9 implementation complete. Ready to unify plan vs actual results.
+**Current focus:** Phase 9 complete. Ready to plan Phase 10.
 
 ## Current Position
 Milestone: v0.2 Autonomous Loops
-Phase: 9 of 15 (State Submodes + Loop Tracking) — Apply complete
-Plan: 09-01 applied, ready for UNIFY
-Status: APPLY complete, ready for UNIFY
-Last activity: 2026-03-29T01:01:00Z — Applied .paul/phases/09-state-submodes-loop-tracking/09-01-PLAN.md
+Phase: 10 of 15 (Review Runner)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-03-29T01:20:06Z — Phase 9 complete, transitioned to Phase 10
 Progress:
-- v0.2 Autonomous Loops: [░░░░░░░░░░] 0%
-- Phase 9: [██████░░░░] APPLY complete
+- v0.2 Autonomous Loops: [█░░░░░░░░░] 14%
+- Phase 9: [██████████] 100% ✓
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ○     [Apply complete, awaiting UNIFY]
+  ✓        ✓        ✓     [Loop complete - ready for next PLAN]
 ```
 
 ## Accumulated Context
@@ -41,6 +41,7 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Symlink `@coda/core` in node_modules | Phase 8 | jiti can't resolve Bun workspace deps |
 | v0.2 specs are source of truth for autonomous loops | Phase 9 | Direct-requirements milestone from docs/v0.2 |
 | Continued APPLY despite preflight branch drift | Phase 9 | Recovered by branching to `feature/09-state-submodes-loop-tracking` before postflight |
+| Submodes remain phase-local, not top-level phases | Phase 9 | Preserves linear lifecycle while enabling bounded review/verify loops |
 
 ### Git State
 Branch: feature/09-state-submodes-loop-tracking
@@ -49,16 +50,15 @@ PR: https://github.com/coctostan/coda/pull/6 (OPEN)
 
 ## Session Continuity
 
-Last session: 2026-03-29T01:01:00Z
-Stopped at: APPLY complete for plan 09-01
-Next action: /paul:unify .paul/phases/09-state-submodes-loop-tracking/09-01-PLAN.md
-Resume file: .paul/phases/09-state-submodes-loop-tracking/09-01-PLAN.md
+Last session: 2026-03-29T01:20:06Z
+Stopped at: Phase 9 complete, ready to plan Phase 10
+Next action: /paul:plan for Phase 10
+Resume file: .paul/phases/09-state-submodes-loop-tracking/09-01-SUMMARY.md
 Resume context:
-- Phase 9 state/config primitives implemented and verified
-- Full suite passed: 202 tests, 0 fail
-- TypeScript clean
-- Advisory note: CHANGELOG.md still absent / doc drift not addressed in this phase
-- Unrelated local changes remain in `pals.json` and `docs/v0.2/`
+- Phase 9 summary recorded in `.paul/phases/09-state-submodes-loop-tracking/09-01-SUMMARY.md`
+- 202 tests passing, TypeScript clean
+- Advisory drift remains: `CHANGELOG.md` absent / docs not updated in this phase
+- Next implementation target is `docs/v0.2/02-review-runner.md`
 
 ---
 *STATE.md — Updated after every significant action*

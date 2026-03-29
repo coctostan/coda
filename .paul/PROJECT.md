@@ -9,16 +9,16 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Current State
 | Attribute | Value |
 |-----------|-------|
-| Version | 0.1.0 |
-| Status | Milestone v0.1 complete |
+| Version | 0.2.0 |
+| Status | Milestone v0.2 in progress |
 | Last Updated | 2026-03-29 |
 
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
-- `@coda/core` ships the L1/L2 foundation: markdown data layer + state engine
+- `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, and v0.2 submode/loop primitives
 - `@coda/coda` ships tools, modules, FORGE, workflow engine, and Pi integration
 - Live Pi extension validated end-to-end against the real `ExtensionAPI`
-- 188 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
+- 202 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
 
 ## Scope Snapshot
 ### Validated
@@ -30,11 +30,18 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Workflow engine — context builder, phase runner, build loop (Phase 6 — v0.1)
 - [x] Pi integration — commands, tools, hooks, extension entry point (Phase 7 — v0.1)
 - [x] E2E validation — live Pi session dogfood, findings, and reusable test playbook (Phase 8 — v0.1)
+- [x] State submodes + loop tracking — `submode`, `loop_iteration`, exhaustion checks, and loop config defaults (Phase 9 — v0.2)
 ### Active
+- [ ] Autonomous review/revise runner (Phase 10 — v0.2)
+- [ ] Autonomous verify/correct runner + correction tasks (Phase 11 — v0.2)
+- [ ] Human review gate (Phase 12 — v0.2)
+- [ ] Exhaustion handling + rewind/kill controls (Phase 13 — v0.2)
+- [ ] Pi integration updates for submode-aware execution (Phase 14 — v0.2)
+- [ ] E2E validation for all v0.2 autonomous-loop scenarios (Phase 15 — v0.2)
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 ### Planned
-- [ ] Define v0.2 milestone scope
+- [ ] Define v0.3 scope after v0.2 completion
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -52,11 +59,11 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Phase completion | 8 of 8 | 8 of 8 complete |
-| Plans completed | All planned work for milestone | 9 of 9 complete |
-| Test suite | Green | 188 passing, 0 failing |
+| Milestone v0.2 progress | 7 phases complete | 1 of 7 complete |
+| Test suite | Green | 202 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
-| Pi validation | Live extension works in Pi | PASS |
+| Review/verify primitives | Landed in core | PASS |
+| Pi validation | Live extension works in Pi | PASS from v0.1 baseline |
 
 ## Key Decisions
 | Decision | Rationale | Date | Status |
@@ -67,6 +74,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | State gates return structured results | Keep lifecycle failures explicit and non-exception-driven | 2026-03-28 | Active |
 | Pi integration uses the real `ExtensionAPI` | Match Pi's actual runtime model and avoid drift from custom wrapper types | 2026-03-28 | Active |
 | `import.meta.url` + `fileURLToPath` replaces `import.meta.dir` | Maintain compatibility across Bun and Node/jiti extension loading | 2026-03-28 | Active |
+| Autonomous-loop submodes are phase-local, not new top-level phases | Preserve linear lifecycle while allowing bounded review/verify cycles | 2026-03-29 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -75,4 +83,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-03-29 after milestone v0.1 completion*
+*Last updated: 2026-03-29 after Phase 9*
