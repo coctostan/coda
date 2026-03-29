@@ -6,19 +6,17 @@ See: .paul/PROJECT.md (updated 2026-03-29)
 Version: v0.2.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 11 unified; Phase 12 planning is next.
+**Current focus:** Phase 12 unified; Phase 13 ready for planning.
 ## Current Position
 Milestone: v0.2 Autonomous Loops
-Phase: 12 of 15 (Human Review Gate) — Ready to Plan
+Phase: 13 of 15 (Exhaustion Handling + Rewind/Kill Controls) — Ready to Plan
 Plan: Not started
 Status: Ready for PLAN
-Last activity: 2026-03-29T13:56:46Z — Unified Phase 11, updated lifecycle docs, and transitioned to Phase 12
+Last activity: 2026-03-29T16:02:13Z — Unified Phase 12 and transitioned to Phase 13
 Progress:
-- v0.2 Autonomous Loops: [████░░░░░░] 43%
-- Phase 12: [░░░░░░░░░░] 0%
-
+- v0.2 Autonomous Loops: [██████░░░░] 57%
+- Phase 13: [░░░░░░░░░░] 0%
 ## Loop Position
-
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
@@ -26,7 +24,6 @@ PLAN ──▶ APPLY ──▶ UNIFY
 ```
 
 ## Accumulated Context
-
 ### Decisions
 | Decision | Phase | Impact |
 |----------|-------|--------|
@@ -43,24 +40,22 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Submodes remain phase-local, not top-level phases | Phase 9 | Preserves linear lifecycle while enabling bounded review/verify loops |
 | Deterministic structural review writes durable revision artifacts | Phase 10 | Review/revise loop stays mechanical, auditable, and disk-backed |
 | Deterministic verify failures become YAML artifacts and correction tasks | Phase 11 | Mechanical, auditable verify/correct loop without new dependencies |
-
-### Git State
-Branch: feature/09-state-submodes-loop-tracking
+| Human review state remains in existing plan frontmatter/body artifacts | Phase 12 | Durable human review without new storage layers |
+Branch: feature/12-human-review-gate
 Remote: https://github.com/coctostan/coda.git
-PR: https://github.com/coctostan/coda/pull/6 (MERGED)
-Last commit: phase-transition commit recorded on current branch
-
+PR: https://github.com/coctostan/coda/pull/7 (OPEN)
+Last commit: phase 12 completion commit recorded on current branch
 ## Session Continuity
 
-Last session: 2026-03-29T13:56:46Z
-Stopped at: Phase 11 complete, ready to plan Phase 12
-Next action: /paul:plan for Phase 12
+Last session: 2026-03-29T16:02:13Z
+Stopped at: Phase 12 complete, ready to plan Phase 13
+Next action: Run /paul:plan for Phase 13
 Resume file: .paul/ROADMAP.md
 Resume context:
-- Phase 11 verify/correct loop is complete and reconciled in `.paul/phases/11-verify-runner-correction-tasks/11-01-SUMMARY.md`
-- `verify-runner.ts` now writes verification-failure YAML artifacts and deterministic correction tasks with `fix_for_ac`
-- Workflow/build context now supports correction-task failure context while preserving existing BUILD mechanics
-- Phase 12 should focus on human review gate persistence and review→build gating only
+- Phase 12 is fully reconciled in `.paul/phases/12-human-review-gate/12-01-SUMMARY.md`
+- Human review now persists as pending/approved/changes-requested in the plan record and plan body
+- Review→build gating and `/coda advance` behavior are aligned with the durable human review state
+- Phase 13 should stay scoped to exhaustion pause flows and rewind/kill controls
 
 ---
 *STATE.md — Updated after every significant action*

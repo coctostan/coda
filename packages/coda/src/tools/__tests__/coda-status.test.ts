@@ -1,22 +1,60 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtempSync, rmSync } from 'fs';
+import { mkdtempSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { codaStatus } from '../coda-status';
-import { persistState, createDefaultState } from '@coda/core';
-import type { CodaState } from '@coda/core';
+import { persistState, createDefaultState, writeRecord } from '@coda/core';
+import type { CodaState, IssueRecord, PlanRecord } from '@coda/core';
 
 let tempDir: string;
 let statePath: string;
+let codaRoot: string;
 
 beforeEach(() => {
   tempDir = mkdtempSync(join(tmpdir(), 'coda-status-'));
-  statePath = join(tempDir, 'state.json');
+  codaRoot = join(tempDir, '.coda');
+  statePath = join(codaRoot, 'state.json');
+  mkdirSync(codaRoot, { recursive: true });
 });
 
 afterEach(() => {
   rmSync(tempDir, { recursive: true, force: true });
 });
+
+function writePendingHumanReviewState(): void {
+  const issueFrontmatter: IssueRecord = {
+    title: 'My Issue',
+    issue_type: 'feature',
+    status: 'active',
+    phase: 'review',
+    priority: 3,
+    topics: [],
+    acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'pending' }],
+    open_questions: [],
+    deferred_items: [],
+    human_review: true,
+  };
+
+  const planFrontmatter: PlanRecord = {
+    title: 'Implementation Plan',
+    issue: 'my-issue',
+    status: 'approved',
+    iteration: 1,
+    task_count: 0,
+    human_review_status: 'pending',
+  };
+
+  writeRecord(join(codaRoot, 'issues', 'my-issue.md'), issueFrontmatter, '## Description\nNeeds approval.\n');
+  writeRecord(join(codaRoot, 'issues', 'my-issue', 'plan-v1.md'), planFrontmatter, '## Approach\nWait for human review.\n');
+
+  const state: CodaState = {
+    ...createDefaultState(),
+    focus_issue: 'my-issue',
+    phase: 'review',
+    submode: 'review',
+  };
+  persistState(state, statePath);
+}
 
 describe('codaStatus', () => {
   test('returns current state fields when state exists', () => {
@@ -71,5 +109,17 @@ describe('codaStatus', () => {
 
     const result = codaStatus(statePath);
     expect(result.next_action.toLowerCase()).toContain('complete');
+  });
+
+  test('surfaces human-review-specific guidance while approval is pending', () => {
+    writePendingHumanReviewState();
+
+    const result = codaStatus(statePath, codaRoot);
+
+    expect(result.success).toBe(true);
+    expect(result.human_review_required).toBe(true);
+    expect(result.human_review_status).toBe('pending');
+    expect(result.next_action.toLowerCase()).toContain('approve');
+    expect(result.next_action.toLowerCase()).toContain('feedback');
   });
 });

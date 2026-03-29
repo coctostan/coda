@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'bun:test';
+import { mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import type { ExtensionAPI, RegisteredCommand, ToolDefinition } from '@mariozechner/pi-coding-agent';
+import { createDefaultState, persistState, readRecord, writeRecord } from '@coda/core';
+import type { IssueRecord, PlanRecord } from '@coda/core';
 import { registerCommands } from '../commands';
 import { registerTools } from '../tools';
 
@@ -26,6 +31,59 @@ function createMockPi() {
   return { pi, commands, tools, hooks };
 }
 
+function createMockCommandContext() {
+  const notifications: Array<{ message: string; level?: string }> = [];
+
+  return {
+    ctx: {
+      ui: {
+        notify(message: string, level?: string) {
+          notifications.push({ message, level });
+        },
+      },
+    },
+    notifications,
+  };
+}
+
+function setupPendingHumanReviewCodaRoot(): string {
+  const tempDir = mkdtempSync(join(tmpdir(), 'coda-commands-'));
+  const codaRoot = join(tempDir, '.coda');
+
+  const issueFrontmatter: IssueRecord = {
+    title: 'Review Me',
+    issue_type: 'feature',
+    status: 'active',
+    phase: 'review',
+    priority: 3,
+    topics: [],
+    acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'pending' }],
+    open_questions: [],
+    deferred_items: [],
+    human_review: true,
+  };
+
+  const planFrontmatter: PlanRecord = {
+    title: 'Implementation Plan',
+    issue: 'review-me',
+    status: 'approved',
+    iteration: 1,
+    task_count: 0,
+    human_review_status: 'pending',
+  };
+
+  writeRecord(join(codaRoot, 'issues', 'review-me.md'), issueFrontmatter, '## Description\nHuman approval required.\n');
+  writeRecord(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'), planFrontmatter, '## Approach\nWait for approval.\n');
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'review-me',
+    phase: 'review',
+    submode: 'review',
+  }, join(codaRoot, 'state.json'));
+
+  return tempDir;
+}
+
 describe('Pi Commands', () => {
   test('registerCommands registers the coda command', () => {
     const { pi, commands } = createMockPi();
@@ -40,6 +98,24 @@ describe('Pi Commands', () => {
     expect(commands[0]?.name).toBe('coda');
     expect(commands[0]?.options.description).toBeTruthy();
     expect(typeof commands[0]?.options.handler).toBe('function');
+  });
+
+  test('advance auto-approves pending human review before moving to build', async () => {
+    const tempDir = setupPendingHumanReviewCodaRoot();
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      registerCommands(pi, codaRoot);
+      await commands[0]?.options.handler('advance', ctx as never);
+
+      const plan = readRecord<PlanRecord>(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'));
+      expect(plan.frontmatter.human_review_status).toBe('approved');
+      expect(notifications[notifications.length - 1]?.message).toContain('to build');
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });
 
