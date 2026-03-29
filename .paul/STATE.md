@@ -6,16 +6,16 @@ See: .paul/PROJECT.md (updated 2026-03-29)
 Version: v0.2.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 14 ready for PLAN after completing Phase 13 UNIFY.
+**Current focus:** Phase 15 ready for PLAN after completing Phase 14 UNIFY.
 ## Current Position
 Milestone: v0.2 Autonomous Loops
-Phase: 14 of 15 (Pi Integration Updates)
+Phase: 15 of 15 (E2E Validation)
 Plan: Not started
 Status: Ready for PLAN
-Last activity: 2026-03-29T17:45:23Z — Unified Phase 13 and transitioned to Phase 14
+Last activity: 2026-03-29T21:33:39Z — Unified Phase 14 and transitioned to Phase 15
 Progress:
-- v0.2 Autonomous Loops: [███████░░░] 71%
-- Phase 14: [░░░░░░░░░░] 0%
+- v0.2 Autonomous Loops: [█████████░] 86%
+- Phase 15: [░░░░░░░░░░] 0%
 ## Loop Position
 Current loop state:
 ```
@@ -42,22 +42,24 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Deterministic verify failures become YAML artifacts and correction tasks | Phase 11 | Mechanical, auditable verify/correct loop without new dependencies |
 | Human review state remains in existing plan frontmatter/body artifacts | Phase 12 | Durable human review without new storage layers |
 | Exhausted loops preserve artifacts and require explicit human recovery | Phase 13 | Human recovery stays auditable and phase-correct |
+| Pi-facing runtime metadata comes from workflow-owned phase context | Phase 14 | Keeps Pi integration thin and phase-correct |
 Branch: feature/13-exhaustion-handling-rewind-kill-controls
 Remote: https://github.com/coctostan/coda.git
 PR: https://github.com/coctostan/coda/pull/8 (OPEN)
-Last commit: feat(13-exhaustion-handling-rewind-kill-controls): complete phase transition
+Last commit: feat(14-pi-integration-updates): complete phase transition
 ## Session Continuity
 
-Last session: 2026-03-29T17:45:23Z
-Stopped at: Phase 13 complete, ready to plan Phase 14
+Last session: 2026-03-29T21:33:39Z
+Stopped at: Phase 14 complete, ready to plan Phase 15
 Next action: Run /paul:plan
 Resume file: .paul/ROADMAP.md
 Resume context:
-- Phase 13 summary is recorded at `.paul/phases/13-exhaustion-handling-rewind-kill-controls/13-01-SUMMARY.md`
-- Phase 13 passed targeted tests, full `bun test`, and `npx tsc --noEmit`
-- Local repo-root `modules.yaml` resolution now works again, but Phase 13 PLAN/APPLY still lacked dispatch evidence because the registry was unavailable when the loop began
+- Phase 14 summary is recorded at `.paul/phases/14-pi-integration-updates/14-01-SUMMARY.md`
+- Phase 14 passed the targeted Pi/workflow suite, full `bun test`, and `npx tsc --noEmit`
+- Pi runtime context now exposes workflow-owned phase/submode/loop/task metadata for revise/correct flows via `before_agent_start`
+- `/coda` command and status output now surface submode-specific guidance instead of generic phase-only messaging where behavior differs
+- Docs drift remains for `README.md`, `CHANGELOG.md`, and `docs/v0.1/07-pi-integration.md`, but cleanup stayed out of scope for Phase 14
 - PR #8 remains open on `feature/13-exhaustion-handling-rewind-kill-controls`; merge-gate enforcement is currently disabled by `pals.json`
-- Local non-phase changes still exist in `.gitignore`, `pals.json`, archived handoffs, and `docs/v0.2/`
 
 ---
 *STATE.md — Updated after every significant action*

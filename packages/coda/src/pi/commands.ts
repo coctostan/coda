@@ -43,8 +43,9 @@ async function handleCodaCommand(
     case 'status': {
       const result = codaStatus(statePath, codaRoot);
       const phase = result.phase ?? 'none';
+      const submode = result.submode ? ` (${result.submode}${typeof result.loop_iteration === 'number' ? ` loop ${String(result.loop_iteration)}` : ''})` : '';
       const task = result.current_task === null ? 'none' : String(result.current_task);
-      ctx.ui.notify(`Phase: ${phase} | Task: ${task} | Next: ${result.next_action}`);
+      ctx.ui.notify(`Phase: ${phase}${submode} | Task: ${task} | Next: ${result.next_action}`);
       return;
     }
 
@@ -161,13 +162,18 @@ async function handleCodaCommand(
         ctx.ui.notify('No focused issue. Use /coda new first.', 'warning');
         return;
       }
-
       const sequence = getBuildSequence(codaRoot, status.focus_issue);
       if (sequence.length === 0) {
         ctx.ui.notify('No pending tasks. All tasks complete or no tasks found.');
         return;
       }
 
+      if (status.submode === 'correct') {
+        const taskLabel = status.current_task === null ? 'none' : String(status.current_task);
+        const taskTitle = status.task_title ? ` (${status.task_title})` : '';
+        ctx.ui.notify(`CORRECT loop ready for ${status.focus_issue}: task ${taskLabel}${taskTitle} pending. ${status.next_action}`);
+        return;
+      }
       ctx.ui.notify(`BUILD loop ready for ${status.focus_issue}: ${String(sequence.length)} task(s) pending.`);
       return;
     }

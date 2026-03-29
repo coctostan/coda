@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, rmSync } from 'fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import type { ExtensionAPI, RegisteredCommand, ToolDefinition } from '@mariozechner/pi-coding-agent';
@@ -121,6 +121,124 @@ function setupBackAndKillCodaRoot(): string {
   return tempDir;
 }
 
+function setupReviseCommandCodaRoot(): string {
+  const tempDir = mkdtempSync(join(tmpdir(), 'coda-commands-'));
+  const codaRoot = join(tempDir, '.coda');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me.md'), {
+    title: 'Review Me',
+    issue_type: 'feature',
+    status: 'active',
+    phase: 'review',
+    priority: 3,
+    topics: [],
+    acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'pending' }],
+    open_questions: [],
+    deferred_items: [],
+    human_review: false,
+  } as IssueRecord, '## Description\nRevision required.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'), {
+    title: 'Implementation Plan',
+    issue: 'review-me',
+    status: 'in-review',
+    iteration: 2,
+    task_count: 2,
+    human_review_status: 'changes-requested',
+  } as PlanRecord, '## Approach\nTighten the task order.\n');
+
+  writeFileSync(
+    join(codaRoot, 'issues', 'review-me', 'revision-instructions.md'),
+    '---\niteration: 2\nissues_found: 1\n---\n## Issue 1: revise the plan\n**Fix:** update the task order.\n',
+    'utf-8'
+  );
+
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'review-me',
+    phase: 'review',
+    submode: 'revise',
+    loop_iteration: 2,
+  }, join(codaRoot, 'state.json'));
+
+  return tempDir;
+}
+
+function setupCorrectBuildCommandCodaRoot(): string {
+  const tempDir = mkdtempSync(join(tmpdir(), 'coda-commands-'));
+  const codaRoot = join(tempDir, '.coda');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me.md'), {
+    title: 'Review Me',
+    issue_type: 'feature',
+    status: 'active',
+    phase: 'verify',
+    priority: 3,
+    topics: [],
+    acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'not-met' }],
+    open_questions: [],
+    deferred_items: [],
+    human_review: false,
+  } as IssueRecord, '## Description\nCorrection required.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'), {
+    title: 'Implementation Plan',
+    issue: 'review-me',
+    status: 'approved',
+    iteration: 1,
+    task_count: 3,
+    human_review_status: 'approved',
+  } as PlanRecord, '## Approach\nCorrection flow.\n');
+
+  mkdirSync(join(codaRoot, 'issues', 'review-me', 'verification-failures'), { recursive: true });
+  writeFileSync(
+    join(codaRoot, 'issues', 'review-me', 'verification-failures', 'AC-1.yaml'),
+    'ac_id: AC-1\nstatus: not-met\nfailed_checks:\n  - type: test_failure\n    detail: regression still fails\nsource_tasks: [1]\nrelevant_files:\n  - src/workflow.ts\n',
+    'utf-8'
+  );
+
+  writeRecord(join(codaRoot, 'issues', 'review-me', 'tasks', '01-setup.md'), {
+    id: 1,
+    issue: 'review-me',
+    title: 'Setup',
+    status: 'complete',
+    kind: 'planned',
+    covers_ac: ['AC-1'],
+    depends_on: [],
+    files_to_modify: [],
+    truths: [],
+    artifacts: [],
+    key_links: [],
+  }, '## Summary\nSetup complete.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me', 'tasks', '03-fix-ac-1.md'), {
+    id: 3,
+    issue: 'review-me',
+    title: 'Fix AC-1',
+    status: 'pending',
+    kind: 'correction',
+    fix_for_ac: 'AC-1',
+    covers_ac: ['AC-1'],
+    depends_on: [1],
+    files_to_modify: ['src/workflow.ts'],
+    truths: ['AC-1 passes after correction'],
+    artifacts: [],
+    key_links: [],
+  }, 'Repair the failing acceptance criterion.\n');
+
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'review-me',
+    phase: 'verify',
+    submode: 'correct',
+    loop_iteration: 1,
+    current_task: 3,
+    completed_tasks: [1],
+  }, join(codaRoot, 'state.json'));
+
+  return tempDir;
+}
+
 describe('Pi Commands', () => {
   test('registerCommands registers the coda command', () => {
     const { pi, commands } = createMockPi();
@@ -150,6 +268,42 @@ describe('Pi Commands', () => {
       const plan = readRecord<PlanRecord>(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'));
       expect(plan.frontmatter.human_review_status).toBe('approved');
       expect(notifications[notifications.length - 1]?.message).toContain('to build');
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('status includes active submode and loop iteration for revise flows', async () => {
+    const tempDir = setupReviseCommandCodaRoot();
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      registerCommands(pi, codaRoot);
+      await commands[0]?.options.handler('status', ctx as never);
+
+      const message = notifications[notifications.length - 1]?.message ?? '';
+      expect(message.toLowerCase()).toContain('revise');
+      expect(message.toLowerCase()).toContain('loop');
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('build reflects correction submode instead of generic build messaging', async () => {
+    const tempDir = setupCorrectBuildCommandCodaRoot();
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      registerCommands(pi, codaRoot);
+      await commands[0]?.options.handler('build', ctx as never);
+
+      const message = notifications[notifications.length - 1]?.message ?? '';
+      expect(message.toLowerCase()).toContain('correct');
+      expect(message).not.toContain('BUILD loop ready');
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

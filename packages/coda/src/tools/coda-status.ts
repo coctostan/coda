@@ -6,7 +6,7 @@
  * based on the current lifecycle phase.
  */
 import { loadState, readRecord } from '@coda/core';
-import type { CodaState, IssueRecord, PlanRecord } from '@coda/core';
+import type { CodaState, IssueRecord, PlanRecord, TaskRecord } from '@coda/core';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { isLoopExhausted } from '../../../core/src/state/machine';
@@ -42,7 +42,11 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
       success: true,
       focus_issue: null,
       phase: null,
+      submode: null,
+      loop_iteration: 0,
       current_task: null,
+      task_kind: null,
+      task_title: null,
       completed_tasks: [],
       tdd_gate: 'locked',
       human_review_required: null,
@@ -55,11 +59,19 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
     ? loadHumanReviewState(codaRoot, state.focus_issue)
     : null;
   const exhausted = codaRoot ? isExhaustedState(codaRoot, state) : false;
+  const activeTask = state.focus_issue && codaRoot && state.current_task !== null
+    ? loadActiveTask(codaRoot, state.focus_issue, state.current_task)
+    : null;
+
   return {
     success: true,
     focus_issue: state.focus_issue,
     phase: state.phase,
+    submode: state.submode,
+    loop_iteration: state.loop_iteration,
     current_task: state.current_task,
+    task_kind: activeTask?.kind ?? null,
+    task_title: activeTask?.title ?? null,
     completed_tasks: state.completed_tasks,
     tdd_gate: state.tdd_gate,
     human_review_required: reviewState?.required ?? null,
@@ -79,6 +91,14 @@ function getNextAction(
 
   if (exhausted && state.phase === 'verify') {
     return 'Verify loop exhausted — provide manual guidance, use /coda back specify to rescope, or kill the issue';
+  }
+
+  if (state.phase === 'review' && state.submode === 'revise') {
+    return 'Revision loop active — apply the revision instructions, then return to review';
+  }
+
+  if (state.phase === 'verify' && state.submode === 'correct') {
+    return 'Correction loop active — complete the correction task, then return to verify';
   }
 
   if (state.phase === 'review' && reviewState?.required === true) {
@@ -126,6 +146,36 @@ function loadHumanReviewState(
     required: issue.frontmatter.human_review,
     status: plan.frontmatter.human_review_status,
   };
+}
+
+function loadActiveTask(
+  codaRoot: string,
+  issueSlug: string,
+  taskId: number
+): { kind: TaskRecord['kind']; title: string } | null {
+  const tasksDir = join(codaRoot, 'issues', issueSlug, 'tasks');
+  if (!existsSync(tasksDir)) {
+    return null;
+  }
+
+  try {
+    const taskFile = readdirSync(tasksDir)
+      .filter((file) => file.endsWith('.md'))
+      .sort()
+      .find((file) => readRecord<TaskRecord>(join(tasksDir, file)).frontmatter.id === taskId);
+
+    if (!taskFile) {
+      return null;
+    }
+
+    const task = readRecord<TaskRecord>(join(tasksDir, taskFile));
+    return {
+      kind: task.frontmatter.kind,
+      title: task.frontmatter.title,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function isExhaustedState(codaRoot: string, state: CodaState): boolean {

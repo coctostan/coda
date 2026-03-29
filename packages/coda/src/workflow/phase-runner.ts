@@ -6,7 +6,7 @@
  * context string for each lifecycle phase. Does NOT drive the LLM.
  */
 import type { CodaState } from '@coda/core';
-import type { Phase, PhaseContext } from './types';
+import type { Phase, PhaseContext, PhaseContextMetadata } from './types';
 import {
   loadIssue,
   loadPlan,
@@ -44,25 +44,25 @@ export function getPhaseContext(
   switch (phase) {
     case 'specify': {
       const refs = loadRefDocs(codaRoot);
-      return {
+      return withMetadata({
         systemPrompt: 'You are specifying an issue. Help the user define requirements and acceptance criteria.',
         context: [
           issueContext,
           refs.system ? `## System Reference\n${refs.system}` : '',
           refs.prd ? `## Product Requirements\n${refs.prd}` : '',
         ].filter(Boolean).join('\n\n'),
-      };
+      }, phase, state);
     }
 
     case 'plan': {
       const refs = loadRefDocs(codaRoot);
-      return {
+      return withMetadata({
         systemPrompt: 'You are planning tasks for this issue. Design an implementation approach.',
         context: [
           issueContext,
           refs.system ? `## System Reference\n${refs.system}` : '',
         ].filter(Boolean).join('\n\n'),
-      };
+      }, phase, state);
     }
 
     case 'review': {
@@ -75,7 +75,7 @@ export function getPhaseContext(
 
       if (state?.submode === 'revise') {
         const revisionInstructions = loadRevisionInstructions(codaRoot, issueSlug);
-        return {
+        return withMetadata({
           systemPrompt: 'You are revising a development plan based on review feedback. Address each issue in the revision instructions without broadening scope.',
           context: [
             issueContext,
@@ -83,14 +83,14 @@ export function getPhaseContext(
             taskList,
             revisionInstructions ? `## Revision Instructions\n${revisionInstructions}` : '',
           ].filter(Boolean).join('\n\n'),
-        };
+        }, phase, state);
       }
 
       const revisionHistory = state?.loop_iteration && state.loop_iteration > 0
         ? loadRevisionHistory(codaRoot, issueSlug)
         : '';
 
-      return {
+      return withMetadata({
         systemPrompt: 'You are reviewing the plan. Check AC coverage, task ordering, and scope.',
         context: [
           issueContext,
@@ -98,20 +98,22 @@ export function getPhaseContext(
           taskList,
           revisionHistory ? `## Revision History\n${revisionHistory}` : '',
         ].filter(Boolean).join('\n\n'),
-      };
+      }, phase, state);
     }
 
     case 'build': {
       const currentTask = state?.current_task ?? 1;
       const completedTasks = state?.completed_tasks ?? [];
-      return buildTaskContext(codaRoot, issueSlug, currentTask, completedTasks);
+      const taskContext = buildTaskContext(codaRoot, issueSlug, currentTask, completedTasks);
+      return withMetadata(taskContext, phase, state, issueSlug, codaRoot);
     }
 
     case 'verify': {
       if (state?.submode === 'correct') {
         const currentTask = state.current_task ?? 1;
         const completedTasks = state.completed_tasks ?? [];
-        return buildTaskContext(codaRoot, issueSlug, currentTask, completedTasks);
+        const taskContext = buildTaskContext(codaRoot, issueSlug, currentTask, completedTasks);
+        return withMetadata(taskContext, phase, state, issueSlug, codaRoot);
       }
 
       const completedTasks = state?.completed_tasks ?? [];
@@ -119,14 +121,14 @@ export function getPhaseContext(
         codaRoot, issueSlug, completedTasks, completedTasks.length
       );
       const plan = loadPlan(codaRoot, issueSlug);
-      return {
+      return withMetadata({
         systemPrompt: 'You are verifying acceptance criteria against built artifacts.',
         context: [
           issueContext,
           plan ? `## Plan\n${plan.body}` : '',
           summaries ? `## Task Summaries\n${summaries}` : '',
         ].filter(Boolean).join('\n\n'),
-      };
+      }, phase, state);
     }
 
     case 'unify': {
@@ -136,7 +138,7 @@ export function getPhaseContext(
         codaRoot, issueSlug, completedTasks, completedTasks.length
       );
       const refs = loadRefDocs(codaRoot);
-      return {
+      return withMetadata({
         systemPrompt: 'You are closing the loop. Write the completion record and update reference docs.',
         context: [
           issueContext,
@@ -144,14 +146,48 @@ export function getPhaseContext(
           summaries ? `## Task Summaries\n${summaries}` : '',
           refs.system ? `## System Reference\n${refs.system}` : '',
         ].filter(Boolean).join('\n\n'),
-      };
+      }, phase, state);
     }
 
     case 'done': {
-      return {
+      return withMetadata({
         systemPrompt: 'This issue is complete.',
         context: issueContext,
-      };
+      }, phase, state);
     }
   }
+}
+
+function withMetadata(
+  context: Omit<PhaseContext, 'metadata'>,
+  phase: Phase,
+  state?: CodaState,
+  issueSlug?: string,
+  codaRoot?: string
+): PhaseContext {
+  return {
+    ...context,
+    metadata: buildMetadata(phase, state, issueSlug, codaRoot),
+  };
+}
+
+function buildMetadata(
+  phase: Phase,
+  state?: CodaState,
+  issueSlug?: string,
+  codaRoot?: string
+): PhaseContextMetadata {
+  const currentTask = state?.current_task ?? null;
+  const task = currentTask !== null && issueSlug && codaRoot
+    ? loadTasks(codaRoot, issueSlug).find((candidate) => candidate.frontmatter.id === currentTask)
+    : undefined;
+
+  return {
+    phase,
+    submode: state?.submode ?? null,
+    loopIteration: state?.loop_iteration ?? 0,
+    currentTask,
+    taskKind: task?.frontmatter.kind ?? null,
+    taskTitle: task?.frontmatter.title ?? null,
+  };
 }
