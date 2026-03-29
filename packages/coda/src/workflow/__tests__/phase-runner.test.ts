@@ -80,6 +80,7 @@ describe('Workflow Phase Runner', () => {
   test('build context includes current task + Todd prompt', () => {
     const ctx = getPhaseContext('build', codaRoot, 'my-feature', {
       version: 1, focus_issue: 'my-feature', phase: 'build',
+      submode: null, loop_iteration: 0,
       current_task: 2, completed_tasks: [1],
       tdd_gate: 'locked', last_test_exit_code: null,
       task_tool_calls: 0, enabled: true,
@@ -92,6 +93,7 @@ describe('Workflow Phase Runner', () => {
   test('verify context includes issue + task summaries', () => {
     const ctx = getPhaseContext('verify', codaRoot, 'my-feature', {
       version: 1, focus_issue: 'my-feature', phase: 'verify',
+      submode: 'verify', loop_iteration: 0,
       current_task: null, completed_tasks: [1, 2],
       tdd_gate: 'locked', last_test_exit_code: null,
       task_tool_calls: 0, enabled: true,
@@ -104,6 +106,7 @@ describe('Workflow Phase Runner', () => {
   test('unify context includes issue + plan + summaries + ref-system', () => {
     const ctx = getPhaseContext('unify', codaRoot, 'my-feature', {
       version: 1, focus_issue: 'my-feature', phase: 'unify',
+      submode: null, loop_iteration: 0,
       current_task: null, completed_tasks: [1, 2],
       tdd_gate: 'locked', last_test_exit_code: null,
       task_tool_calls: 0, enabled: true,

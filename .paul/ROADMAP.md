@@ -4,16 +4,55 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-**v0.1 Initial Release** (v0.1.0)
-Status: ✅ Complete
-Completed: 2026-03-29
+**v0.2 Autonomous Loops** (v0.2.0)
+Status: 🚧 In Progress
+Phases: 0 of 7 complete
 
-## Next Milestone
-Run `/paul:discuss-milestone` or `/paul:milestone` to define.
+## Phases
+
+| Phase | Name | Plans | Status | Completed |
+|-------|------|-------|--------|-----------|
+| 9 | State Submodes + Loop Tracking | 1 | In Progress | - |
+| 10 | Review Runner | TBD | Not started | - |
+| 11 | Verify Runner + Correction Tasks | TBD | Not started | - |
+| 12 | Human Review Gate | TBD | Not started | - |
+| 13 | Exhaustion Handling + Rewind/Kill Controls | TBD | Not started | - |
+| 14 | Pi Integration Updates | TBD | Not started | - |
+| 15 | E2E Validation | TBD | Not started | - |
+
+## Phase Details
+
+### Phase 9: State Submodes + Loop Tracking
+Focus: Add `submode`, `loop_iteration`, transition rules, exhaustion checks, config fields, and persistence/tests in `@coda/core`.
+Plans: `09-01-PLAN.md` (APPLY complete, awaiting UNIFY)
+
+### Phase 10: Review Runner
+Focus: Add `review-runner.ts`, structural checks, revision-instructions artifact, and the `review ↔ revise` autonomous loop.
+Plans: TBD (defined during /paul:plan)
+
+### Phase 11: Verify Runner + Correction Tasks
+Focus: Add `verify-runner.ts`, per-AC verification, failure artifacts, correction task generation, and BUILD-loop integration for correction tasks.
+Plans: TBD (defined during /paul:plan)
+
+### Phase 12: Human Review Gate
+Focus: Add `human_review_status`, review→build gate updates, conversational human change requests, and durable review state.
+Plans: TBD (defined during /paul:plan)
+
+### Phase 13: Exhaustion Handling + Rewind/Kill Controls
+Focus: Add exhaustion pause flows, `/coda kill`, `/coda back <phase>`, and preservation/supersede semantics for rewind.
+Plans: TBD (defined during /paul:plan)
+
+### Phase 14: Pi Integration Updates
+Focus: Update `before_agent_start`, command handling, and submode-aware context injection for review/revise/verify/correct.
+Plans: TBD (defined during /paul:plan)
+
+### Phase 15: E2E Validation
+Focus: Validate all four required v0.2 scenarios end-to-end with the v0.1 clean prerequisite satisfied.
+Plans: TBD (defined during /paul:plan)
 
 ## Completed Milestones
 
-<details open>
+<details>
 <summary>v0.1 Initial Release — 2026-03-29 (8 phases, 9 plans)</summary>
 
 | Phase | Name | Plans | Completed |
@@ -30,9 +69,9 @@ Run `/paul:discuss-milestone` or `/paul:milestone` to define.
 </details>
 
 ## Milestone Notes
-- Archive: `.paul/milestones/v0.1.0-ROADMAP.md`
-- Summary: `.paul/MILESTONES.md`
-- Next milestone not yet defined
+- Active milestone context comes from `docs/v0.2/00-overview.md` through `docs/v0.2/04-human-review.md`
+- Previous milestone archive: `.paul/milestones/v0.1.0-ROADMAP.md`
+- Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-03-29 after milestone v0.1 completion*
+*Roadmap updated: 2026-03-29 after APPLY for plan 09-01*

@@ -43,6 +43,8 @@ describe('persistState', () => {
     expect(loaded?.last_test_exit_code).toBe(0);
     expect(loaded?.task_tool_calls).toBe(15);
     expect(loaded?.enabled).toBe(true);
+    expect(loaded).toHaveProperty('submode', null);
+    expect(loaded).toHaveProperty('loop_iteration', 0);
   });
 
   test('cleans up .tmp file after successful write', () => {
@@ -119,6 +121,8 @@ describe('loadState', () => {
     expect(loaded?.phase).toBeNull();
     expect(loaded?.tdd_gate).toBe('locked');
     expect(loaded?.enabled).toBe(true);
+    expect(loaded).toHaveProperty('submode', null);
+    expect(loaded).toHaveProperty('loop_iteration', 0);
   });
 
   test('atomic write safety: stale .tmp does not corrupt valid state', () => {
@@ -139,5 +143,22 @@ describe('loadState', () => {
     expect(loaded).not.toBeNull();
     expect(loaded?.focus_issue).toBe('good-issue');
     expect(loaded?.phase).toBe('build');
+  });
+
+  test('persists and loads v0.2 submode fields', () => {
+    const statePath = join(tempDir, 'state.json');
+    const state = {
+      ...createDefaultState(),
+      phase: 'review' as const,
+      submode: 'revise' as const,
+      loop_iteration: 2,
+    };
+
+    persistState(state, statePath);
+
+    const loaded = loadState(statePath);
+    expect(loaded).not.toBeNull();
+    expect(loaded).toHaveProperty('submode', 'revise');
+    expect(loaded).toHaveProperty('loop_iteration', 2);
   });
 });

@@ -57,6 +57,10 @@ export interface CodaConfig {
   full_suite_command: string | null;
   /** Additional verification commands to run. */
   verification_commands: string[];
+  /** Maximum review/revise loop iterations before exhaustion. */
+  max_review_iterations: number;
+  /** Maximum verify/correct loop iterations before exhaustion. */
+  max_verify_iterations: number;
   /** Which issue types enforce TDD gating. */
   tdd_gate: GateConfig;
   /** Which issue types require human review by default. */

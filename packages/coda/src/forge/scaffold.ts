@@ -28,13 +28,15 @@ export function detectBackdrop(projectRoot: string): ForgeBackdrop {
 /**
  * Return the default coda.json configuration object.
  *
- * @returns A CodaConfig with v0.1 defaults
+ * @returns A CodaConfig with v0.2 defaults
  */
 export function getDefaultConfig(): CodaConfig {
   return {
     tdd_test_command: null,
     full_suite_command: null,
     verification_commands: [],
+    max_review_iterations: 3,
+    max_verify_iterations: 3,
     tdd_gate: {
       feature: true,
       bugfix: true,
@@ -68,13 +70,11 @@ export function getDefaultConfig(): CodaConfig {
 export function scaffoldCoda(projectRoot: string): string {
   const codaRoot = join(projectRoot, '.coda');
 
-  // Create directory structure
   mkdirSync(codaRoot, { recursive: true });
   mkdirSync(join(codaRoot, 'reference'), { recursive: true });
   mkdirSync(join(codaRoot, 'issues'), { recursive: true });
   mkdirSync(join(codaRoot, 'milestones'), { recursive: true });
 
-  // Write default coda.json
   const config = getDefaultConfig();
   writeFileSync(
     join(codaRoot, 'coda.json'),

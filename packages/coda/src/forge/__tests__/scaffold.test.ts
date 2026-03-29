@@ -53,6 +53,8 @@ describe('FORGE Scaffold', () => {
       expect(config).toHaveProperty('verification_commands');
       expect(config).toHaveProperty('tdd_gate');
       expect(config).toHaveProperty('human_review_default');
+      expect(config).toHaveProperty('max_review_iterations');
+      expect(config).toHaveProperty('max_verify_iterations');
     });
 
     test('coda.json tdd_test_command and full_suite_command are null', () => {
@@ -100,6 +102,15 @@ describe('FORGE Scaffold', () => {
       });
     });
 
+    test('coda.json loop iteration defaults are 3', () => {
+      scaffoldCoda(tempDir);
+      const config: CodaConfig = JSON.parse(
+        readFileSync(join(tempDir, '.coda', 'coda.json'), 'utf-8')
+      );
+      expect(config.max_review_iterations).toBe(3);
+      expect(config.max_verify_iterations).toBe(3);
+    });
+
     test('returns codaRoot path', () => {
       const codaRoot = scaffoldCoda(tempDir);
       expect(codaRoot).toBe(join(tempDir, '.coda'));
@@ -114,6 +125,8 @@ describe('FORGE Scaffold', () => {
       expect(config.verification_commands).toEqual([]);
       expect(config.tdd_gate.feature).toBe(true);
       expect(config.human_review_default.refactor).toBe(false);
+      expect(config.max_review_iterations).toBe(3);
+      expect(config.max_verify_iterations).toBe(3);
     });
   });
 });

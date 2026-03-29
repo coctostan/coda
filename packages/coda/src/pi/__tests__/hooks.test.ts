@@ -52,6 +52,8 @@ function makeState(overrides: Partial<CodaState> = {}): CodaState {
     version: 1,
     focus_issue: 'my-feature',
     phase: 'build',
+    submode: null,
+    loop_iteration: 0,
     current_task: 1,
     completed_tasks: [],
     tdd_gate: 'locked',
