@@ -84,6 +84,43 @@ function setupPendingHumanReviewCodaRoot(): string {
   return tempDir;
 }
 
+function setupBackAndKillCodaRoot(): string {
+  const tempDir = mkdtempSync(join(tmpdir(), 'coda-commands-'));
+  const codaRoot = join(tempDir, '.coda');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me.md'), {
+    title: 'Review Me',
+    issue_type: 'feature',
+    status: 'active',
+    phase: 'verify',
+    priority: 3,
+    topics: [],
+    acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'not-met' }],
+    open_questions: [],
+    deferred_items: [],
+    human_review: false,
+  } as IssueRecord, '## Description\nReady for operator controls.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'), {
+    title: 'Implementation Plan',
+    issue: 'review-me',
+    status: 'approved',
+    iteration: 1,
+    task_count: 0,
+    human_review_status: 'approved',
+  } as PlanRecord, '## Approach\nOperator controls.\n');
+
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'review-me',
+    phase: 'verify',
+    submode: 'correct',
+    loop_iteration: 2,
+  }, join(codaRoot, 'state.json'));
+
+  return tempDir;
+}
+
 describe('Pi Commands', () => {
   test('registerCommands registers the coda command', () => {
     const { pi, commands } = createMockPi();
@@ -113,6 +150,43 @@ describe('Pi Commands', () => {
       const plan = readRecord<PlanRecord>(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'));
       expect(plan.frontmatter.human_review_status).toBe('approved');
       expect(notifications[notifications.length - 1]?.message).toContain('to build');
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+
+  test('back rewinds to the requested prior phase', async () => {
+    const tempDir = setupBackAndKillCodaRoot();
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      registerCommands(pi, codaRoot);
+      await commands[0]?.options.handler('back review', ctx as never);
+
+      const plan = readRecord<PlanRecord>(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'));
+      expect(plan.frontmatter.status).toBe('draft');
+      expect(notifications[notifications.length - 1]?.message.toLowerCase()).toContain('rewound');
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('kill terminates the focused issue', async () => {
+    const tempDir = setupBackAndKillCodaRoot();
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      registerCommands(pi, codaRoot);
+      await commands[0]?.options.handler('kill', ctx as never);
+
+      const issue = readRecord<IssueRecord>(join(codaRoot, 'issues', 'review-me.md'));
+      expect(issue.frontmatter.status).toBe('wont-fix');
+      expect(notifications[notifications.length - 1]?.message.toLowerCase()).toContain('terminated');
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

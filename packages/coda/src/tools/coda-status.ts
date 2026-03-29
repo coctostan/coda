@@ -6,9 +6,11 @@
  * based on the current lifecycle phase.
  */
 import { loadState, readRecord } from '@coda/core';
-import type { IssueRecord, PlanRecord } from '@coda/core';
-import { existsSync, readdirSync } from 'fs';
+import type { CodaState, IssueRecord, PlanRecord } from '@coda/core';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { isLoopExhausted } from '../../../core/src/state/machine';
+import type { LoopIterationConfig } from '../../../core/src/state/types';
 import type { StatusResult } from './types';
 
 /** Phase-specific next action suggestions. */
@@ -52,7 +54,7 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
   const reviewState = state.focus_issue && codaRoot
     ? loadHumanReviewState(codaRoot, state.focus_issue)
     : null;
-
+  const exhausted = codaRoot ? isExhaustedState(codaRoot, state) : false;
   return {
     success: true,
     focus_issue: state.focus_issue,
@@ -62,29 +64,37 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
     tdd_gate: state.tdd_gate,
     human_review_required: reviewState?.required ?? null,
     human_review_status: reviewState?.status ?? null,
-    next_action: getNextAction(state.phase, reviewState),
+    next_action: getNextAction(state, reviewState, exhausted),
   };
 }
 
 function getNextAction(
-  phase: string | null,
-  reviewState: { required: boolean; status: PlanRecord['human_review_status'] | null } | null
+  state: CodaState,
+  reviewState: { required: boolean; status: PlanRecord['human_review_status'] | null } | null,
+  exhausted: boolean
 ): string {
-  if (phase === 'review' && reviewState?.required === true) {
+  if (exhausted && state.phase === 'review') {
+    return 'Review loop exhausted — provide guidance, approve to enter build, or kill the issue';
+  }
+
+  if (exhausted && state.phase === 'verify') {
+    return 'Verify loop exhausted — provide manual guidance, use /coda back specify to rescope, or kill the issue';
+  }
+
+  if (state.phase === 'review' && reviewState?.required === true) {
     if (reviewState.status === 'pending') {
       return 'Human review required — approve the plan to advance or request changes with feedback';
     }
-
     if (reviewState.status === 'changes-requested') {
       return 'Human changes requested — revise the plan using the recorded feedback before re-review';
     }
   }
 
-  if (!phase) {
+  if (!state.phase) {
     return 'Focus an issue to begin';
   }
 
-  return NEXT_ACTIONS[phase] ?? 'Unknown phase';
+  return NEXT_ACTIONS[state.phase] ?? 'Unknown phase';
 }
 
 function loadHumanReviewState(
@@ -116,4 +126,21 @@ function loadHumanReviewState(
     required: issue.frontmatter.human_review,
     status: plan.frontmatter.human_review_status,
   };
+}
+
+function isExhaustedState(codaRoot: string, state: CodaState): boolean {
+  return isLoopExhausted(state, loadLoopConfig(codaRoot));
+}
+
+function loadLoopConfig(codaRoot: string): LoopIterationConfig {
+  const configPath = join(codaRoot, 'coda.json');
+  if (!existsSync(configPath)) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(readFileSync(configPath, 'utf-8')) as LoopIterationConfig;
+  } catch {
+    return {};
+  }
 }

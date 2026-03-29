@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtempSync, mkdirSync, rmSync } from 'fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { codaStatus } from '../coda-status';
@@ -15,6 +15,7 @@ beforeEach(() => {
   codaRoot = join(tempDir, '.coda');
   statePath = join(codaRoot, 'state.json');
   mkdirSync(codaRoot, { recursive: true });
+  mkdirSync(join(codaRoot, 'issues'), { recursive: true });
 });
 
 afterEach(() => {
@@ -54,6 +55,75 @@ function writePendingHumanReviewState(): void {
     submode: 'review',
   };
   persistState(state, statePath);
+}
+
+function writeExhaustedReviewState(): void {
+  writeRecord(join(codaRoot, 'issues', 'my-issue.md'), {
+    title: 'My Issue',
+    issue_type: 'feature',
+    status: 'active',
+    phase: 'review',
+    priority: 3,
+    topics: [],
+    acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'pending' }],
+    open_questions: [],
+    deferred_items: [],
+    human_review: false,
+  } as IssueRecord, '## Description\nReview exhausted.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'my-issue', 'plan-v1.md'), {
+    title: 'Implementation Plan',
+    issue: 'my-issue',
+    status: 'in-review',
+    iteration: 1,
+    task_count: 0,
+    human_review_status: 'not-required',
+  } as PlanRecord, '## Approach\nAwait manual review decision.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'my-issue', 'revision-instructions.md'), {
+    iteration: 3,
+    issues_found: 1,
+  }, '## Issue 1: unresolved\nStill missing AC coverage.\n**Fix:** provide human guidance.\n');
+
+  writeFileSync(join(codaRoot, 'coda.json'), JSON.stringify({ max_review_iterations: 3 }, null, 2));
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'my-issue',
+    phase: 'review',
+    submode: 'revise',
+    loop_iteration: 3,
+  }, statePath);
+}
+
+function writeExhaustedVerifyState(): void {
+  writeRecord(join(codaRoot, 'issues', 'my-issue.md'), {
+    title: 'My Issue',
+    issue_type: 'feature',
+    status: 'active',
+    phase: 'verify',
+    priority: 3,
+    topics: [],
+    acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'not-met' }],
+    open_questions: [],
+    deferred_items: [],
+    human_review: false,
+  } as IssueRecord, '## Description\nVerify exhausted.\n');
+
+  mkdirSync(join(codaRoot, 'issues', 'my-issue', 'verification-failures'), { recursive: true });
+  writeFileSync(
+    join(codaRoot, 'issues', 'my-issue', 'verification-failures', 'AC-1.yaml'),
+    'ac_id: AC-1\nstatus: not-met\nfailed_checks:\n  - type: test_failure\n    detail: regression still fails\nsource_tasks: [1]\nrelevant_files:\n  - src/workflow.ts\n',
+    'utf-8'
+  );
+
+  writeFileSync(join(codaRoot, 'coda.json'), JSON.stringify({ max_verify_iterations: 3 }, null, 2));
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'my-issue',
+    phase: 'verify',
+    submode: 'correct',
+    loop_iteration: 3,
+  }, statePath);
 }
 
 describe('codaStatus', () => {
@@ -121,5 +191,26 @@ describe('codaStatus', () => {
     expect(result.human_review_status).toBe('pending');
     expect(result.next_action.toLowerCase()).toContain('approve');
     expect(result.next_action.toLowerCase()).toContain('feedback');
+  });
+
+
+  test('surfaces exhausted review guidance with approve and kill options', () => {
+    writeExhaustedReviewState();
+
+    const result = codaStatus(statePath, codaRoot);
+
+    expect(result.next_action.toLowerCase()).toContain('provide guidance');
+    expect(result.next_action.toLowerCase()).toContain('approve');
+    expect(result.next_action.toLowerCase()).toContain('kill');
+  });
+
+  test('surfaces exhausted verify guidance with back and kill options', () => {
+    writeExhaustedVerifyState();
+
+    const result = codaStatus(statePath, codaRoot);
+
+    expect(result.next_action.toLowerCase()).toContain('manual');
+    expect(result.next_action.toLowerCase()).toContain('back');
+    expect(result.next_action.toLowerCase()).toContain('kill');
   });
 });

@@ -97,6 +97,78 @@ function setupPendingHumanReview(): string {
   return planPath;
 }
 
+function setupExhaustedReview(): string {
+  codaCreate(
+    {
+      type: 'issue',
+      fields: {
+        title: 'Test Issue',
+        issue_type: 'feature',
+        status: 'active',
+        phase: 'review',
+        priority: 3,
+        topics: [],
+        acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'pending' }],
+        open_questions: [],
+        deferred_items: [],
+        human_review: false,
+      },
+    },
+    codaRoot
+  );
+
+  const planPath = join(codaRoot, 'issues', 'test-issue', 'plan-v1.md');
+  writeRecord<PlanRecord>(planPath, {
+    title: 'Implementation Plan',
+    issue: 'test-issue',
+    status: 'in-review',
+    iteration: 1,
+    task_count: 0,
+    human_review_status: 'not-required',
+  }, '## Approach\nHuman will approve after exhaustion.\n');
+
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'test-issue',
+    phase: 'review',
+    submode: 'revise',
+    loop_iteration: 3,
+  }, statePath);
+
+  return planPath;
+}
+
+function setupExhaustedVerify(): void {
+  codaCreate(
+    {
+      type: 'issue',
+      fields: {
+        title: 'Test Issue',
+        issue_type: 'feature',
+        status: 'active',
+        phase: 'verify',
+        priority: 3,
+        topics: [],
+        acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'not-met' }],
+        open_questions: [],
+        deferred_items: [],
+        human_review: false,
+      },
+    },
+    codaRoot
+  );
+
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'test-issue',
+    phase: 'verify',
+    submode: 'correct',
+    loop_iteration: 3,
+    current_task: 4,
+    completed_tasks: [1, 2, 3],
+  }, statePath);
+}
+
 describe('codaAdvance', () => {
   test('advance specify→plan with ACs succeeds', () => {
     setupIssue(2);
@@ -211,5 +283,45 @@ describe('codaAdvance', () => {
     expect(state?.loop_iteration).toBe(0);
 
     expect(basename(planPath)).toBe('plan-v1.md');
+  });
+
+
+  test('manually approves an exhausted review loop into build', () => {
+    const planPath = setupExhaustedReview();
+
+    const result = codaAdvance({ target_phase: 'build' }, codaRoot, statePath);
+
+    expect(result.success).toBe(true);
+    expect(result.previous_phase).toBe('review');
+    expect(result.new_phase).toBe('build');
+
+    const plan = readRecord<PlanRecord>(planPath);
+    expect(plan.frontmatter.status).toBe('approved');
+    expect(plan.frontmatter.human_review_status).toBe('approved');
+
+    const state = loadState(statePath);
+    expect(state?.phase).toBe('build');
+    expect(state?.submode).toBeNull();
+    expect(state?.loop_iteration).toBe(0);
+  });
+
+  test('re-enters verify with loop reset when advance is used after verify exhaustion', () => {
+    setupExhaustedVerify();
+
+    const result = codaAdvance({ target_phase: 'unify' }, codaRoot, statePath);
+
+    expect(result.success).toBe(true);
+    expect(result.previous_phase).toBe('verify');
+    expect(result.new_phase).toBe('verify');
+
+    const issue = readRecord<IssueRecord>(join(codaRoot, 'issues', 'test-issue.md'));
+    expect(issue.frontmatter.phase).toBe('verify');
+
+    const state = loadState(statePath);
+    expect(state?.phase).toBe('verify');
+    expect(state?.submode).toBe('verify');
+    expect(state?.loop_iteration).toBe(0);
+    expect(state?.current_task).toBeNull();
+    expect(state?.completed_tasks).toEqual([1, 2, 3]);
   });
 });

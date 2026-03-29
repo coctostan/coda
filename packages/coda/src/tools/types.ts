@@ -102,6 +102,12 @@ export interface AdvanceResult extends ToolResult {
   reason?: string;
 }
 
+/** Input for coda_back — rewind the focused issue to a prior phase. */
+export interface BackInput {
+  /** Prior phase to rewind to. */
+  target_phase: string;
+}
+
 /** Result from coda_status. */
 export interface StatusResult extends ToolResult {
   /** Currently focused issue slug */
