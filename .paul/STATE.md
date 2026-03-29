@@ -43,8 +43,8 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Human review state remains in existing plan frontmatter/body artifacts | Phase 12 | Durable human review without new storage layers |
 Branch: feature/13-exhaustion-handling-rewind-kill-controls
 Remote: https://github.com/coctostan/coda.git
-PR: none
-Last commit: local APPLY changes completed; branch not yet pushed
+PR: https://github.com/coctostan/coda/pull/8 (OPEN)
+Last commit: feat(13-exhaustion-handling-rewind-kill-controls): add recovery controls
 ## Session Continuity
 
 Last session: 2026-03-29T16:45:53Z
