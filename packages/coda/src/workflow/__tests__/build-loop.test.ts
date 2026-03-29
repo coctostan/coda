@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach } from 'bun:test';
-import { mkdtempSync, rmSync, mkdirSync } from 'fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { writeRecord } from '@coda/core';
@@ -55,6 +55,38 @@ describe('Workflow Build Loop', () => {
     test('systemPrompt references the task', () => {
       const ctx = buildTaskContext(codaRoot, 'my-feature', 2, [1]);
       expect(ctx.systemPrompt).toContain('task');
+    });
+
+    test('includes verification failure context and source task summaries for correction tasks', () => {
+      writeRecord(join(codaRoot, 'issues', 'my-feature', 'tasks', '04-fix-ac-2.md'), {
+        id: 4, issue: 'my-feature', title: 'Fix AC-2', status: 'pending',
+        kind: 'correction', fix_for_ac: 'AC-2', covers_ac: ['AC-2'], depends_on: [],
+        files_to_modify: ['src/store.ts', 'tests/store.test.ts'], truths: ['AC-2 passes after the fix'], artifacts: [], key_links: [],
+      }, 'Narrowly fix the verification failure.\n');
+
+      mkdirSync(join(codaRoot, 'issues', 'my-feature', 'verification-failures'), { recursive: true });
+      writeFileSync(
+        join(codaRoot, 'issues', 'my-feature', 'verification-failures', 'AC-2.yaml'),
+        [
+          'ac_id: AC-2',
+          'status: not-met',
+          'failed_checks:',
+          '  - type: test_failure',
+          '    detail: saveTodo test still fails',
+          'source_tasks: [2]',
+          'relevant_files:',
+          '  - src/store.ts',
+          '  - tests/store.test.ts',
+        ].join('\n'),
+        'utf-8'
+      );
+
+      const ctx = buildTaskContext(codaRoot, 'my-feature', 4, [1]);
+      expect(ctx.taskId).toBe(4);
+      expect(ctx.context).toContain('verification failure');
+      expect(ctx.context).toContain('saveTodo test still fails');
+      expect(ctx.context).toContain('Second Task');
+      expect(ctx.systemPrompt).toContain('verification failure');
     });
   });
 

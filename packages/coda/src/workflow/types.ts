@@ -3,6 +3,8 @@
  * Type definitions for the CODA workflow engine.
  */
 
+import type { CodaState, TaskRecord } from '@coda/core';
+
 export type { Phase } from '@coda/core';
 
 /** Context object returned by the phase runner for each lifecycle phase. */
@@ -26,6 +28,79 @@ export interface CarryForwardConfig {
   /** Maximum number of previous task summaries to include. Default: 3. */
   maxTasks: number;
 }
+
+/** One verification check that failed for a specific acceptance criterion. */
+export interface VerificationFailedCheck {
+  type: string;
+  detail: string;
+}
+
+/** Parsed verification failure artifact content. */
+export interface VerificationFailureArtifact {
+  acId: string;
+  status: 'not-met';
+  failedChecks: VerificationFailedCheck[];
+  sourceTasks: number[];
+  relevantFiles: string[];
+}
+
+/** In-memory verification result for one acceptance criterion. */
+export interface VerifyAcResult {
+  acId: string;
+  status: 'met' | 'not-met';
+  failedChecks?: VerificationFailedCheck[];
+  sourceTasks: number[];
+  relevantFiles: string[];
+}
+
+/** Optional explicit verification output injected by tests or higher-level orchestration. */
+export interface VerificationResult {
+  acResults: VerifyAcResult[];
+}
+
+/** Options for running the verify runner. */
+export interface VerifyRunnerOptions {
+  max_verify_iterations?: number;
+  verificationResult?: VerificationResult;
+  suitePassed?: boolean;
+}
+
+/** Outcome when verification found unmet criteria and generated correction tasks. */
+export interface VerifyCorrectionsRequiredOutcome {
+  outcome: 'corrections-required';
+  state: CodaState;
+  failures: VerificationFailureArtifact[];
+  failureArtifacts: string[];
+  correctionTasks: TaskRecord[];
+}
+
+/** Outcome when correction work is done and verify should run again. */
+export interface VerifyReadyOutcome {
+  outcome: 'verify-ready';
+  state: CodaState;
+}
+
+/** Outcome when all ACs are met and verification succeeds. */
+export interface VerifySuccessOutcome {
+  outcome: 'success';
+  state: CodaState;
+  failureArtifacts: string[];
+  correctionTasks: TaskRecord[];
+}
+
+/** Outcome when the verify/correct loop is exhausted. */
+export interface VerifyExhaustedOutcome {
+  outcome: 'exhausted';
+  state: CodaState;
+  failureArtifacts: string[];
+}
+
+/** Union of verify-runner outcomes. */
+export type VerifyRunnerOutcome =
+  | VerifyCorrectionsRequiredOutcome
+  | VerifyReadyOutcome
+  | VerifySuccessOutcome
+  | VerifyExhaustedOutcome;
 
 /** Default carry-forward configuration. */
 export const DEFAULT_CARRY_FORWARD: CarryForwardConfig = {
