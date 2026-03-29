@@ -7,3 +7,4 @@
 | 2026-03-28 | 08-e2e-test | 186 pass / 0 fail | N/A | clean | N/A | → stable (-1 consolidated test) |
 | 2026-03-29 | 09-state-submodes-loop-tracking | 202 pass / 0 fail | N/A | clean | N/A | ↑ improving (+16 tests) |
 | 2026-03-29 | 11-verify-runner-correction-tasks | 222 pass / 0 fail | clean | clean | N/A | ↑ improving (+20 tests) |
+| 2026-03-29 | 13-exhaustion-handling-rewind-kill-controls | 241 pass / 0 fail | N/A | clean | N/A | ↑ improving (+19 tests) |

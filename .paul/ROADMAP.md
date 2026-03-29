@@ -6,7 +6,7 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.2 Autonomous Loops** (v0.2.0)
 Status: 🚧 In Progress
-Phases: 4 of 7 complete
+Phases: 5 of 7 complete
 
 ## Phases
 
@@ -16,7 +16,7 @@ Phases: 4 of 7 complete
 | 10 | Review Runner | 1/1 | ✅ Complete | 2026-03-29 |
 | 11 | Verify Runner + Correction Tasks | 1/1 | ✅ Complete | 2026-03-29 |
 | 12 | Human Review Gate | 1/1 | ✅ Complete | 2026-03-29 |
-| 13 | Exhaustion Handling + Rewind/Kill Controls | 1/1 | In progress | - |
+| 13 | Exhaustion Handling + Rewind/Kill Controls | 1/1 | ✅ Complete | 2026-03-29 |
 | 14 | Pi Integration Updates | TBD | Not started | - |
 | 15 | E2E Validation | TBD | Not started | - |
 
@@ -40,7 +40,7 @@ Plans: `12-01-PLAN.md`, `12-01-SUMMARY.md`
 
 ### Phase 13: Exhaustion Handling + Rewind/Kill Controls
 Focus: Add exhaustion pause flows, `/coda kill`, `/coda back <phase>`, and preservation/supersede semantics for rewind.
-Plans: `13-01-PLAN.md`
+Plans: `13-01-PLAN.md`, `13-01-SUMMARY.md`
 
 ### Phase 14: Pi Integration Updates
 Focus: Update `before_agent_start`, command handling, and submode-aware context injection for review/revise/verify/correct.
@@ -74,4 +74,4 @@ Plans: TBD (defined during /paul:plan)
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-03-29 after Phase 13 APPLY*
+*Roadmap updated: 2026-03-29 after Phase 13 UNIFY*

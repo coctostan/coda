@@ -6,21 +6,21 @@ See: .paul/PROJECT.md (updated 2026-03-29)
 Version: v0.2.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 13 APPLY complete; ready for UNIFY.
+**Current focus:** Phase 14 ready for PLAN after completing Phase 13 UNIFY.
 ## Current Position
 Milestone: v0.2 Autonomous Loops
-Phase: 13 of 15 (Exhaustion Handling + Rewind/Kill Controls) — Apply complete
-Plan: 13-01 executed
-Status: APPLY complete, ready for UNIFY
-Last activity: 2026-03-29T16:45:53Z — Completed APPLY for .paul/phases/13-exhaustion-handling-rewind-kill-controls/13-01-PLAN.md
+Phase: 14 of 15 (Pi Integration Updates)
+Plan: Not started
+Status: Ready for PLAN
+Last activity: 2026-03-29T17:45:23Z — Unified Phase 13 and transitioned to Phase 14
 Progress:
 - v0.2 Autonomous Loops: [███████░░░] 71%
-- Phase 13: [██████░░░░] 67%
+- Phase 14: [░░░░░░░░░░] 0%
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ○     [Execution complete - ready for reconciliation]
+  ✓        ✓        ✓     [Loop complete - ready for next PLAN]
 ```
 
 ## Accumulated Context
@@ -41,21 +41,23 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Deterministic structural review writes durable revision artifacts | Phase 10 | Review/revise loop stays mechanical, auditable, and disk-backed |
 | Deterministic verify failures become YAML artifacts and correction tasks | Phase 11 | Mechanical, auditable verify/correct loop without new dependencies |
 | Human review state remains in existing plan frontmatter/body artifacts | Phase 12 | Durable human review without new storage layers |
+| Exhausted loops preserve artifacts and require explicit human recovery | Phase 13 | Human recovery stays auditable and phase-correct |
 Branch: feature/13-exhaustion-handling-rewind-kill-controls
 Remote: https://github.com/coctostan/coda.git
 PR: https://github.com/coctostan/coda/pull/8 (OPEN)
-Last commit: feat(13-exhaustion-handling-rewind-kill-controls): add recovery controls
+Last commit: feat(13-exhaustion-handling-rewind-kill-controls): complete phase transition
 ## Session Continuity
 
-Last session: 2026-03-29T16:45:53Z
-Stopped at: APPLY complete for plan 13-01
-Next action: Run /paul:unify .paul/phases/13-exhaustion-handling-rewind-kill-controls/13-01-PLAN.md
-Resume file: .paul/phases/13-exhaustion-handling-rewind-kill-controls/13-01-PLAN.md
+Last session: 2026-03-29T17:45:23Z
+Stopped at: Phase 13 complete, ready to plan Phase 14
+Next action: Run /paul:plan
+Resume file: .paul/ROADMAP.md
 Resume context:
-- Exhausted review/verify loops now surface actionable operator guidance from persisted artifacts
-- `/coda advance` now supports exhausted review approval into BUILD and exhausted verify resume back into verify
-- `/coda back` and `/coda kill` landed with preservation/terminal state semantics plus command coverage
-- `modules.yaml` is still absent, so post-apply advisory/enforcement dispatch was skipped and SUMMARY should record that warning
+- Phase 13 summary is recorded at `.paul/phases/13-exhaustion-handling-rewind-kill-controls/13-01-SUMMARY.md`
+- Phase 13 passed targeted tests, full `bun test`, and `npx tsc --noEmit`
+- Local repo-root `modules.yaml` resolution now works again, but Phase 13 PLAN/APPLY still lacked dispatch evidence because the registry was unavailable when the loop began
+- PR #8 remains open on `feature/13-exhaustion-handling-rewind-kill-controls`; merge-gate enforcement is currently disabled by `pals.json`
+- Local non-phase changes still exist in `.gitignore`, `pals.json`, archived handoffs, and `docs/v0.2/`
 
 ---
 *STATE.md — Updated after every significant action*
