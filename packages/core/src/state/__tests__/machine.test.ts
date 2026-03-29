@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
-import { transition } from '../machine';
-import { createDefaultState, PHASE_ORDER } from '../types';
+import { transition, transitionSubmode, isLoopExhausted } from '../machine';
+import { createDefaultState, PHASE_ORDER, type Submode } from '../types';
 import type { CodaState, Phase, GateCheckData } from '../types';
 
 /** Helper to create a state at a given phase. */
@@ -30,6 +30,12 @@ describe('createDefaultState', () => {
     expect(state.last_test_exit_code).toBeNull();
     expect(state.task_tool_calls).toBe(0);
     expect(state.enabled).toBe(true);
+  });
+
+  test('includes v0.2 submode defaults', () => {
+    const state = createDefaultState();
+    expect(state).toHaveProperty('submode', null);
+    expect(state).toHaveProperty('loop_iteration', 0);
   });
 });
 
@@ -133,5 +139,132 @@ describe('transition', () => {
     const r2 = transition(relocked, 'review', { planExists: true });
     expect(r2.success).toBe(true);
     expect(r2.state?.tdd_gate).toBe('locked');
+  });
+
+  test('entering review phase initializes review submode and resets loop_iteration', () => {
+    const result = transition(stateAt('plan'), 'review', { planExists: true });
+    expect(result.success).toBe(true);
+    expect(result.state).toMatchObject({
+      phase: 'review',
+      submode: 'review',
+      loop_iteration: 0,
+    });
+  });
+
+  test('entering verify phase initializes verify submode and resets loop_iteration', () => {
+    const state: CodaState = {
+      ...stateAt('build'),
+      completed_tasks: [1, 2],
+    };
+    const result = transition(state, 'verify', { allPlannedTasksComplete: true });
+    expect(result.success).toBe(true);
+    expect(result.state).toMatchObject({
+      phase: 'verify',
+      submode: 'verify',
+      loop_iteration: 0,
+    });
+  });
+
+  test('exiting review phase clears submode and resets loop_iteration', () => {
+    const reviewState = {
+      ...stateAt('review'),
+      submode: 'review' as Submode,
+      loop_iteration: 2,
+    };
+    const result = transition(reviewState, 'build', { planApproved: true });
+    expect(result.success).toBe(true);
+    expect(result.state).toMatchObject({
+      phase: 'build',
+      submode: null,
+      loop_iteration: 0,
+    });
+  });
+
+  test('exiting verify phase clears submode and resets loop_iteration', () => {
+    const verifyState = {
+      ...stateAt('verify'),
+      submode: 'verify' as Submode,
+      loop_iteration: 2,
+    };
+    const result = transition(verifyState, 'unify', { allAcsMet: true });
+    expect(result.success).toBe(true);
+    expect(result.state).toMatchObject({
+      phase: 'unify',
+      submode: null,
+      loop_iteration: 0,
+    });
+  });
+});
+
+describe('transitionSubmode', () => {
+  test('review → revise succeeds without incrementing loop_iteration', () => {
+    const state = {
+      ...stateAt('review'),
+      submode: 'review' as Submode,
+      loop_iteration: 0,
+    };
+    const next = transitionSubmode(state, 'revise');
+    expect(next.submode).toBe('revise');
+    expect(next.loop_iteration).toBe(0);
+  });
+
+  test('revise → review increments loop_iteration', () => {
+    const state = {
+      ...stateAt('review'),
+      submode: 'revise' as Submode,
+      loop_iteration: 1,
+    };
+    const next = transitionSubmode(state, 'review');
+    expect(next.submode).toBe('review');
+    expect(next.loop_iteration).toBe(2);
+  });
+
+  test('correct → verify increments loop_iteration', () => {
+    const state = {
+      ...stateAt('verify'),
+      submode: 'correct' as Submode,
+      loop_iteration: 2,
+    };
+    const next = transitionSubmode(state, 'verify');
+    expect(next.submode).toBe('verify');
+    expect(next.loop_iteration).toBe(3);
+  });
+
+  test('rejects invalid submode transitions', () => {
+    const state = {
+      ...stateAt('review'),
+      submode: 'review' as Submode,
+      loop_iteration: 0,
+    };
+    expect(() => transitionSubmode(state, 'correct')).toThrow('Invalid submode transition');
+  });
+});
+
+describe('isLoopExhausted', () => {
+  test('uses config max_review_iterations for review phase', () => {
+    const state = {
+      ...stateAt('review'),
+      submode: 'review' as Submode,
+      loop_iteration: 3,
+    };
+    expect(isLoopExhausted(state, { max_review_iterations: 3, max_verify_iterations: 5 })).toBe(true);
+  });
+
+  test('uses default max_verify_iterations of 3 when config is absent', () => {
+    const state = {
+      ...stateAt('verify'),
+      submode: 'verify' as Submode,
+      loop_iteration: 3,
+    };
+    expect(isLoopExhausted(state, {})).toBe(true);
+  });
+
+  test('returns false outside review/verify phases', () => {
+    const state = {
+      ...stateAt('build'),
+      submode: null,
+      loop_iteration: 99,
+    };
+    expect(isLoopExhausted(state, { max_review_iterations: 1, max_verify_iterations: 1 })).toBe(false);
   });
 });

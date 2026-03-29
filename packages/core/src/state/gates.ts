@@ -10,7 +10,7 @@
 import type { Phase, Gate, GateCheckData } from './types';
 
 /**
- * v0.1 gate definitions — one per valid phase transition.
+ * v0.1/v0.2 gate definitions — one per valid phase transition.
  * Each gate checks a specific precondition before allowing the move.
  */
 export const GATES: Record<string, Gate> = {
@@ -30,10 +30,23 @@ export const GATES: Record<string, Gate> = {
   },
   'review→build': {
     name: 'review→build',
-    check: (d: GateCheckData) => ({
-      passed: d.planApproved === true,
-      reason: 'Plan must be approved before build',
-    }),
+    check: (d: GateCheckData) => {
+      if (d.planApproved !== true) {
+        return {
+          passed: false,
+          reason: 'Plan must be approved before build',
+        };
+      }
+
+      if (d.humanReviewRequired === true && d.humanReviewStatus !== 'approved') {
+        return {
+          passed: false,
+          reason: 'Human plan review pending',
+        };
+      }
+
+      return { passed: true };
+    },
   },
   'build→verify': {
     name: 'build→verify',
@@ -75,7 +88,6 @@ export function checkGate(
   const gate = GATES[key];
 
   if (!gate) {
-    // No gate defined — pass by default
     return { passed: true };
   }
 

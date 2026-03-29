@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach } from 'bun:test';
-import { mkdtempSync, rmSync, mkdirSync } from 'fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { writeRecord } from '@coda/core';
@@ -15,13 +15,19 @@ describe('Workflow Phase Runner', () => {
     mkdirSync(join(codaRoot, 'reference'), { recursive: true });
     mkdirSync(join(codaRoot, 'issues', 'my-feature', 'tasks'), { recursive: true });
 
-    // Fixture: issue
     writeRecord(join(codaRoot, 'issues', 'my-feature.md'), {
-      title: 'My Feature', issue_type: 'feature', phase: 'build', priority: 3,
+      title: 'My Feature',
+      issue_type: 'feature',
+      status: 'active',
+      phase: 'build',
+      priority: 3,
+      topics: ['workflow'],
       acceptance_criteria: [{ id: 'AC-1', text: 'It works', status: 'pending' }],
+      open_questions: [],
+      deferred_items: [],
+      human_review: false,
     }, '## Description\nBuild a great feature.\n');
 
-    // Fixture: ref docs
     writeRecord(join(codaRoot, 'reference', 'ref-system.md'), {
       type: 'reference', title: 'System Reference',
     }, '## System\nIt manages tasks.\n');
@@ -30,13 +36,15 @@ describe('Workflow Phase Runner', () => {
       type: 'reference', title: 'Product Requirements',
     }, '## Users\nDevelopers who need tracking.\n');
 
-    // Fixture: plan
     writeRecord(join(codaRoot, 'issues', 'my-feature', 'plan-v1.md'), {
-      title: 'Implementation Plan', issue: 'my-feature',
-      status: 'approved', iteration: 1, task_count: 2,
+      title: 'Implementation Plan',
+      issue: 'my-feature',
+      status: 'approved',
+      iteration: 1,
+      task_count: 2,
+      human_review_status: 'not-required',
     }, '## Approach\nStep by step.\n');
 
-    // Fixture: tasks
     writeRecord(join(codaRoot, 'issues', 'my-feature', 'tasks', '01-setup.md'), {
       id: 1, issue: 'my-feature', title: 'Setup', status: 'complete',
       kind: 'planned', covers_ac: ['AC-1'], depends_on: [],
@@ -77,9 +85,61 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.context).toContain('Setup');
   });
 
+  test('review context includes revision history on later iterations', () => {
+    mkdirSync(join(codaRoot, 'issues', 'my-feature', 'revision-history'), { recursive: true });
+    writeFileSync(
+      join(codaRoot, 'issues', 'my-feature', 'revision-history', 'iteration-1.md'),
+      '## Issue 1\nPrior revision feedback.\n',
+      'utf-8'
+    );
+
+    const ctx = getPhaseContext('review', codaRoot, 'my-feature', {
+      version: 1,
+      focus_issue: 'my-feature',
+      phase: 'review',
+      submode: 'review',
+      loop_iteration: 1,
+      current_task: null,
+      completed_tasks: [],
+      tdd_gate: 'locked',
+      last_test_exit_code: null,
+      task_tool_calls: 0,
+      enabled: true,
+    });
+
+    expect(ctx.context).toContain('Prior revision feedback');
+  });
+
+  test('revise context includes active revision instructions artifact', () => {
+    writeFileSync(
+      join(codaRoot, 'issues', 'my-feature', 'revision-instructions.md'),
+      '---\niteration: 1\nissues_found: 1\n---\n## Issue 1: address review feedback\n**Fix:** update the plan.\n',
+      'utf-8'
+    );
+
+    const ctx = getPhaseContext('review', codaRoot, 'my-feature', {
+      version: 1,
+      focus_issue: 'my-feature',
+      phase: 'review',
+      submode: 'revise',
+      loop_iteration: 0,
+      current_task: null,
+      completed_tasks: [],
+      tdd_gate: 'locked',
+      last_test_exit_code: null,
+      task_tool_calls: 0,
+      enabled: true,
+    });
+
+    expect(ctx.systemPrompt).toContain('revis');
+    expect(ctx.context).toContain('address review feedback');
+    expect(ctx.context).toContain('Step by step');
+  });
+
   test('build context includes current task + Todd prompt', () => {
     const ctx = getPhaseContext('build', codaRoot, 'my-feature', {
       version: 1, focus_issue: 'my-feature', phase: 'build',
+      submode: null, loop_iteration: 0,
       current_task: 2, completed_tasks: [1],
       tdd_gate: 'locked', last_test_exit_code: null,
       task_tool_calls: 0, enabled: true,
@@ -92,6 +152,7 @@ describe('Workflow Phase Runner', () => {
   test('verify context includes issue + task summaries', () => {
     const ctx = getPhaseContext('verify', codaRoot, 'my-feature', {
       version: 1, focus_issue: 'my-feature', phase: 'verify',
+      submode: 'verify', loop_iteration: 0,
       current_task: null, completed_tasks: [1, 2],
       tdd_gate: 'locked', last_test_exit_code: null,
       task_tool_calls: 0, enabled: true,
@@ -104,6 +165,7 @@ describe('Workflow Phase Runner', () => {
   test('unify context includes issue + plan + summaries + ref-system', () => {
     const ctx = getPhaseContext('unify', codaRoot, 'my-feature', {
       version: 1, focus_issue: 'my-feature', phase: 'unify',
+      submode: null, loop_iteration: 0,
       current_task: null, completed_tasks: [1, 2],
       tdd_gate: 'locked', last_test_exit_code: null,
       task_tool_calls: 0, enabled: true,

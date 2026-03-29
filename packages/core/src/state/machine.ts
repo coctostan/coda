@@ -9,9 +9,19 @@
  * checked by the relevant gate before proceeding.
  */
 
-import type { CodaState, Phase, GateCheckData, TransitionResult } from './types';
+import type {
+  CodaState,
+  Phase,
+  Submode,
+  GateCheckData,
+  TransitionResult,
+  LoopIterationConfig,
+} from './types';
 import { PHASE_ORDER } from './types';
 import { checkGate } from './gates';
+
+const DEFAULT_MAX_REVIEW_ITERATIONS = 3;
+const DEFAULT_MAX_VERIFY_ITERATIONS = 3;
 
 /**
  * Attempt a phase transition on the given state.
@@ -40,9 +50,10 @@ export function transition(
         error: `Cannot transition from initial state to "${to}" — must start at "specify"`,
       };
     }
+
     return {
       success: true,
-      state: { ...state, phase: 'specify' },
+      state: applyPhaseState({ ...state, phase: 'specify' }, 'specify'),
     };
   }
 
@@ -50,7 +61,7 @@ export function transition(
   if (currentPhase === 'done') {
     return {
       success: false,
-      error: `Cannot transition from "done" — it is a terminal state`,
+      error: 'Cannot transition from "done" — it is a terminal state',
     };
   }
 
@@ -74,9 +85,101 @@ export function transition(
     };
   }
 
-  // Transition succeeds — update phase, preserve all other state
   return {
     success: true,
-    state: { ...state, phase: to },
+    state: applyPhaseState({ ...state, phase: to }, to),
+  };
+}
+
+/**
+ * Transition between valid submodes inside review/verify phases.
+ *
+ * @param state - Current CODA state
+ * @param targetSubmode - Target submode within the active phase
+ * @returns Updated state with validated submode transition applied
+ */
+export function transitionSubmode(
+  state: CodaState,
+  targetSubmode: Submode | null
+): CodaState {
+  if (state.phase === 'review') {
+    if (state.submode === 'review' && targetSubmode === 'revise') {
+      return { ...state, submode: 'revise' };
+    }
+
+    if (state.submode === 'revise' && targetSubmode === 'review') {
+      return {
+        ...state,
+        submode: 'review',
+        loop_iteration: state.loop_iteration + 1,
+      };
+    }
+  }
+
+  if (state.phase === 'verify') {
+    if (state.submode === 'verify' && targetSubmode === 'correct') {
+      return { ...state, submode: 'correct' };
+    }
+
+    if (state.submode === 'correct' && targetSubmode === 'verify') {
+      return {
+        ...state,
+        submode: 'verify',
+        loop_iteration: state.loop_iteration + 1,
+      };
+    }
+  }
+
+  throw new Error(
+    `Invalid submode transition: ${state.submode} → ${targetSubmode} in phase ${state.phase}`
+  );
+}
+
+/**
+ * Determine whether the current review/verify loop has exhausted its budget.
+ *
+ * @param state - Current CODA state
+ * @param config - Loop iteration configuration
+ * @returns True when the active review/verify loop has reached its configured limit
+ */
+export function isLoopExhausted(
+  state: CodaState,
+  config: LoopIterationConfig
+): boolean {
+  if (state.phase === 'review') {
+    return state.loop_iteration >= (config.max_review_iterations ?? DEFAULT_MAX_REVIEW_ITERATIONS);
+  }
+
+  if (state.phase === 'verify') {
+    return state.loop_iteration >= (config.max_verify_iterations ?? DEFAULT_MAX_VERIFY_ITERATIONS);
+  }
+
+  return false;
+}
+
+function applyPhaseState(state: CodaState, phase: Phase): CodaState {
+  if (phase === 'review') {
+    return {
+      ...state,
+      phase,
+      submode: 'review',
+      loop_iteration: 0,
+    };
+  }
+
+  if (phase === 'verify') {
+    return {
+      ...state,
+      phase,
+      submode: 'verify',
+      loop_iteration: 0,
+    };
+  }
+
+  return {
+    ...state,
+    phase,
+    submode: null,
+    loop_iteration: 0,
   };
 }
