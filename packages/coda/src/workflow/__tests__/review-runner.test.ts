@@ -138,7 +138,7 @@ describe('Review Runner', () => {
     expect(record.body).toContain('/tmp/not-in-repo.ts');
   });
 
-  test('approves the plan when structural checks pass and review result is approved', () => {
+  test('approves the plan immediately when human review is not required', () => {
     const result = runReviewRunner(codaRoot, 'my-feature', createReviewState(), {
       reviewResult: { approved: true },
     });
@@ -148,6 +148,28 @@ describe('Review Runner', () => {
 
     const plan = readRecord<PlanRecord>(join(codaRoot, 'issues', 'my-feature', 'plan-v1.md'));
     expect(plan.frontmatter.status).toBe('approved');
+    expect(plan.frontmatter.human_review_status).toBe('not-required');
+    expect(result.issues).toEqual([]);
+    expect(existsSync(join(codaRoot, 'issues', 'my-feature', 'revision-instructions.md'))).toBe(false);
+  });
+
+  test('persists pending human review when autonomous review approves a required plan', () => {
+    const issue = readRecord<IssueRecord>(join(codaRoot, 'issues', 'my-feature.md'));
+    writeRecord(join(codaRoot, 'issues', 'my-feature.md'), {
+      ...issue.frontmatter,
+      human_review: true,
+    }, issue.body);
+
+    const result = runReviewRunner(codaRoot, 'my-feature', createReviewState(), {
+      reviewResult: { approved: true },
+    });
+
+    expect(result.outcome).toBe('approved');
+    if (result.outcome !== 'approved') throw new Error('Expected approved outcome');
+
+    const plan = readRecord<PlanRecord>(join(codaRoot, 'issues', 'my-feature', 'plan-v1.md'));
+    expect(plan.frontmatter.status).toBe('approved');
+    expect(plan.frontmatter.human_review_status).toBe('pending');
     expect(result.issues).toEqual([]);
     expect(existsSync(join(codaRoot, 'issues', 'my-feature', 'revision-instructions.md'))).toBe(false);
   });

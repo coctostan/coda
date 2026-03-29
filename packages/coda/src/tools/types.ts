@@ -84,6 +84,10 @@ export interface EditBodyResult extends ToolResult {
 export interface AdvanceInput {
   /** Target phase to transition to */
   target_phase: string;
+  /** Optional human review decision to apply before or instead of advancing. */
+  human_review_decision?: 'approved' | 'changes-requested';
+  /** Optional human review feedback captured for requested changes. */
+  review_feedback?: string;
 }
 
 /** Result from coda_advance. */
@@ -110,6 +114,10 @@ export interface StatusResult extends ToolResult {
   completed_tasks: number[];
   /** TDD write-gate state */
   tdd_gate: string;
+  /** Whether the focused issue requires human review before build. */
+  human_review_required?: boolean | null;
+  /** Current durable human review status on the active plan. */
+  human_review_status?: 'not-required' | 'pending' | 'approved' | 'changes-requested' | null;
   /** Human-readable suggestion for next action */
   next_action: string;
 }

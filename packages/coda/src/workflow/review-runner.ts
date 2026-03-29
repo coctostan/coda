@@ -171,8 +171,8 @@ function collectStructuralIssues(codaRoot: string, issueSlug: string): ReviewIss
       if (!coveredAcs.has(ac.id)) {
         issues.push({
           title: `${ac.id} not covered by any task`,
-          details: `${ac.id} (\"${ac.text}\") is not in any task's covers_ac.`,
-          fix: `Add covers_ac: [\"${ac.id}\"] to an existing task or create a new task that covers it.`,
+          details: `${ac.id} ("${ac.text}") is not in any task's covers_ac.`,
+          fix: `Add covers_ac: ["${ac.id}"] to an existing task or create a new task that covers it.`,
         });
       }
     }
@@ -217,7 +217,7 @@ function collectFileScopeIssues(task: TaskRecord): ReviewIssue[] {
     .filter((path) => isUnreasonableFileTarget(path))
     .map((path) => ({
       title: `Task ${String(task.id)} targets an unreasonable file path`,
-      details: `Task ${String(task.id)} (${task.title}) includes file target \"${path}\", which is outside normal repo workflow scope.`,
+      details: `Task ${String(task.id)} (${task.title}) includes file target "${path}", which is outside normal repo workflow scope.`,
       fix: 'Replace the file path with a repo-relative implementation target inside the intended package scope.',
     }));
 }
@@ -232,7 +232,15 @@ function approvePlan(codaRoot: string, issueSlug: string): void {
     throw new Error(`No plan found for issue ${issueSlug}`);
   }
 
-  updateFrontmatter<PlanRecord>(planPath, { status: 'approved' });
+  const issue = loadIssue(codaRoot, issueSlug);
+  const humanReviewStatus: PlanRecord['human_review_status'] = issue?.frontmatter.human_review === true
+    ? 'pending'
+    : 'not-required';
+
+  updateFrontmatter<PlanRecord>(planPath, {
+    status: 'approved',
+    human_review_status: humanReviewStatus,
+  });
 }
 
 function getPlanPath(codaRoot: string, issueSlug: string): string | null {

@@ -162,6 +162,44 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.context).toContain('Setup');
   });
 
+
+  test('correct context includes correction task, failure artifact, and source task summaries', () => {
+    mkdirSync(join(codaRoot, 'issues', 'my-feature', 'verification-failures'), { recursive: true });
+    writeFileSync(
+      join(codaRoot, 'issues', 'my-feature', 'verification-failures', 'AC-1.yaml'),
+      [
+        'ac_id: AC-1',
+        'status: not-met',
+        'failed_checks:',
+        '  - type: test_failure',
+        '    detail: setup path still fails verification',
+        'source_tasks: [1]',
+        'relevant_files:',
+        '  - src/main.ts',
+      ].join('\n'),
+      'utf-8'
+    );
+
+    writeRecord(join(codaRoot, 'issues', 'my-feature', 'tasks', '03-fix-ac-1.md'), {
+      id: 3, issue: 'my-feature', title: 'Fix AC-1', status: 'pending',
+      kind: 'correction', fix_for_ac: 'AC-1', covers_ac: ['AC-1'], depends_on: [],
+      files_to_modify: ['src/main.ts'], truths: ['AC-1 passes after correction'], artifacts: [], key_links: [],
+    }, 'Repair the failing acceptance criterion.\n');
+
+    const ctx = getPhaseContext('verify', codaRoot, 'my-feature', {
+      version: 1, focus_issue: 'my-feature', phase: 'verify',
+      submode: 'correct', loop_iteration: 0,
+      current_task: 3, completed_tasks: [1, 2],
+      tdd_gate: 'locked', last_test_exit_code: null,
+      task_tool_calls: 0, enabled: true,
+    });
+
+    expect(ctx.systemPrompt).toContain('fixing a verification failure');
+    expect(ctx.context).toContain('Fix AC-1');
+    expect(ctx.context).toContain('setup path still fails verification');
+    expect(ctx.context).toContain('Setup');
+  });
+
   test('unify context includes issue + plan + summaries + ref-system', () => {
     const ctx = getPhaseContext('unify', codaRoot, 'my-feature', {
       version: 1, focus_issue: 'my-feature', phase: 'unify',

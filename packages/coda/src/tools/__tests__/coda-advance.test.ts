@@ -1,11 +1,11 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
 import { mkdtempSync, rmSync } from 'fs';
-import { join } from 'path';
+import { basename, join } from 'path';
 import { tmpdir } from 'os';
 import { codaAdvance } from '../coda-advance';
 import { codaCreate } from '../coda-create';
-import { readRecord, persistState, createDefaultState } from '@coda/core';
-import type { CodaState } from '@coda/core';
+import { readRecord, persistState, createDefaultState, writeRecord, loadState } from '@coda/core';
+import type { CodaState, IssueRecord, PlanRecord } from '@coda/core';
 
 let codaRoot: string;
 let statePath: string;
@@ -54,6 +54,47 @@ function setupIssue(acCount: number = 2): string {
   persistState(state, statePath);
 
   return result.path;
+}
+
+function setupPendingHumanReview(): string {
+  codaCreate(
+    {
+      type: 'issue',
+      fields: {
+        title: 'Test Issue',
+        issue_type: 'feature',
+        status: 'active',
+        phase: 'review',
+        priority: 3,
+        topics: [],
+        acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'pending' }],
+        open_questions: [],
+        deferred_items: [],
+        human_review: true,
+      },
+    },
+    codaRoot
+  );
+
+  const planPath = join(codaRoot, 'issues', 'test-issue', 'plan-v1.md');
+  writeRecord<PlanRecord>(planPath, {
+    title: 'Implementation Plan',
+    issue: 'test-issue',
+    status: 'approved',
+    iteration: 1,
+    task_count: 0,
+    human_review_status: 'pending',
+  }, '## Approach\nShip the approved plan.\n');
+
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'test-issue',
+    phase: 'review',
+    submode: 'review',
+    loop_iteration: 2,
+  }, statePath);
+
+  return planPath;
 }
 
 describe('codaAdvance', () => {
@@ -110,5 +151,65 @@ describe('codaAdvance', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('focus');
+  });
+
+  test('blocks review→build while human review is still pending', () => {
+    setupPendingHumanReview();
+
+    const result = codaAdvance({ target_phase: 'build' }, codaRoot, statePath);
+
+    expect(result.success).toBe(false);
+    expect(result.reason).toContain('Human plan review pending');
+  });
+
+  test('approves pending human review before advancing to build', () => {
+    const planPath = setupPendingHumanReview();
+
+    const result = codaAdvance({
+      target_phase: 'build',
+      human_review_decision: 'approved',
+    }, codaRoot, statePath);
+
+    expect(result.success).toBe(true);
+    expect(result.previous_phase).toBe('review');
+    expect(result.new_phase).toBe('build');
+
+    const plan = readRecord<PlanRecord>(planPath);
+    expect(plan.frontmatter.human_review_status).toBe('approved');
+
+    const issue = readRecord<IssueRecord>(join(codaRoot, 'issues', 'test-issue.md'));
+    expect(issue.frontmatter.phase).toBe('build');
+
+    const state = loadState(statePath);
+    expect(state?.phase).toBe('build');
+    expect(state?.submode).toBeNull();
+    expect(state?.loop_iteration).toBe(0);
+  });
+
+  test('records requested changes and returns the workflow to revise', () => {
+    const planPath = setupPendingHumanReview();
+    const reviewFeedback = 'Add a test scenario for approval rollback and tighten task scope.';
+
+    const result = codaAdvance({
+      target_phase: 'build',
+      human_review_decision: 'changes-requested',
+      review_feedback: reviewFeedback,
+    }, codaRoot, statePath);
+
+    expect(result.success).toBe(true);
+    expect(result.previous_phase).toBe('review');
+    expect(result.new_phase).toBe('review');
+
+    const plan = readRecord<PlanRecord>(planPath);
+    expect(plan.frontmatter.human_review_status).toBe('changes-requested');
+    expect(plan.body).toContain('## Human Review');
+    expect(plan.body).toContain(reviewFeedback);
+
+    const state = loadState(statePath);
+    expect(state?.phase).toBe('review');
+    expect(state?.submode).toBe('revise');
+    expect(state?.loop_iteration).toBe(0);
+
+    expect(basename(planPath)).toBe('plan-v1.md');
   });
 });

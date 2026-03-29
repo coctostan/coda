@@ -6,18 +6,17 @@
  * state engine's transition function, and updates both the
  * issue record and state.json on success.
  */
-
 import {
   readRecord,
   updateFrontmatter,
   transition,
   loadState,
   persistState,
-  listRecords,
 } from '@coda/core';
-import type { Phase, GateCheckData } from '@coda/core';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import type { CodaState, GateCheckData, IssueRecord, Phase, PlanRecord } from '@coda/core';
+import { basename, join } from 'path';
+import { existsSync, readdirSync } from 'fs';
+import { codaEditBody } from './coda-edit-body';
 import type { AdvanceInput, AdvanceResult } from './types';
 
 /**
@@ -29,54 +28,48 @@ function gatherGateData(codaRoot: string, issueSlug: string): GateCheckData {
 
   const data: GateCheckData = {};
 
-  // Read issue record for AC count
   if (existsSync(issuePath)) {
-    const { frontmatter } = readRecord<Record<string, unknown>>(issuePath);
-    const acs = frontmatter['acceptance_criteria'];
-    data.issueAcCount = Array.isArray(acs) ? acs.length : 0;
-
-    // Check all ACs met
-    if (Array.isArray(acs)) {
-      data.allAcsMet = acs.length > 0 && acs.every(
-        (ac) => typeof ac === 'object' && ac !== null && (ac as Record<string, unknown>)['status'] === 'met'
-      );
-    }
+    const { frontmatter } = readRecord<IssueRecord>(issuePath);
+    data.issueAcCount = frontmatter.acceptance_criteria.length;
+    data.humanReviewRequired = frontmatter.human_review;
+    data.allAcsMet = frontmatter.acceptance_criteria.length > 0
+      && frontmatter.acceptance_criteria.every((ac) => ac.status === 'met');
   }
 
-  // Check if plan exists
-  if (existsSync(issueDir)) {
-    const files = listRecords(issueDir);
-    const planFile = files.find((f) => f.includes('plan-'));
-    data.planExists = planFile !== undefined;
+  const planPath = getLatestPlanPath(codaRoot, issueSlug);
+  if (planPath) {
+    const { frontmatter } = readRecord<PlanRecord>(planPath);
+    data.planExists = true;
+    data.planApproved = frontmatter.status === 'approved';
+    data.humanReviewStatus = frontmatter.human_review_status;
 
-    // Check if plan is approved
-    if (planFile) {
-      const { frontmatter } = readRecord<Record<string, unknown>>(planFile);
-      data.planApproved = frontmatter['status'] === 'approved';
-
-      // Check all tasks complete
-      const taskCount = frontmatter['task_count'] as number | undefined;
-      if (taskCount !== undefined) {
-        const tasksDir = join(issueDir, 'tasks');
-        if (existsSync(tasksDir)) {
-          const taskFiles = listRecords(tasksDir);
-          const completeTasks = taskFiles.filter((f) => {
-            const { frontmatter: tf } = readRecord<Record<string, unknown>>(f);
-            return tf['status'] === 'complete';
-          });
-          data.allPlannedTasksComplete = completeTasks.length >= taskCount;
-        } else {
-          data.allPlannedTasksComplete = taskCount === 0;
-        }
+    if (frontmatter.task_count !== undefined) {
+      const tasksDir = join(issueDir, 'tasks');
+      if (existsSync(tasksDir)) {
+        const taskFiles = readdirSync(tasksDir)
+          .filter((file) => file.endsWith('.md'))
+          .map((file) => join(tasksDir, file));
+        const completeTasks = taskFiles.filter((taskPath) => {
+          const { frontmatter: task } = readRecord<Record<string, unknown>>(taskPath);
+          return task['status'] === 'complete';
+        });
+        data.allPlannedTasksComplete = completeTasks.length >= frontmatter.task_count;
+      } else {
+        data.allPlannedTasksComplete = frontmatter.task_count === 0;
       }
     }
+  } else {
+    data.planExists = false;
   }
 
-  // Check completion record exists
-  const completionFiles = existsSync(join(codaRoot, 'records'))
-    ? listRecords(join(codaRoot, 'records'))
-    : [];
-  data.completionRecordExists = completionFiles.some((f) => f.includes(issueSlug));
+  const recordsDir = join(codaRoot, 'records');
+  if (existsSync(recordsDir)) {
+    const completionFiles = readdirSync(recordsDir)
+      .filter((file) => file.endsWith('.md'));
+    data.completionRecordExists = completionFiles.some((file) => file.includes(issueSlug));
+  } else {
+    data.completionRecordExists = false;
+  }
 
   return data;
 }
@@ -110,12 +103,18 @@ export function codaAdvance(
 
     const previousPhase = state.phase;
     const targetPhase = input.target_phase as Phase;
-    const gateData = gatherGateData(codaRoot, state.focus_issue);
 
+    if (state.phase === 'review' && targetPhase === 'build') {
+      const humanReviewResult = handleHumanReviewDecision(input, codaRoot, statePath, state);
+      if (humanReviewResult) {
+        return humanReviewResult;
+      }
+    }
+
+    const gateData = gatherGateData(codaRoot, state.focus_issue);
     const result = transition(state, targetPhase, gateData);
 
     if (!result.success) {
-      // Extract gate name from error
       const gateMatch = result.error?.match(/Gate "([^"]+)"/);
       return {
         success: false,
@@ -125,14 +124,10 @@ export function codaAdvance(
       };
     }
 
-    // Update issue phase in mdbase
-    const issuePath = join(codaRoot, 'issues', `${state.focus_issue}.md`);
-    if (existsSync(issuePath)) {
-      updateFrontmatter(issuePath, { phase: targetPhase });
-    }
-
-    // Persist new state
     if (result.state) {
+      if (result.state.phase) {
+        updateIssuePhase(codaRoot, state.focus_issue, result.state.phase);
+      }
       persistState(result.state, statePath);
     }
 
@@ -144,5 +139,102 @@ export function codaAdvance(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return { success: false, error: message };
+  }
+}
+
+function handleHumanReviewDecision(
+  input: AdvanceInput,
+  codaRoot: string,
+  statePath: string,
+  state: CodaState
+): AdvanceResult | null {
+  if (!state.focus_issue) {
+    return { success: false, error: 'No focus issue set — focus an issue first' };
+  }
+
+  if (input.human_review_decision === 'changes-requested') {
+    const reviewFeedback = input.review_feedback?.trim();
+    if (!reviewFeedback) {
+      return {
+        success: false,
+        previous_phase: state.phase ?? undefined,
+        reason: 'Human review feedback is required when requesting changes',
+      };
+    }
+
+    const planPath = getLatestPlanPath(codaRoot, state.focus_issue);
+    if (!planPath) {
+      return {
+        success: false,
+        previous_phase: state.phase ?? undefined,
+        reason: `No plan found for issue ${state.focus_issue}`,
+      };
+    }
+
+    const editResult = codaEditBody({
+      record: join('issues', state.focus_issue, basename(planPath)),
+      op: 'replace_section',
+      section: 'Human Review',
+      content: `Status: changes-requested\n\nFeedback:\n${reviewFeedback}`,
+    }, codaRoot);
+
+    if (!editResult.success) {
+      return {
+        success: false,
+        previous_phase: state.phase ?? undefined,
+        reason: editResult.error ?? 'Failed to capture human review feedback',
+      };
+    }
+
+    updateFrontmatter<PlanRecord>(planPath, { human_review_status: 'changes-requested' });
+    updateIssuePhase(codaRoot, state.focus_issue, 'review');
+    persistState({
+      ...state,
+      phase: 'review',
+      submode: 'revise',
+      loop_iteration: 0,
+    }, statePath);
+
+    return {
+      success: true,
+      previous_phase: state.phase ?? undefined,
+      new_phase: 'review',
+    };
+  }
+
+  if (input.human_review_decision === 'approved') {
+    const planPath = getLatestPlanPath(codaRoot, state.focus_issue);
+    if (!planPath) {
+      return {
+        success: false,
+        previous_phase: state.phase ?? undefined,
+        reason: `No plan found for issue ${state.focus_issue}`,
+      };
+    }
+
+    updateFrontmatter<PlanRecord>(planPath, { human_review_status: 'approved' });
+  }
+
+  return null;
+}
+
+function getLatestPlanPath(codaRoot: string, issueSlug: string): string | null {
+  const issueDir = join(codaRoot, 'issues', issueSlug);
+  if (!existsSync(issueDir)) {
+    return null;
+  }
+
+  const planFiles = readdirSync(issueDir)
+    .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
+    .sort();
+  const planFile = planFiles[planFiles.length - 1];
+
+  return planFile ? join(issueDir, planFile) : null;
+}
+
+function updateIssuePhase(codaRoot: string, issueSlug: string, targetPhase: Phase): void {
+  const issuePath = join(codaRoot, 'issues', `${issueSlug}.md`);
+  if (existsSync(issuePath)) {
+    updateFrontmatter<IssueRecord>(issuePath, { phase: targetPhase });
   }
 }

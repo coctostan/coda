@@ -108,14 +108,22 @@ export function getPhaseContext(
     }
 
     case 'verify': {
+      if (state?.submode === 'correct') {
+        const currentTask = state.current_task ?? 1;
+        const completedTasks = state.completed_tasks ?? [];
+        return buildTaskContext(codaRoot, issueSlug, currentTask, completedTasks);
+      }
+
       const completedTasks = state?.completed_tasks ?? [];
       const summaries = getPreviousTaskSummaries(
         codaRoot, issueSlug, completedTasks, completedTasks.length
       );
+      const plan = loadPlan(codaRoot, issueSlug);
       return {
         systemPrompt: 'You are verifying acceptance criteria against built artifacts.',
         context: [
           issueContext,
+          plan ? `## Plan\n${plan.body}` : '',
           summaries ? `## Task Summaries\n${summaries}` : '',
         ].filter(Boolean).join('\n\n'),
       };

@@ -4,10 +4,10 @@
  *
  * Registers the `/coda` slash command and dispatches supported subcommands.
  */
-
 import { join } from 'node:path';
 import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-coding-agent';
 import { codaAdvance, codaCreate, codaStatus } from '../tools';
+import type { AdvanceInput, StatusResult } from '../tools';
 import { getBuildSequence } from '../workflow';
 
 /** Supported issue types for `/coda new`. */
@@ -41,7 +41,7 @@ async function handleCodaCommand(
 
   switch (parsed.subcommand) {
     case 'status': {
-      const result = codaStatus(statePath);
+      const result = codaStatus(statePath, codaRoot);
       const phase = result.phase ?? 'none';
       const task = result.current_task === null ? 'none' : String(result.current_task);
       ctx.ui.notify(`Phase: ${phase} | Task: ${task} | Next: ${result.next_action}`);
@@ -85,18 +85,27 @@ async function handleCodaCommand(
     }
 
     case 'advance': {
-      const status = codaStatus(statePath);
+      const status = codaStatus(statePath, codaRoot);
       if (!status.focus_issue || !status.phase) {
         ctx.ui.notify('No focused issue or phase to advance from.', 'warning');
         return;
       }
 
-      const result = codaAdvance({
-        target_phase: getNextPhase(status.phase),
-      }, codaRoot, statePath);
+      const advanceInput = buildAdvanceInput(status, parsed.remainder);
+      if ('error' in advanceInput) {
+        ctx.ui.notify(advanceInput.error, 'warning');
+        return;
+      }
+
+      const result = codaAdvance(advanceInput, codaRoot, statePath);
 
       if (!result.success) {
         ctx.ui.notify(result.reason ?? result.error ?? 'Advance failed.', 'error');
+        return;
+      }
+
+      if (advanceInput.human_review_decision === 'changes-requested') {
+        ctx.ui.notify(`Recorded human review changes for ${status.focus_issue} and returned the workflow to revise.`);
         return;
       }
 
@@ -107,7 +116,7 @@ async function handleCodaCommand(
     }
 
     case 'build': {
-      const status = codaStatus(statePath);
+      const status = codaStatus(statePath, codaRoot);
       if (!status.focus_issue) {
         ctx.ui.notify('No focused issue. Use /coda new first.', 'warning');
         return;
@@ -125,7 +134,7 @@ async function handleCodaCommand(
 
     default: {
       ctx.ui.notify(
-        'Usage: /coda [status|forge|new <type> <title>|advance|build]',
+        'Usage: /coda [status|forge|new <type> <title>|advance [approve|changes <feedback>]|build]',
         'warning'
       );
     }
@@ -181,4 +190,41 @@ function getNextPhase(current: string): string {
   const order = ['specify', 'plan', 'review', 'build', 'verify', 'unify', 'done'];
   const index = order.indexOf(current);
   return index >= 0 && index < order.length - 1 ? order[index + 1]! : 'done';
+}
+
+function buildAdvanceInput(
+  status: StatusResult,
+  remainder: string
+): AdvanceInput | { error: string } {
+  const trimmed = remainder.trim();
+
+  if (status.phase === 'review' && status.human_review_status === 'pending') {
+    if (trimmed.length === 0 || trimmed === 'approve' || trimmed === 'approved') {
+      return {
+        target_phase: 'build',
+        human_review_decision: 'approved',
+      };
+    }
+
+    if (trimmed === 'changes' || trimmed === 'request-changes') {
+      return { error: 'Usage: /coda advance changes <feedback>' };
+    }
+
+    const changeMatch = trimmed.match(/^(changes|request-changes)\s+([\s\S]+)$/);
+    if (changeMatch) {
+      return {
+        target_phase: 'build',
+        human_review_decision: 'changes-requested',
+        review_feedback: changeMatch[2]!.trim(),
+      };
+    }
+
+    return {
+      error: 'Human review is pending. Use /coda advance to approve or /coda advance changes <feedback> to request changes.',
+    };
+  }
+
+  return {
+    target_phase: getNextPhase(status.phase ?? 'done'),
+  };
 }
