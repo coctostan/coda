@@ -6,15 +6,15 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.2 Autonomous Loops** (v0.2.0)
 Status: 🚧 In Progress
-Phases: 1 of 7 complete
+Phases: 2 of 7 complete
 
 ## Phases
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 9 | State Submodes + Loop Tracking | 1/1 | ✅ Complete | 2026-03-29 |
-| 10 | Review Runner | TBD | Not started | - |
-| 11 | Verify Runner + Correction Tasks | TBD | Not started | - |
+| 10 | Review Runner | 1/1 | ✅ Complete | 2026-03-29 |
+| 11 | Verify Runner + Correction Tasks | TBD | Ready to plan | - |
 | 12 | Human Review Gate | TBD | Not started | - |
 | 13 | Exhaustion Handling + Rewind/Kill Controls | TBD | Not started | - |
 | 14 | Pi Integration Updates | TBD | Not started | - |
@@ -28,7 +28,7 @@ Plans: `09-01-PLAN.md`, `09-01-SUMMARY.md`
 
 ### Phase 10: Review Runner
 Focus: Add `review-runner.ts`, structural checks, revision-instructions artifact, and the `review ↔ revise` autonomous loop.
-Plans: TBD (defined during /paul:plan)
+Plans: `10-01-PLAN.md`, `10-01-SUMMARY.md`
 
 ### Phase 11: Verify Runner + Correction Tasks
 Focus: Add `verify-runner.ts`, per-AC verification, failure artifacts, correction task generation, and BUILD-loop integration for correction tasks.
@@ -74,4 +74,4 @@ Plans: TBD (defined during /paul:plan)
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-03-29 after Phase 9 completion*
+*Roadmap updated: 2026-03-29 after Phase 10 completion*

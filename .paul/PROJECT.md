@@ -18,7 +18,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, and v0.2 submode/loop primitives
 - `@coda/coda` ships tools, modules, FORGE, workflow engine, and Pi integration
 - Live Pi extension validated end-to-end against the real `ExtensionAPI`
-- 202 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
+- 212 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
 
 ## Scope Snapshot
 ### Validated
@@ -31,8 +31,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Pi integration — commands, tools, hooks, extension entry point (Phase 7 — v0.1)
 - [x] E2E validation — live Pi session dogfood, findings, and reusable test playbook (Phase 8 — v0.1)
 - [x] State submodes + loop tracking — `submode`, `loop_iteration`, exhaustion checks, and loop config defaults (Phase 9 — v0.2)
+- [x] Autonomous review/revise runner — deterministic structural review, revision instructions/history, and review-context injection (Phase 10 — v0.2)
 ### Active
-- [ ] Autonomous review/revise runner (Phase 10 — v0.2)
 - [ ] Autonomous verify/correct runner + correction tasks (Phase 11 — v0.2)
 - [ ] Human review gate (Phase 12 — v0.2)
 - [ ] Exhaustion handling + rewind/kill controls (Phase 13 — v0.2)
@@ -59,8 +59,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.2 progress | 7 phases complete | 1 of 7 complete |
-| Test suite | Green | 202 passing, 0 failing |
+| Milestone v0.2 progress | 7 phases complete | 2 of 7 complete |
+| Test suite | Green | 212 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Review/verify primitives | Landed in core | PASS |
 | Pi validation | Live extension works in Pi | PASS from v0.1 baseline |
@@ -75,6 +75,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Pi integration uses the real `ExtensionAPI` | Match Pi's actual runtime model and avoid drift from custom wrapper types | 2026-03-28 | Active |
 | `import.meta.url` + `fileURLToPath` replaces `import.meta.dir` | Maintain compatibility across Bun and Node/jiti extension loading | 2026-03-28 | Active |
 | Autonomous-loop submodes are phase-local, not new top-level phases | Preserve linear lifecycle while allowing bounded review/verify cycles | 2026-03-29 | Active |
+| Deterministic structural review writes durable revision artifacts | Keep Phase 10 review/revise loop mechanical, auditable, and disk-backed before later human/LLM gates | 2026-03-29 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -83,4 +84,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-03-29 after Phase 9*
+*Last updated: 2026-03-29 after Phase 10*

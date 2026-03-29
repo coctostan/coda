@@ -6,17 +6,16 @@ See: .paul/PROJECT.md (updated 2026-03-29)
 Version: v0.2.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 9 complete. Ready to plan Phase 10.
-
+**Current focus:** Phase 11 ready for planning.
 ## Current Position
 Milestone: v0.2 Autonomous Loops
-Phase: 10 of 15 (Review Runner)
+Phase: 11 of 15 (Verify Runner + Correction Tasks) — Ready to Plan
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-03-29T01:20:06Z — Phase 9 complete, transitioned to Phase 10
+Status: Ready for next PLAN
+Last activity: 2026-03-29T02:57:03Z — Completed Phase 10 UNIFY and transitioned to Phase 11
 Progress:
-- v0.2 Autonomous Loops: [█░░░░░░░░░] 14%
-- Phase 9: [██████████] 100% ✓
+- v0.2 Autonomous Loops: [███░░░░░░░] 29%
+- Phase 11: [░░░░░░░░░░] 0%
 
 ## Loop Position
 
@@ -42,6 +41,7 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | v0.2 specs are source of truth for autonomous loops | Phase 9 | Direct-requirements milestone from docs/v0.2 |
 | Continued APPLY despite preflight branch drift | Phase 9 | Recovered by branching to `feature/09-state-submodes-loop-tracking` before postflight |
 | Submodes remain phase-local, not top-level phases | Phase 9 | Preserves linear lifecycle while enabling bounded review/verify loops |
+| Deterministic structural review writes durable revision artifacts | Phase 10 | Review/revise loop stays mechanical, auditable, and disk-backed |
 
 ### Git State
 Branch: feature/09-state-submodes-loop-tracking
@@ -50,15 +50,16 @@ PR: https://github.com/coctostan/coda/pull/6 (OPEN)
 
 ## Session Continuity
 
-Last session: 2026-03-29T01:20:06Z
-Stopped at: Phase 9 complete, ready to plan Phase 10
-Next action: /paul:plan for Phase 10
-Resume file: .paul/phases/09-state-submodes-loop-tracking/09-01-SUMMARY.md
+Last session: 2026-03-29T02:57:03Z
+Stopped at: Phase 10 complete, transitioned to Phase 11 and ready to plan
+Next action: /paul:plan
+Resume file: .paul/phases/10-review-runner/10-01-SUMMARY.md
 Resume context:
-- Phase 9 summary recorded in `.paul/phases/09-state-submodes-loop-tracking/09-01-SUMMARY.md`
-- 202 tests passing, TypeScript clean
-- Advisory drift remains: `CHANGELOG.md` absent / docs not updated in this phase
-- Next implementation target is `docs/v0.2/02-review-runner.md`
+- Phase 10 closed with `.paul/phases/10-review-runner/10-01-SUMMARY.md`
+- Review runner landed with structural checks, revision-instructions/history artifacts, and submode-aware review context assembly
+- Verification passed: targeted workflow tests, full `bun test`, and `npx tsc --noEmit`
+- Module dispatch remained unavailable because `modules.yaml` is absent in repo root
+- Next planning target is Phase 11 verify/correct orchestration and correction-task generation
 
 ---
 *STATE.md — Updated after every significant action*

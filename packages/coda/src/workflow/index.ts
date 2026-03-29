@@ -10,6 +10,16 @@
 // Types
 export type { PhaseContext, BuildTaskContext, CarryForwardConfig } from './types';
 export { DEFAULT_CARRY_FORWARD } from './types';
+export type {
+  ReviewIssue,
+  ReviewDecision,
+  ReviewRunnerOptions,
+  ReviewRunnerOutcome,
+  ReviewApprovedOutcome,
+  ReviewReviseRequiredOutcome,
+  ReviewReadyOutcome,
+  ReviewExhaustedOutcome,
+} from './review-runner';
 
 // Context builder
 export {
@@ -17,6 +27,8 @@ export {
   loadPlan,
   loadTasks,
   loadRefDocs,
+  loadRevisionInstructions,
+  loadRevisionHistory,
   getPreviousTaskSummaries,
 } from './context-builder';
 
@@ -25,3 +37,6 @@ export { getPhaseContext } from './phase-runner';
 
 // Build loop
 export { buildTaskContext, getBuildSequence } from './build-loop';
+
+// Review loop
+export { runReviewRunner } from './review-runner';

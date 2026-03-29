@@ -5,11 +5,10 @@
  * All functions use @coda/core data layer for record I/O.
  * Missing files return null/empty gracefully — no throws.
  */
-
 import { readRecord, listRecords } from '@coda/core';
-import type { IssueRecord, TaskRecord } from '@coda/core';
+import type { IssueRecord, PlanRecord, TaskRecord } from '@coda/core';
 import { join } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 
 /**
  * Load an issue record from `.coda/issues/{slug}.md`.
@@ -37,7 +36,7 @@ export function loadIssue(
 export function loadPlan(
   codaRoot: string,
   issueSlug: string
-): { frontmatter: Record<string, unknown>; body: string } | null {
+): { frontmatter: PlanRecord; body: string } | null {
   const issueDir = join(codaRoot, 'issues', issueSlug);
   if (!existsSync(issueDir)) return null;
 
@@ -45,10 +44,9 @@ export function loadPlan(
     const files = readdirSync(issueDir).filter((f) => f.startsWith('plan-v') && f.endsWith('.md'));
     if (files.length === 0) return null;
 
-    // Sort to get the latest plan version
     files.sort();
     const planFile = files[files.length - 1]!;
-    return readRecord<Record<string, unknown>>(join(issueDir, planFile));
+    return readRecord<PlanRecord>(join(issueDir, planFile));
   } catch {
     return null;
   }
@@ -73,7 +71,7 @@ export function loadTasks(
     const tasks = files.map((filePath) =>
       readRecord<TaskRecord>(filePath)
     );
-    tasks.sort((a, b) => (a.frontmatter.id as number) - (b.frontmatter.id as number));
+    tasks.sort((a, b) => a.frontmatter.id - b.frontmatter.id);
     return tasks;
   } catch {
     return [];
@@ -115,6 +113,51 @@ export function loadRefDocs(codaRoot: string): { system: string; prd: string } {
 }
 
 /**
+ * Load the active revision instructions artifact for an issue.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param issueSlug - The issue slug
+ * @returns Raw markdown content, or empty string if missing
+ */
+export function loadRevisionInstructions(codaRoot: string, issueSlug: string): string {
+  const path = join(codaRoot, 'issues', issueSlug, 'revision-instructions.md');
+  if (!existsSync(path)) return '';
+
+  try {
+    return readFileSync(path, 'utf-8');
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Load prior revision instruction snapshots for an issue.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param issueSlug - The issue slug
+ * @returns Concatenated markdown history, or empty string if none exists
+ */
+export function loadRevisionHistory(codaRoot: string, issueSlug: string): string {
+  const historyDir = join(codaRoot, 'issues', issueSlug, 'revision-history');
+  if (!existsSync(historyDir)) return '';
+
+  try {
+    const historyFiles = readdirSync(historyDir)
+      .filter((file) => file.endsWith('.md'))
+      .sort();
+
+    const entries = historyFiles.map((file) => {
+      const content = readFileSync(join(historyDir, file), 'utf-8').trim();
+      return content.length > 0 ? `### ${file}\n${content}` : '';
+    }).filter(Boolean);
+
+    return entries.join('\n\n');
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Get summaries from the most recent N completed tasks (carry-forward).
  *
  * @param codaRoot - Path to the `.coda/` directory
@@ -134,27 +177,25 @@ export function getPreviousTaskSummaries(
   const taskDir = join(codaRoot, 'issues', issueSlug, 'tasks');
   if (!existsSync(taskDir)) return '';
 
-  // Take the last N completed task ids
   const recentIds = completedTasks.slice(-maxTasks);
-
-  const summaries: string[] = [];
+  const summaries: Array<{ id: number; content: string }> = [];
 
   try {
     const files = listRecords(taskDir);
 
     for (const filePath of files) {
       const record = readRecord<TaskRecord>(filePath);
-      if (recentIds.includes(record.frontmatter.id as number)) {
-        summaries.push(
-          `### ${record.frontmatter.title} (Task ${String(record.frontmatter.id)})\n${record.body}`
-        );
+      if (recentIds.includes(record.frontmatter.id)) {
+        summaries.push({
+          id: record.frontmatter.id,
+          content: `### ${record.frontmatter.title} (Task ${String(record.frontmatter.id)})\n${record.body}`,
+        });
       }
     }
   } catch {
     return '';
   }
 
-  // Sort by task id to maintain order
-  summaries.sort();
-  return summaries.join('\n');
+  summaries.sort((a, b) => a.id - b.id);
+  return summaries.map((summary) => summary.content).join('\n');
 }

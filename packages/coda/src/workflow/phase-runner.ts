@@ -5,10 +5,17 @@
  * Returns a PhaseContext with the right systemPrompt and assembled
  * context string for each lifecycle phase. Does NOT drive the LLM.
  */
-
 import type { CodaState } from '@coda/core';
 import type { Phase, PhaseContext } from './types';
-import { loadIssue, loadPlan, loadTasks, loadRefDocs, getPreviousTaskSummaries } from './context-builder';
+import {
+  loadIssue,
+  loadPlan,
+  loadTasks,
+  loadRefDocs,
+  getPreviousTaskSummaries,
+  loadRevisionInstructions,
+  loadRevisionHistory,
+} from './context-builder';
 import { buildTaskContext } from './build-loop';
 
 /**
@@ -61,15 +68,36 @@ export function getPhaseContext(
     case 'review': {
       const plan = loadPlan(codaRoot, issueSlug);
       const tasks = loadTasks(codaRoot, issueSlug);
-      const planContext = plan
-        ? `## Plan\n${plan.body}`
-        : '';
+      const planContext = plan ? `## Plan\n${plan.body}` : '';
       const taskList = tasks.length > 0
         ? `## Tasks\n${tasks.map((t) => `- Task ${String(t.frontmatter.id)}: ${t.frontmatter.title} (${t.frontmatter.status})`).join('\n')}`
         : '';
+
+      if (state?.submode === 'revise') {
+        const revisionInstructions = loadRevisionInstructions(codaRoot, issueSlug);
+        return {
+          systemPrompt: 'You are revising a development plan based on review feedback. Address each issue in the revision instructions without broadening scope.',
+          context: [
+            issueContext,
+            planContext,
+            taskList,
+            revisionInstructions ? `## Revision Instructions\n${revisionInstructions}` : '',
+          ].filter(Boolean).join('\n\n'),
+        };
+      }
+
+      const revisionHistory = state?.loop_iteration && state.loop_iteration > 0
+        ? loadRevisionHistory(codaRoot, issueSlug)
+        : '';
+
       return {
         systemPrompt: 'You are reviewing the plan. Check AC coverage, task ordering, and scope.',
-        context: [issueContext, planContext, taskList].filter(Boolean).join('\n\n'),
+        context: [
+          issueContext,
+          planContext,
+          taskList,
+          revisionHistory ? `## Revision History\n${revisionHistory}` : '',
+        ].filter(Boolean).join('\n\n'),
       };
     }
 

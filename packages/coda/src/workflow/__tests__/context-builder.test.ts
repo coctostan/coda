@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach } from 'bun:test';
-import { mkdtempSync, rmSync, mkdirSync } from 'fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { writeRecord } from '@coda/core';
@@ -9,6 +9,8 @@ import {
   loadTasks,
   loadRefDocs,
   getPreviousTaskSummaries,
+  loadRevisionInstructions,
+  loadRevisionHistory,
 } from '../context-builder';
 
 describe('Workflow Context Builder', () => {
@@ -32,8 +34,14 @@ describe('Workflow Context Builder', () => {
       writeRecord(join(codaRoot, 'issues', 'my-feature.md'), {
         title: 'My Feature',
         issue_type: 'feature',
+        status: 'active',
         phase: 'build',
         priority: 3,
+        topics: [],
+        acceptance_criteria: [],
+        open_questions: [],
+        deferred_items: [],
+        human_review: false,
       }, '## Description\nA great feature.\n');
 
       const result = loadIssue(codaRoot, 'my-feature');
@@ -57,6 +65,7 @@ describe('Workflow Context Builder', () => {
         status: 'approved',
         iteration: 1,
         task_count: 3,
+        human_review_status: 'not-required',
       }, '## Approach\nBuild it step by step.\n');
 
       const result = loadPlan(codaRoot, 'my-feature');
@@ -167,12 +176,41 @@ describe('Workflow Context Builder', () => {
       }
 
       const summaries = getPreviousTaskSummaries(codaRoot, 'my-feature', [1, 2, 3, 4, 5], 2);
-      // Should only include last 2 (tasks 4 and 5)
       expect(summaries).not.toContain('Task 1');
       expect(summaries).not.toContain('Task 2');
       expect(summaries).not.toContain('Task 3');
       expect(summaries).toContain('Task 4');
       expect(summaries).toContain('Task 5');
+    });
+  });
+
+  describe('revision artifacts', () => {
+    test('loads current revision instructions from disk', () => {
+      mkdirSync(join(codaRoot, 'issues', 'my-feature'), { recursive: true });
+      writeFileSync(
+        join(codaRoot, 'issues', 'my-feature', 'revision-instructions.md'),
+        '---\niteration: 1\nissues_found: 2\n---\n## Issue 1: tighten task scope\n**Fix:** narrow the files.\n',
+        'utf-8'
+      );
+
+      const instructions = loadRevisionInstructions(codaRoot, 'my-feature');
+      expect(instructions).toContain('tighten task scope');
+      expect(instructions).toContain('issues_found: 2');
+    });
+
+    test('loads revision history entries in sorted order', () => {
+      const historyDir = join(codaRoot, 'issues', 'my-feature', 'revision-history');
+      mkdirSync(historyDir, { recursive: true });
+      writeFileSync(join(historyDir, 'iteration-2.md'), '## Issue 2\nSecond revision\n', 'utf-8');
+      writeFileSync(join(historyDir, 'iteration-1.md'), '## Issue 1\nFirst revision\n', 'utf-8');
+
+      const history = loadRevisionHistory(codaRoot, 'my-feature');
+      expect(history.indexOf('First revision')).toBeLessThan(history.indexOf('Second revision'));
+    });
+
+    test('returns empty strings when revision artifacts are missing', () => {
+      expect(loadRevisionInstructions(codaRoot, 'my-feature')).toBe('');
+      expect(loadRevisionHistory(codaRoot, 'my-feature')).toBe('');
     });
   });
 });
