@@ -6,7 +6,7 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.2 Autonomous Loops** (v0.2.0)
 Status: 🚧 In Progress
-Phases: 6 of 7 complete
+Phases: 8 of 9 complete
 
 ## Phases
 
@@ -18,7 +18,9 @@ Phases: 6 of 7 complete
 | 12 | Human Review Gate | 1/1 | ✅ Complete | 2026-03-29 |
 | 13 | Exhaustion Handling + Rewind/Kill Controls | 1/1 | ✅ Complete | 2026-03-29 |
 | 14 | Pi Integration Updates | 1/1 | ✅ Complete | 2026-03-29 |
-| 15 | E2E Validation | TBD | Not started | - |
+| 15 | E2E Validation | 1/1 | ✅ Complete | 2026-03-29 |
+| 16 | Live Operator Trigger Resolution | 1/1 | ✅ Complete | 2026-03-30 |
+| 17 | Repeat Live E2E Validation | TBD | Not started | - |
 
 ## Phase Details
 
@@ -48,6 +50,14 @@ Plans: `14-01-PLAN.md`, `14-01-SUMMARY.md`
 
 ### Phase 15: E2E Validation
 Focus: Validate all four required v0.2 scenarios end-to-end with the v0.1 clean prerequisite satisfied.
+Plans: `15-01-PLAN.md`, `15-01-SUMMARY.md`
+
+### Phase 16: Live Operator Trigger Resolution
+Focus: Resolve the operator-surface/runtime trigger gap that prevented live Pi sessions from entering the autonomous review/verify loops documented for v0.2.
+Plans: `16-01-PLAN.md`, `16-01-SUMMARY.md`
+
+### Phase 17: Repeat Live E2E Validation
+Focus: Re-run the canonical CMUX/Pi validation from a clean baseline after the live trigger gap is fixed and record a fully green transcript.
 Plans: TBD (defined during /paul:plan)
 
 ## Completed Milestones
@@ -69,9 +79,9 @@ Plans: TBD (defined during /paul:plan)
 </details>
 
 ## Milestone Notes
-- Active milestone context comes from `docs/v0.2/00-overview.md` through `docs/v0.2/04-human-review.md`
+- Active milestone context comes from `docs/v0.2/00-overview.md` through `docs/v0.2/E2E-TEST-SCRIPT-v0.2.md`
 - Previous milestone archive: `.paul/milestones/v0.1.0-ROADMAP.md`
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-03-29 after Phase 14 UNIFY*
+*Roadmap updated: 2026-03-30 after Phase 16 transition*

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type {
@@ -33,12 +33,17 @@ type ToolCallResult = {
   block?: boolean;
   reason?: string;
 };
+type ToolResultHookResult = {
+  content?: Array<{ type: string; text?: string }>;
+  details?: Record<string, unknown>;
+};
 
 /** Create a mock ExtensionAPI that tracks registrations and captures hook handlers. */
 function createMockPi() {
   const commands: Array<{ name: string; options: Omit<RegisteredCommand, 'name'> }> = [];
   const tools: ToolDefinition[] = [];
   const hooks: Map<string, MockHook> = new Map();
+  const sentUserMessages: Array<{ content: string | unknown[]; options?: { deliverAs?: 'steer' | 'followUp' } }> = [];
 
   const pi = {
     registerCommand(name: string, options: Omit<RegisteredCommand, 'name'>) {
@@ -50,9 +55,12 @@ function createMockPi() {
     on(event: string, handler: MockHook) {
       hooks.set(event, handler);
     },
+    sendUserMessage(content: string | unknown[], options?: { deliverAs?: 'steer' | 'followUp' }) {
+      sentUserMessages.push({ content, options });
+    },
   } as unknown as ExtensionAPI;
 
-  return { pi, commands, tools, hooks };
+  return { pi, commands, tools, hooks, sentUserMessages };
 }
 
 /** Build a valid CodaState with optional overrides. */
@@ -203,8 +211,60 @@ function setupSubmodeAwareCodaRoot(submode: 'revise' | 'correct'): { projectRoot
   return base;
 }
 
+function setupVerifyTriggerCodaRoot(): { projectRoot: string; codaRoot: string } {
+  const base = createTempCodaRoot();
+  const { codaRoot } = base;
+
+  writeRecord(join(codaRoot, 'issues', 'my-feature.md'), {
+    title: 'My Feature',
+    issue_type: 'feature',
+    status: 'active',
+    phase: 'verify',
+    priority: 3,
+    topics: ['workflow'],
+    acceptance_criteria: [{ id: 'AC-1', text: 'It works', status: 'pending' }],
+    open_questions: [],
+    deferred_items: [],
+    human_review: false,
+  }, '## Description\nVerify the feature.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'my-feature', 'plan-v1.md'), {
+    title: 'Implementation Plan',
+    issue: 'my-feature',
+    status: 'approved',
+    iteration: 1,
+    task_count: 1,
+    human_review_status: 'approved',
+  }, '## Approach\nVerify the built work.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'my-feature', 'tasks', '01-unrelated.md'), {
+    id: 1,
+    issue: 'my-feature',
+    title: 'Unrelated Task',
+    status: 'complete',
+    kind: 'planned',
+    covers_ac: [],
+    depends_on: [],
+    files_to_modify: ['src/verify.ts'],
+    truths: ['Keep the fix narrow'],
+    artifacts: [],
+    key_links: [],
+  }, '## Summary\nFinished unrelated work.\n');
+
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'my-feature',
+    phase: 'verify',
+    submode: 'verify',
+    current_task: null,
+    completed_tasks: [1],
+  }, join(codaRoot, 'state.json'));
+
+  return base;
+}
+
 /** Create a minimal ExtensionContext for hook execution. */
-function createMockContext(cwd: string): ExtensionContext {
+function createMockContext(cwd: string, idle: boolean = true): ExtensionContext {
   return {
     cwd,
     hasUI: true,
@@ -214,7 +274,7 @@ function createMockContext(cwd: string): ExtensionContext {
     sessionManager: {} as ExtensionContext['sessionManager'],
     modelRegistry: {} as ExtensionContext['modelRegistry'],
     model: undefined,
-    isIdle: () => true,
+    isIdle: () => idle,
     abort() {},
     hasPendingMessages: () => false,
     shutdown() {},
@@ -236,14 +296,15 @@ afterEach(() => {
 });
 
 describe('Pi Hooks', () => {
-  test('registerHooks registers session_start, before_agent_start, and tool_call hooks', () => {
+  test('registerHooks registers session_start, before_agent_start, tool_call, and tool_result hooks', () => {
     const { pi, hooks } = createMockPi();
     registerHooks(pi, '/tmp/.coda');
 
-    expect(hooks.size).toBe(3);
+    expect(hooks.size).toBe(4);
     expect(hooks.has('session_start')).toBe(true);
     expect(hooks.has('before_agent_start')).toBe(true);
     expect(hooks.has('tool_call')).toBe(true);
+    expect(hooks.has('tool_result')).toBe(true);
   });
 
   test('before_agent_start returns Pi message context when an issue is focused', async () => {
@@ -400,28 +461,24 @@ describe('Pi Hooks', () => {
 
     const toolCall = hooks.get('tool_call');
 
-    // printf redirect
     const r1 = await toolCall?.(
       { type: 'tool_call', toolCallId: '1', toolName: 'bash', input: { command: "printf '%s' 'HACKED' > .coda/test.md" } },
       createMockContext(projectRoot)
     ) as ToolCallResult;
     expect(r1.block).toBe(true);
 
-    // echo redirect
     const r2 = await toolCall?.(
       { type: 'tool_call', toolCallId: '2', toolName: 'bash', input: { command: 'echo hello >> .coda/issues/x.md' } },
       createMockContext(projectRoot)
     ) as ToolCallResult;
     expect(r2.block).toBe(true);
 
-    // cp to .coda/
     const r3 = await toolCall?.(
       { type: 'tool_call', toolCallId: '3', toolName: 'bash', input: { command: 'cp /tmp/x .coda/issues/y.md' } },
       createMockContext(projectRoot)
     ) as ToolCallResult;
     expect(r3.block).toBe(true);
 
-    // rm inside .coda/
     const r4 = await toolCall?.(
       { type: 'tool_call', toolCallId: '4', toolName: 'bash', input: { command: 'rm .coda/state.json' } },
       createMockContext(projectRoot)
@@ -441,6 +498,41 @@ describe('Pi Hooks', () => {
     ) as ToolCallResult;
     expect(result.block).not.toBe(true);
   });
+
+  test('tool_result runs verify autonomously after coda_advance and queues a correction follow-up', async () => {
+    const { pi, hooks, sentUserMessages } = createMockPi();
+    const { projectRoot, codaRoot } = setupVerifyTriggerCodaRoot();
+    registerHooks(pi, codaRoot);
+
+    const toolResult = hooks.get('tool_result');
+    const result = await toolResult?.(
+      {
+        type: 'tool_result',
+        toolCallId: '1',
+        toolName: 'coda_advance',
+        input: { target_phase: 'verify' },
+        content: [{ type: 'text', text: '{"success":true}' }],
+        isError: false,
+        details: {
+          success: true,
+          previous_phase: 'build',
+          new_phase: 'verify',
+        },
+      },
+      createMockContext(projectRoot, false)
+    ) as ToolResultHookResult;
+
+    const nextState = JSON.parse(readFileSync(join(codaRoot, 'state.json'), 'utf-8')) as CodaState;
+    expect(nextState.phase).toBe('verify');
+    expect(nextState.submode).toBe('correct');
+    expect(typeof nextState.current_task).toBe('number');
+    expect(existsSync(join(codaRoot, 'issues', 'my-feature', 'verification-failures', 'AC-1.yaml'))).toBe(true);
+    expect(sentUserMessages).toHaveLength(1);
+    expect(sentUserMessages[0]?.options?.deliverAs).toBe('followUp');
+    expect(String(sentUserMessages[0]?.content).toLowerCase()).toContain('correction loop');
+    expect(result.details?.autonomous_trigger).toBeTruthy();
+    expect(result.content?.some((entry) => entry.text?.includes('Autonomous verify ran'))).toBe(true);
+  });
 });
 
 describe('Pi Extension Entry Point', () => {
@@ -450,6 +542,6 @@ describe('Pi Extension Entry Point', () => {
 
     expect(commands.length).toBe(1);
     expect(tools.length).toBe(7);
-    expect(hooks.size).toBe(3);
+    expect(hooks.size).toBe(4);
   });
 });

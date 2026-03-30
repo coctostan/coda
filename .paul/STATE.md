@@ -2,25 +2,27 @@
 
 ## Project Reference
 
-See: .paul/PROJECT.md (updated 2026-03-29)
+See: .paul/PROJECT.md (updated 2026-03-30)
 Version: v0.2.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 15 ready for PLAN after completing Phase 14 UNIFY.
+**Current focus:** Phase 16 unified; Phase 17 ready for PLAN.
+
 ## Current Position
 Milestone: v0.2 Autonomous Loops
-Phase: 15 of 15 (E2E Validation)
+Phase: 17 of 17 (Repeat Live E2E Validation)
 Plan: Not started
 Status: Ready for PLAN
-Last activity: 2026-03-29T21:33:39Z — Unified Phase 14 and transitioned to Phase 15
+Last activity: 2026-03-30T23:24:45Z — Unified Phase 16, committed the transition, and moved to Phase 17
 Progress:
-- v0.2 Autonomous Loops: [█████████░] 86%
-- Phase 15: [░░░░░░░░░░] 0%
+- v0.2 Autonomous Loops: [█████████░] 89%
+- Phase 17: [░░░░░░░░░░] 0%
+
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Loop complete - ready for next PLAN]
+  ○        ○        ○     [Phase transition complete — ready for next PLAN]
 ```
 
 ## Accumulated Context
@@ -43,23 +45,24 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Human review state remains in existing plan frontmatter/body artifacts | Phase 12 | Durable human review without new storage layers |
 | Exhausted loops preserve artifacts and require explicit human recovery | Phase 13 | Human recovery stays auditable and phase-correct |
 | Pi-facing runtime metadata comes from workflow-owned phase context | Phase 14 | Keeps Pi integration thin and phase-correct |
+| Split the live operator-trigger fix and the follow-up rerun into new Phases 16 and 17 | Phase 15 | Keeps Phase 15 as documented validation while preserving a clean follow-on plan boundary |
+| Pi hooks now trigger deterministic review/verify runners and queue revise/correct follow-up turns | Phase 16 | Restores the supported live operator path without changing core state-machine semantics |
 Branch: feature/13-exhaustion-handling-rewind-kill-controls
 Remote: https://github.com/coctostan/coda.git
-PR: https://github.com/coctostan/coda/pull/8 (OPEN)
-Last commit: feat(14-pi-integration-updates): complete phase transition
+PR: previous PR #8 merged; no active PR for Phase 16 local work
+Last commit: feat(16-live-operator-trigger-resolution): support live autonomous triggers
+
 ## Session Continuity
 
-Last session: 2026-03-29T21:33:39Z
-Stopped at: Phase 14 complete, ready to plan Phase 15
-Next action: Run /paul:plan
+Last session: 2026-03-30T23:24:45Z
+Stopped at: Phase 16 complete, ready to plan Phase 17
+Next action: Run /paul:plan for Phase 17 (Repeat Live E2E Validation)
 Resume file: .paul/ROADMAP.md
 Resume context:
-- Phase 14 summary is recorded at `.paul/phases/14-pi-integration-updates/14-01-SUMMARY.md`
-- Phase 14 passed the targeted Pi/workflow suite, full `bun test`, and `npx tsc --noEmit`
-- Pi runtime context now exposes workflow-owned phase/submode/loop/task metadata for revise/correct flows via `before_agent_start`
-- `/coda` command and status output now surface submode-specific guidance instead of generic phase-only messaging where behavior differs
-- Docs drift remains for `README.md`, `CHANGELOG.md`, and `docs/v0.1/07-pi-integration.md`, but cleanup stayed out of scope for Phase 14
-- PR #8 remains open on `feature/13-exhaustion-handling-rewind-kill-controls`; merge-gate enforcement is currently disabled by `pals.json`
+- Successful `coda_advance` into `review` or `verify` now triggers the deterministic runner from the Pi extension and queues revise/correct follow-up turns when needed
+- Targeted Pi/runtime regressions, full `bun test`, and `npx tsc --noEmit` are green at 253 passing tests
+- Phase 17 owns the clean live CMUX/Pi rerun from a fresh baseline plus transcript/findings capture
+- The current branch now contains the committed Phase 15/16 artifacts but still has no fresh PR; handle remote publication deliberately when Phase 17 is ready
 
 ---
 *STATE.md — Updated after every significant action*
