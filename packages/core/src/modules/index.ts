@@ -28,3 +28,7 @@ export { validateFinding, validateFindings } from './finding-schema';
 // Registry
 export type { ModuleRegistry, RegistryConfig } from './registry';
 export { createRegistry, MODULE_DEFINITIONS, DEFAULT_THRESHOLDS } from './registry';
+
+// Dispatcher
+export type { ModuleDispatcher, HookContext } from './dispatcher';
+export { createDispatcher, exceedsThreshold, FINDINGS_OUTPUT_TEMPLATE } from './dispatcher';

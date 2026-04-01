@@ -6,16 +6,16 @@ See: .paul/PROJECT.md (updated 2026-04-01)
 Version: v0.3.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Milestone v0.3 Module System — Phase 19 complete, moving to Phase 20 Module Dispatcher.
+**Current focus:** Milestone v0.3 Module System — Phases 18-20 complete (types + registry + dispatcher). Moving to Phase 21 prompts.
 
 ## Current Position
 Milestone: v0.3 Module System
-Phase: 20 of 25 (Module Dispatcher)
+Phase: 21 of 25 (Module Prompts — Security + TDD)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-04-01T18:25:00Z — Phase 19 complete, transitioned to Phase 20
+Last activity: 2026-04-01T18:30:00Z — Phase 20 complete, transitioned to Phase 21
 Progress:
-- v0.3 Module System: [██░░░░░░░░] 25%
+- v0.3 Module System: [███░░░░░░░] 37%
 
 ## Loop Position
 Current loop state:
@@ -51,14 +51,15 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Old todd/walt deleted in single clean cut at workflow integration | v0.3 D4 | No period where both old and new systems coexist |
 | Workflow stores post-build results, passes moduleBlockFindings to GateCheckData | v0.3 D5 | Gate system remains single authority for advancement |
 | HOOK_POINTS + SEVERITY_VALUES as const arrays for runtime validation | Phase 18 | validateFinding needs runtime enum membership checks |
+| HookContext uses string types for phase/submode, not L2 imports | Phase 20 | Avoids coupling dispatcher to state engine |
 Branch: main
 Remote: https://github.com/coctostan/coda.git
 
 ## Session Continuity
 
-Last session: 2026-04-01T18:25:00Z
-Stopped at: Phase 19 complete, ready to plan Phase 20
-Next action: /paul:plan for Phase 20
+Last session: 2026-04-01T18:30:00Z
+Stopped at: Phase 20 complete, ready to plan Phase 21
+Next action: /paul:plan for Phase 21
 Resume file: .paul/ROADMAP.md
 
 ---
