@@ -13,7 +13,7 @@ Phases: 3 of 8 complete
 | 18 | Core Types + Finding Schema | 1/1 | ✅ Complete | 2026-04-01 |
 | 19 | Module Registry | 1/1 | ✅ Complete | 2026-04-01 |
 | 20 | Module Dispatcher | 1/1 | ✅ Complete | 2026-04-01 |
-| 21 | Module Prompts — Security + TDD | TBD | Not started | - |
+| 21 | Module Prompts — Security + TDD | 0/1 | 📝 Planning | - |
 | 22 | Workflow Integration | TBD | Not started | - |
 | 23 | Config Integration | TBD | Not started | - |
 | 24 | Findings Persistence + Context Summarization | TBD | Not started | - |
