@@ -6,12 +6,12 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.3 Module System** (v0.3.0)
 Status: 🚧 In Progress
-Phases: 1 of 8 complete
+Phases: 2 of 8 complete
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 18 | Core Types + Finding Schema | 1/1 | ✅ Complete | 2026-04-01 |
-| 19 | Module Registry | TBD | Not started | - |
+| 19 | Module Registry | 1/1 | ✅ Complete | 2026-04-01 |
 | 20 | Module Dispatcher | TBD | Not started | - |
 | 21 | Module Prompts — Security + TDD | TBD | Not started | - |
 | 22 | Workflow Integration | TBD | Not started | - |

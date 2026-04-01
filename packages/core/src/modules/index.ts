@@ -24,3 +24,7 @@ export { HOOK_POINTS, SEVERITY_ORDER, SEVERITY_VALUES } from './types';
 
 // Validation
 export { validateFinding, validateFindings } from './finding-schema';
+
+// Registry
+export type { ModuleRegistry, RegistryConfig } from './registry';
+export { createRegistry, MODULE_DEFINITIONS, DEFAULT_THRESHOLDS } from './registry';
