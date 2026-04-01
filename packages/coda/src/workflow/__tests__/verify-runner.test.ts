@@ -137,6 +137,33 @@ describe('Verify Runner', () => {
     expect(correctionTask.frontmatter.files_to_modify).toEqual(['src/store.ts', 'tests/store.test.ts']);
   });
 
+  test('handles tasks that omit optional array fields without crashing', () => {
+    // Simulate tasks created by an LLM that omit covers_ac, depends_on, files_to_modify, etc.
+    const minimalTask = {
+      id: 1,
+      issue: 'my-feature',
+      title: 'Minimal task',
+      status: 'complete' as const,
+      kind: 'planned' as const,
+      // covers_ac, depends_on, files_to_modify, truths, artifacts, key_links intentionally omitted
+    };
+
+    writeRecord(
+      join(codaRoot, 'issues', 'my-feature', 'tasks', '01-implement-workflow-core.md'),
+      minimalTask,
+      '## Summary\nShipped.\n'
+    );
+    writeRecord(
+      join(codaRoot, 'issues', 'my-feature', 'tasks', '02-implement-persistence-integration.md'),
+      { ...minimalTask, id: 2 },
+      '## Summary\nShipped.\n'
+    );
+
+    const result = runVerifyRunner(codaRoot, 'my-feature', createVerifyState());
+    // Should complete without throwing
+    expect(['corrections-required', 'success', 'verify-ready', 'exhausted']).toContain(result.outcome);
+  });
+
   test('continues correction task numbering after existing correction ids', () => {
     const existingCorrection: TaskRecord = {
       id: 3,

@@ -138,6 +138,34 @@ describe('Review Runner', () => {
     expect(record.body).toContain('/tmp/not-in-repo.ts');
   });
 
+  test('handles tasks that omit optional array fields without crashing', () => {
+    // Simulate a task created by an LLM that omits depends_on, files_to_modify, etc.
+    const minimalFrontmatter = {
+      id: 1,
+      issue: 'my-feature',
+      title: 'Minimal task',
+      status: 'pending' as const,
+      kind: 'planned' as const,
+      covers_ac: ['AC-1'],
+      // depends_on, files_to_modify, truths, artifacts, key_links intentionally omitted
+    };
+
+    writeRecord(
+      join(codaRoot, 'issues', 'my-feature', 'tasks', '01-cover-ac-1.md'),
+      minimalFrontmatter,
+      'A minimal task.\n'
+    );
+    writeRecord(
+      join(codaRoot, 'issues', 'my-feature', 'tasks', '02-cover-ac-2.md'),
+      { ...minimalFrontmatter, id: 2, covers_ac: ['AC-2'] },
+      'Another minimal task.\n'
+    );
+
+    const result = runReviewRunner(codaRoot, 'my-feature', createReviewState());
+    // Should complete without throwing — the exact outcome depends on structural checks
+    expect(['approved', 'revise-required', 'pending-human-review']).toContain(result.outcome);
+  });
+
   test('approves the plan immediately when human review is not required', () => {
     const result = runReviewRunner(codaRoot, 'my-feature', createReviewState(), {
       reviewResult: { approved: true },
