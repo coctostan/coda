@@ -55,6 +55,28 @@ describe('GATES', () => {
     expect(result.reason).toContain('tasks');
   });
 
+  test('build→verify passes when tasks complete and moduleBlockFindings is 0', () => {
+    const result = checkGate('build', 'verify', { allPlannedTasksComplete: true, moduleBlockFindings: 0 });
+    expect(result.passed).toBe(true);
+  });
+
+  test('build→verify passes when tasks complete and moduleBlockFindings is undefined', () => {
+    const result = checkGate('build', 'verify', { allPlannedTasksComplete: true });
+    expect(result.passed).toBe(true);
+  });
+
+  test('build→verify fails when moduleBlockFindings > 0 even if tasks complete', () => {
+    const result = checkGate('build', 'verify', { allPlannedTasksComplete: true, moduleBlockFindings: 2 });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('Module findings');
+  });
+
+  test('build→verify fails on tasks first before checking moduleBlockFindings', () => {
+    const result = checkGate('build', 'verify', { allPlannedTasksComplete: false, moduleBlockFindings: 3 });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('tasks');
+  });
+
   test('verify→unify passes when all ACs met', () => {
     const result = checkGate('verify', 'unify', { allAcsMet: true });
     expect(result.passed).toBe(true);

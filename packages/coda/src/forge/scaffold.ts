@@ -51,6 +51,10 @@ export function getDefaultConfig(): CodaConfig {
       chore: false,
       docs: false,
     },
+    modules: {
+      security: { enabled: true, blockThreshold: 'critical' },
+      tdd: { enabled: true, blockThreshold: 'high' },
+    },
   };
 }
 

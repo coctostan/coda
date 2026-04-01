@@ -58,3 +58,11 @@ export { runReviewRunner } from './review-runner';
 
 // Verify loop
 export { runVerifyRunner } from './verify-runner';
+
+// Module integration (v0.3)
+export {
+  createModuleSystem,
+  buildHookContext,
+  getModulePromptForHook,
+  loadModuleConfig,
+} from './module-integration';
