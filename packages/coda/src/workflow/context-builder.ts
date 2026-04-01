@@ -69,9 +69,21 @@ export function loadTasks(
 
   try {
     const files = listRecords(taskDir);
-    const tasks = files.map((filePath) =>
-      readRecord<TaskRecord>(filePath)
-    );
+    const tasks = files.map((filePath) => {
+      const record = readRecord<TaskRecord>(filePath);
+      return {
+        frontmatter: {
+          ...record.frontmatter,
+          covers_ac: record.frontmatter.covers_ac ?? [],
+          depends_on: record.frontmatter.depends_on ?? [],
+          files_to_modify: record.frontmatter.files_to_modify ?? [],
+          truths: record.frontmatter.truths ?? [],
+          artifacts: record.frontmatter.artifacts ?? [],
+          key_links: record.frontmatter.key_links ?? [],
+        },
+        body: record.body,
+      };
+    });
     tasks.sort((a, b) => a.frontmatter.id - b.frontmatter.id);
     return tasks;
   } catch {
