@@ -10,17 +10,17 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Attribute | Value |
 |-----------|-------|
 | Version | 0.2.0 |
-| Status | Milestone v0.2 in progress (Phase 16 complete, Phase 17 ready) |
-| Last Updated | 2026-03-30 |
+| Status | Milestone v0.2 complete |
+| Last Updated | 2026-04-01 |
 
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
 - `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, and v0.2 submode/loop primitives
 - `@coda/coda` ships tools, modules, FORGE, workflow engine, and Pi integration
-- Phase 13 adds exhaustion-aware recovery controls plus durable `/coda back` and `/coda kill` operator commands
-- Phase 14 threads submode-aware review/revise/verify/correct runtime metadata through the Pi hook, command, and status surfaces
-- Phase 16 now triggers deterministic review/verify runners from the supported `/coda advance` operator flow and queues revise/correct follow-up turns through Pi messaging
-- 253 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
+- Autonomous review/revise and verify/correct loops run deterministically from the supported `coda_advance` trigger path
+- Human review gate blocks BUILD until human approval is recorded
+- Exhaustion handling pauses automation and routes operators through `/coda back` and `/coda kill`
+- 255 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
 
 ## Scope Snapshot
 ### Validated
@@ -39,13 +39,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Exhaustion handling + rewind/kill controls — explicit exhausted outcomes, human recovery paths, and durable rewind/kill commands (Phase 13 — v0.2)
 - [x] Pi integration updates — submode-aware `before_agent_start`, command/status guidance, and workflow-owned runtime metadata for revise/correct flows (Phase 14 — v0.2)
 - [x] Live operator trigger resolution — successful `coda_advance` into `review`/`verify` now runs the deterministic autonomous loops and queues Pi follow-up turns when needed (Phase 16 — v0.2)
+- [x] Live E2E validation — clean CMUX/Pi rerun with review → revise → re-review → build → verify all passing (Phase 17 — v0.2)
 ### Active
-- [ ] Repeat live E2E validation for all v0.2 autonomous-loop scenarios from a clean baseline (Phase 17 — v0.2)
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
+- [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- [ ] Define v0.3 scope after v0.2 completion
+- [ ] Define v0.3 scope
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -63,13 +64,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.2 progress | 9 phases complete | 8 of 9 complete |
-| Test suite | Green | 253 passing, 0 failing |
+| Milestone v0.2 progress | 9 phases complete | 9 of 9 complete ✅ |
+| Test suite | Green | 255 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Review/verify primitives | Landed in core | PASS |
 | Human review gate | Durable pending/approval/change-request flow | PASS |
 | Exhaustion recovery controls | Durable pause, rewind, and kill behavior | PASS |
 | Pi validation | Live extension exposes the supported autonomous trigger path for review/verify | PASS |
+| Live E2E | Clean CMUX/Pi rerun with all autonomous scenarios passing | PASS |
 
 ## Key Decisions
 | Decision | Rationale | Date | Status |
@@ -87,6 +89,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Exhausted loops preserve artifacts and require explicit human recovery | Keep exhaustion handling auditable and prevent hidden auto-advancement | 2026-03-29 | Active |
 | Pi-facing runtime metadata is emitted from workflow-owned phase context | Keep Pi integration thin while exposing canonical phase/submode/task state to the extension surface | 2026-03-29 | Active |
 | Successful `coda_advance` into `review`/`verify` is the supported live autonomous trigger | Close the Phase 15 operator-surface gap without widening the command surface or changing core state semantics | 2026-03-30 | Active |
+| Optional frontmatter arrays normalized at the `loadTasks()` boundary | Single defense point protects all downstream runners from missing optional fields | 2026-04-01 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -95,4 +98,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-03-30 after Phase 16*
+*Last updated: 2026-04-01 after v0.2 Autonomous Loops milestone completion*
