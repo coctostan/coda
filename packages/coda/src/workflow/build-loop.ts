@@ -42,7 +42,7 @@ export function buildTaskContext(
   const truths = task?.frontmatter.truths ?? [];
 
   // Get module prompts for pre-build injection (v0.3 dispatcher)
-  const modulePrompt = getModulePromptForHook('pre-build', issueSlug, 'build', { taskId });
+  const modulePrompt = getModulePromptForHook('pre-build', issueSlug, 'build', { taskId, codaRoot });
 
   // Get carry-forward summaries
   const prevSummaries = getPreviousTaskSummaries(

@@ -3,6 +3,8 @@
  * Shared types for the FORGE design layer.
  */
 
+import type { ModuleConfig } from '@coda/core';
+
 /** Result of backdrop detection — determines which FORGE flow to use. */
 export type ForgeBackdrop =
   | { type: 'greenfield' }
@@ -65,4 +67,6 @@ export interface CodaConfig {
   tdd_gate: GateConfig;
   /** Which issue types require human review by default. */
   human_review_default: GateConfig;
+  /** Per-module enable/disable and block threshold overrides. Omitted modules use defaults. */
+  modules?: Record<string, ModuleConfig>;
 }

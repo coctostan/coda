@@ -57,7 +57,7 @@ export function getPhaseContext(
 
     case 'plan': {
       const refs = loadRefDocs(codaRoot);
-      const modulePrompt = getModulePromptForHook('pre-plan', issueSlug, 'plan');
+      const modulePrompt = getModulePromptForHook('pre-plan', issueSlug, 'plan', { codaRoot });
       return withMetadata({
         systemPrompt: 'You are planning tasks for this issue. Design an implementation approach.',
         context: [

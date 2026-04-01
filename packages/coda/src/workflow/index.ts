@@ -64,4 +64,5 @@ export {
   createModuleSystem,
   buildHookContext,
   getModulePromptForHook,
+  loadModuleConfig,
 } from './module-integration';

@@ -13,4 +13,5 @@ export {
   createModuleSystem,
   buildHookContext,
   getModulePromptForHook,
+  loadModuleConfig,
 } from '../workflow/module-integration';
