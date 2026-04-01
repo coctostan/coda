@@ -3,25 +3,25 @@
 ## Project Reference
 
 See: .paul/PROJECT.md (updated 2026-04-01)
-Version: v0.2.0
+Version: v0.3.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Milestone v0.2 complete — ready for next milestone.
+**Current focus:** Milestone v0.3 Module System — Phase 18 complete, moving to Phase 19 Module Registry.
 
 ## Current Position
-Milestone: Awaiting next milestone
-Phase: None active
-Plan: None
-Status: Milestone v0.2 Autonomous Loops complete — ready for next
-Last activity: 2026-04-01T17:13:25Z — Milestone completed
+Milestone: v0.3 Module System
+Phase: 19 of 25 (Module Registry)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-04-01T18:20:00Z — Phase 18 complete, transitioned to Phase 19
 Progress:
-- v0.2 Autonomous Loops: [██████████] 100% ✓
+- v0.3 Module System: [█░░░░░░░░░] 12%
 
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Milestone complete - ready for next]
+  ○        ○        ○     [Ready for next PLAN]
 ```
 
 ## Accumulated Context
@@ -45,15 +45,21 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Pi-facing runtime metadata comes from workflow-owned phase context | Phase 14 | Keeps Pi integration thin and phase-correct |
 | Pi hooks now trigger deterministic review/verify runners and queue revise/correct follow-up turns | Phase 16 | Restores the supported live operator path without changing core state-machine semantics |
 | Optional frontmatter arrays normalized at the loadTasks() boundary | Fix | Single defense point protects all downstream runners |
+| blockThreshold: FindingSeverity \| 'none' — clean type separation | v0.3 D1 | 'none' threshold for advisory-only modules without polluting severity enum |
+| Dispatcher API: assemblePrompts() + parseAndCheckFindings() | v0.3 D2 | Two-method API, dispatcher never touches sessions, matches Decision #5 |
+| Only 2 module definitions in v0.3 (security + tdd) | v0.3 D3 | No half-registered modules with missing prompt files |
+| Old todd/walt deleted in single clean cut at workflow integration | v0.3 D4 | No period where both old and new systems coexist |
+| Workflow stores post-build results, passes moduleBlockFindings to GateCheckData | v0.3 D5 | Gate system remains single authority for advancement |
+| HOOK_POINTS + SEVERITY_VALUES as const arrays for runtime validation | Phase 18 | validateFinding needs runtime enum membership checks |
 Branch: main
 Remote: https://github.com/coctostan/coda.git
 
 ## Session Continuity
 
-Last session: 2026-04-01T17:13:25Z
-Stopped at: Milestone v0.2 Autonomous Loops complete
-Next action: /paul:discuss-milestone or /paul:milestone
-Resume file: .paul/MILESTONES.md
+Last session: 2026-04-01T18:20:00Z
+Stopped at: Phase 18 complete, ready to plan Phase 19
+Next action: /paul:plan for Phase 19
+Resume file: .paul/ROADMAP.md
 
 ---
 *STATE.md — Updated after every significant action*

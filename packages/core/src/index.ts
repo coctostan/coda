@@ -4,7 +4,7 @@
  * Layers:
  *   L1: Data     — mdbase wrapper, type schemas, section reader (IMPLEMENTED)
  *   L2: State    — state machine, atomic JSON persist, gates, transitions (IMPLEMENTED)
- *   L3: Modules  — registry, dispatcher, finding schema, eval engine
+ *   L3: Modules  — registry, dispatcher, finding schema, eval engine (IMPLEMENTED — types + validation)
  *
  * Dependency rule: imports flow downward only. L3 → L2 → L1.
  */
@@ -14,4 +14,4 @@ export * from './data';
 export * from './state';
 
 // L3: Module System
-// export * from './modules';
+export * from './modules';

@@ -20,7 +20,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 - Autonomous review/revise and verify/correct loops run deterministically from the supported `coda_advance` trigger path
 - Human review gate blocks BUILD until human approval is recorded
 - Exhaustion handling pauses automation and routes operators through `/coda back` and `/coda kill`
-- 255 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
+- 267 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
+- v0.3 Module System in progress: L3 types + finding schema landed (Phase 18)
 
 ## Scope Snapshot
 ### Validated
@@ -40,13 +41,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Pi integration updates — submode-aware `before_agent_start`, command/status guidance, and workflow-owned runtime metadata for revise/correct flows (Phase 14 — v0.2)
 - [x] Live operator trigger resolution — successful `coda_advance` into `review`/`verify` now runs the deterministic autonomous loops and queues Pi follow-up turns when needed (Phase 16 — v0.2)
 - [x] Live E2E validation — clean CMUX/Pi rerun with review → revise → re-review → build → verify all passing (Phase 17 — v0.2)
+- [x] Module types + finding schema — HookPoint, FindingSeverity, Finding, validateFinding/validateFindings in @coda/core L3 (Phase 18 — v0.3)
 ### Active
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 - [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- [ ] Define v0.3 scope
+- [ ] v0.3 Module System — registry, dispatcher, findings, block thresholds (Phases 19-25)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
