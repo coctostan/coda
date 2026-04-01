@@ -2,25 +2,27 @@
 
 ## Project Reference
 
-See: .paul/PROJECT.md (updated 2026-03-29)
+See: .paul/PROJECT.md (updated 2026-03-30)
 Version: v0.2.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Phase 15 ready for PLAN after completing Phase 14 UNIFY.
+**Current focus:** Phase 17 unified; live blocker documented. Fix needed before milestone can close.
+
 ## Current Position
 Milestone: v0.2 Autonomous Loops
-Phase: 15 of 15 (E2E Validation)
-Plan: Not started
-Status: Ready for PLAN
-Last activity: 2026-03-29T21:33:39Z — Unified Phase 14 and transitioned to Phase 15
+Phase: 17 of 17 (Repeat Live E2E Validation) — Complete
+Plan: 17-01 unified
+Status: Phase complete (with documented blocker); ready for fix
+Last activity: 2026-04-01T16:05:38Z — Unified Phase 17, recorded WALT/SKIP/RUBY reports, documented the live review-trigger blocker
 Progress:
-- v0.2 Autonomous Loops: [█████████░] 86%
-- Phase 15: [░░░░░░░░░░] 0%
+- v0.2 Autonomous Loops: [█████████░] 94%
+- Phase 17: [██████████] 100%
+
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Loop complete - ready for next PLAN]
+  ✓        ✓        ✓     [Loop complete — Phase 17 closed with documented blocker]
 ```
 
 ## Accumulated Context
@@ -43,23 +45,25 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Human review state remains in existing plan frontmatter/body artifacts | Phase 12 | Durable human review without new storage layers |
 | Exhausted loops preserve artifacts and require explicit human recovery | Phase 13 | Human recovery stays auditable and phase-correct |
 | Pi-facing runtime metadata comes from workflow-owned phase context | Phase 14 | Keeps Pi integration thin and phase-correct |
-Branch: feature/13-exhaustion-handling-rewind-kill-controls
+| Split the live operator-trigger fix and the follow-up rerun into new Phases 16 and 17 | Phase 15 | Keeps Phase 15 as documented validation while preserving a clean follow-on plan boundary |
+| Pi hooks now trigger deterministic review/verify runners and queue revise/correct follow-up turns | Phase 16 | Restores the supported live operator path without changing core state-machine semantics |
+| Live review trigger crashes when a planned task omits `depends_on` | Phase 17 | Blocks the clean CMUX/Pi rerun until review-runner treats missing dependencies as `[]` |
+Branch: feature/v0.2-autonomous-loops
 Remote: https://github.com/coctostan/coda.git
-PR: https://github.com/coctostan/coda/pull/8 (OPEN)
-Last commit: feat(14-pi-integration-updates): complete phase transition
+PR: previous PR #8 merged; no active PR for current tip
+Last commit: feat(16-live-operator-trigger-resolution): support live autonomous triggers
+
 ## Session Continuity
 
-Last session: 2026-03-29T21:33:39Z
-Stopped at: Phase 14 complete, ready to plan Phase 15
-Next action: Run /paul:plan
-Resume file: .paul/ROADMAP.md
+Last session: 2026-04-01T16:05:38Z
+Stopped at: Phase 17 unified with documented live blocker
+Next action: Run /paul:fix to guard `collectDependencyIssues()` against missing `depends_on`, add a regression test, and verify the fix
+Resume file: .paul/phases/17-repeat-live-e2e-validation/17-01-SUMMARY.md
 Resume context:
-- Phase 14 summary is recorded at `.paul/phases/14-pi-integration-updates/14-01-SUMMARY.md`
-- Phase 14 passed the targeted Pi/workflow suite, full `bun test`, and `npx tsc --noEmit`
-- Pi runtime context now exposes workflow-owned phase/submode/loop/task metadata for revise/correct flows via `before_agent_start`
-- `/coda` command and status output now surface submode-specific guidance instead of generic phase-only messaging where behavior differs
-- Docs drift remains for `README.md`, `CHANGELOG.md`, and `docs/v0.1/07-pi-integration.md`, but cleanup stayed out of scope for Phase 14
-- PR #8 remains open on `feature/13-exhaustion-handling-rewind-kill-controls`; merge-gate enforcement is currently disabled by `pals.json`
+- Phase 17 is fully unified but the milestone remains open due to the live review-trigger crash
+- The fix is a one-line guard (`task.depends_on ?? []`) in `packages/coda/src/workflow/review-runner.ts:193` plus a regression test
+- After the fix, a follow-on live rerun is needed to close v0.2 on fully green evidence
+- Branch is `feature/v0.2-autonomous-loops`, 1 commit ahead of `main`, no active PR
 
 ---
 *STATE.md — Updated after every significant action*

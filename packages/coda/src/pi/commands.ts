@@ -9,6 +9,7 @@ import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-cod
 import { codaAdvance, codaBack, codaCreate, codaKill, codaStatus } from '../tools';
 import type { AdvanceInput, StatusResult } from '../tools';
 import { getBuildSequence } from '../workflow';
+import { handleAutonomousAdvanceTrigger } from './hooks';
 
 /** Supported issue types for `/coda new`. */
 type IssueType = 'feature' | 'bugfix' | 'refactor' | 'chore' | 'docs';
@@ -25,7 +26,7 @@ export function registerCommands(pi: ExtensionAPI, codaRoot: string): void {
   pi.registerCommand('coda', {
     description: 'Manage CODA lifecycle actions (status, forge, new, advance, back, kill, build)',
     handler: async (args, ctx) => {
-      await handleCodaCommand(args, ctx, codaRoot, statePath);
+      await handleCodaCommand(args, ctx, pi, codaRoot, statePath);
     },
   });
 }
@@ -34,6 +35,7 @@ export function registerCommands(pi: ExtensionAPI, codaRoot: string): void {
 async function handleCodaCommand(
   args: string,
   ctx: ExtensionCommandContext,
+  pi: ExtensionAPI,
   codaRoot: string,
   statePath: string
 ): Promise<void> {
@@ -105,14 +107,16 @@ async function handleCodaCommand(
         return;
       }
 
+      const trigger = handleAutonomousAdvanceTrigger(pi, ctx, codaRoot, statePath, advanceInput, result);
+
       if (advanceInput.human_review_decision === 'changes-requested') {
-        ctx.ui.notify(`Recorded human review changes for ${status.focus_issue} and returned the workflow to revise.`);
+        const baseMessage = `Recorded human review changes for ${status.focus_issue} and returned the workflow to revise.`;
+        ctx.ui.notify(trigger.summary ? `${baseMessage} ${trigger.summary}` : baseMessage);
         return;
       }
 
-      ctx.ui.notify(
-        `Advanced ${status.focus_issue} from ${result.previous_phase ?? status.phase} to ${result.new_phase ?? 'done'}.`
-      );
+      const baseMessage = `Advanced ${status.focus_issue} from ${result.previous_phase ?? status.phase} to ${result.new_phase ?? 'done'}.`;
+      ctx.ui.notify(trigger.summary ? `${baseMessage} ${trigger.summary}` : baseMessage);
       return;
     }
 

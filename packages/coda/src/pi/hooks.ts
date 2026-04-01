@@ -7,11 +7,12 @@
  */
 
 import { join, resolve, sep } from 'node:path';
-import { loadState } from '@coda/core';
+import { loadState, persistState } from '@coda/core';
 import { isToolCallEventType } from '@mariozechner/pi-coding-agent';
-import type { ExtensionAPI } from '@mariozechner/pi-coding-agent';
+import type { ExtensionAPI, ExtensionContext, ToolResultEvent } from '@mariozechner/pi-coding-agent';
 import { checkWriteGate } from '../tools';
-import { getPhaseContext } from '../workflow';
+import type { AdvanceInput, AdvanceResult } from '../tools';
+import { getPhaseContext, runReviewRunner, runVerifyRunner } from '../workflow';
 import type { CodaExtensionState, StateProvider } from './types';
 
 /**
@@ -84,6 +85,153 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
     }
     return {};
   });
+
+  pi.on('tool_result', async (event, ctx) => {
+    if (!isSuccessfulAdvanceToolResult(event)) {
+      return {};
+    }
+
+    const trigger = handleAutonomousAdvanceTrigger(
+      pi,
+      ctx,
+      codaRoot,
+      statePath,
+      event.input as AdvanceInput,
+      event.details as AdvanceResult
+    );
+
+    stateProvider.refreshState();
+
+    if (!trigger.summary) {
+      return {};
+    }
+
+    return {
+      content: [
+        ...event.content,
+        { type: 'text', text: trigger.summary },
+      ],
+      details: {
+        ...(typeof event.details === 'object' && event.details !== null ? event.details as unknown as Record<string, unknown> : {}),
+        autonomous_trigger: trigger.summary,
+      },
+    };
+  });
+}
+
+/**
+ * Handle the operator-facing autonomous trigger after a successful coda_advance.
+ *
+ * Runs deterministic review/verify runners when entering those phases, persists
+ * their outcomes, and queues the next agent turn for revise/correct work when needed.
+ */
+export function handleAutonomousAdvanceTrigger(
+  pi: ExtensionAPI,
+  ctx: ExtensionContext,
+  codaRoot: string,
+  statePath: string,
+  advanceInput: AdvanceInput,
+  advanceResult: AdvanceResult
+): { triggered: boolean; queuedFollowUp: boolean; summary?: string } {
+  if (!advanceResult.success) {
+    return { triggered: false, queuedFollowUp: false };
+  }
+
+  const state = loadState(statePath);
+  if (!state?.focus_issue || !state.phase) {
+    return { triggered: false, queuedFollowUp: false };
+  }
+
+  if (
+    advanceInput.human_review_decision === 'changes-requested'
+    && state.phase === 'review'
+    && state.submode === 'revise'
+  ) {
+    const queuedFollowUp = queueAutonomousFollowUp(pi, ctx, state);
+    return {
+      triggered: queuedFollowUp,
+      queuedFollowUp,
+      summary: queuedFollowUp ? 'Queued the autonomous revise follow-up for the recorded human changes.' : undefined,
+    };
+  }
+
+  if (
+    advanceInput.target_phase === 'review'
+    && advanceResult.new_phase === 'review'
+    && advanceResult.previous_phase !== 'review'
+    && state.phase === 'review'
+    && state.submode === 'review'
+  ) {
+    const reviewResult = runReviewRunner(codaRoot, state.focus_issue, state);
+    persistState(reviewResult.state, statePath);
+
+    if (reviewResult.outcome === 'revise-required') {
+      const queuedFollowUp = queueAutonomousFollowUp(pi, ctx, reviewResult.state);
+      return {
+        triggered: true,
+        queuedFollowUp,
+        summary: queuedFollowUp
+          ? 'Autonomous review ran, wrote revision instructions, and queued the revise follow-up.'
+          : 'Autonomous review ran and wrote revision instructions.',
+      };
+    }
+
+    if (reviewResult.outcome === 'approved') {
+      return {
+        triggered: true,
+        queuedFollowUp: false,
+        summary: 'Autonomous review ran and approved the plan.',
+      };
+    }
+
+    if (reviewResult.outcome === 'exhausted') {
+      return {
+        triggered: true,
+        queuedFollowUp: false,
+        summary: 'Autonomous review is exhausted and awaiting operator guidance.',
+      };
+    }
+  }
+
+  if (
+    advanceInput.target_phase === 'verify'
+    && advanceResult.new_phase === 'verify'
+    && advanceResult.previous_phase !== 'verify'
+    && state.phase === 'verify'
+    && state.submode === 'verify'
+  ) {
+    const verifyResult = runVerifyRunner(codaRoot, state.focus_issue, state);
+    persistState(verifyResult.state, statePath);
+
+    if (verifyResult.outcome === 'corrections-required') {
+      const queuedFollowUp = queueAutonomousFollowUp(pi, ctx, verifyResult.state);
+      return {
+        triggered: true,
+        queuedFollowUp,
+        summary: queuedFollowUp
+          ? 'Autonomous verify ran, wrote correction artifacts, and queued the correction follow-up.'
+          : 'Autonomous verify ran and wrote correction artifacts.',
+      };
+    }
+
+    if (verifyResult.outcome === 'success') {
+      return {
+        triggered: true,
+        queuedFollowUp: false,
+        summary: 'Autonomous verify ran and confirmed all acceptance criteria are met.',
+      };
+    }
+
+    if (verifyResult.outcome === 'exhausted') {
+      return {
+        triggered: true,
+        queuedFollowUp: false,
+        summary: 'Autonomous verify is exhausted and awaiting operator guidance.',
+      };
+    }
+  }
+
+  return { triggered: false, queuedFollowUp: false };
 }
 
 /** Evaluate CODA write protections for a write-like tool call. */
@@ -115,6 +263,50 @@ function evaluateWriteGate(
     block: true,
     reason: gateResult.reason ?? 'TDD gate locked. Write a failing test first.',
   };
+}
+
+function queueAutonomousFollowUp(pi: ExtensionAPI, ctx: ExtensionContext, state: NonNullable<ReturnType<typeof loadState>>): boolean {
+  const followUp = buildAutonomousFollowUpMessage(state);
+  if (!followUp) {
+    return false;
+  }
+
+  if (ctx.isIdle()) {
+    pi.sendUserMessage(followUp);
+  } else {
+    pi.sendUserMessage(followUp, { deliverAs: 'followUp' });
+  }
+
+  return true;
+}
+
+function buildAutonomousFollowUpMessage(state: NonNullable<ReturnType<typeof loadState>>): string | null {
+  if (state.phase === 'review' && state.submode === 'revise') {
+    return 'Continue the CODA revise loop for the focused issue using the injected context. Update the plan and tasks narrowly to address the revision instructions, then advance when ready.';
+  }
+
+  if (state.phase === 'verify' && state.submode === 'correct') {
+    return 'Continue the CODA correction loop for the focused issue using the injected context. Complete the correction task narrowly, run the required tests, and advance when ready.';
+  }
+
+  return null;
+}
+
+function isSuccessfulAdvanceToolResult(event: ToolResultEvent): event is ToolResultEvent & {
+  toolName: 'coda_advance';
+  input: AdvanceInput;
+  details: AdvanceResult;
+} {
+  if (event.toolName !== 'coda_advance' || event.isError) {
+    return false;
+  }
+
+  if (typeof event.details !== 'object' || event.details === null) {
+    return false;
+  }
+
+  const details = event.details as Record<string, unknown>;
+  return details.success === true;
 }
 
 /** Return whether a write targets `.coda/` directly or by absolute path. */

@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import type { ExtensionAPI, RegisteredCommand, ToolDefinition } from '@mariozechner/pi-coding-agent';
 import { createDefaultState, persistState, readRecord, writeRecord } from '@coda/core';
-import type { IssueRecord, PlanRecord } from '@coda/core';
+import type { CodaState, IssueRecord, PlanRecord } from '@coda/core';
 import { registerCommands } from '../commands';
 import { registerTools } from '../tools';
 
@@ -15,6 +15,7 @@ function createMockPi() {
   const commands: Array<{ name: string; options: Omit<RegisteredCommand, 'name'> }> = [];
   const tools: ToolDefinition[] = [];
   const hooks: Array<{ event: string; handler: MockHook }> = [];
+  const sentUserMessages: Array<{ content: string | unknown[]; options?: { deliverAs?: 'steer' | 'followUp' } }> = [];
 
   const pi = {
     registerCommand(name: string, options: Omit<RegisteredCommand, 'name'>) {
@@ -26,12 +27,15 @@ function createMockPi() {
     on(event: string, handler: MockHook) {
       hooks.push({ event, handler });
     },
+    sendUserMessage(content: string | unknown[], options?: { deliverAs?: 'steer' | 'followUp' }) {
+      sentUserMessages.push({ content, options });
+    },
   } as unknown as ExtensionAPI;
 
-  return { pi, commands, tools, hooks };
+  return { pi, commands, tools, hooks, sentUserMessages };
 }
 
-function createMockCommandContext() {
+function createMockCommandContext(idle: boolean = true) {
   const notifications: Array<{ message: string; level?: string }> = [];
 
   return {
@@ -41,6 +45,13 @@ function createMockCommandContext() {
           notifications.push({ message, level });
         },
       },
+      isIdle: () => idle,
+      waitForIdle: async () => {},
+      newSession: async () => ({ cancelled: false }),
+      fork: async () => ({ cancelled: false }),
+      navigateTree: async () => ({ cancelled: false }),
+      switchSession: async () => ({ cancelled: false }),
+      reload: async () => {},
     },
     notifications,
   };
@@ -146,7 +157,6 @@ function setupReviseCommandCodaRoot(): string {
     task_count: 2,
     human_review_status: 'changes-requested',
   } as PlanRecord, '## Approach\nTighten the task order.\n');
-
   writeFileSync(
     join(codaRoot, 'issues', 'review-me', 'revision-instructions.md'),
     '---\niteration: 2\nissues_found: 1\n---\n## Issue 1: revise the plan\n**Fix:** update the task order.\n',
@@ -239,6 +249,75 @@ function setupCorrectBuildCommandCodaRoot(): string {
   return tempDir;
 }
 
+function setupReviewAdvanceTriggerCodaRoot(): string {
+  const tempDir = mkdtempSync(join(tmpdir(), 'coda-commands-'));
+  const codaRoot = join(tempDir, '.coda');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me.md'), {
+    title: 'Review Me',
+    issue_type: 'feature',
+    status: 'active',
+    phase: 'plan',
+    priority: 3,
+    topics: [],
+    acceptance_criteria: [
+      { id: 'AC-1', text: 'Criterion 1', status: 'pending' },
+      { id: 'AC-2', text: 'Criterion 2', status: 'pending' },
+    ],
+    open_questions: [],
+    deferred_items: [],
+    human_review: false,
+  } as IssueRecord, '## Description\nAdvance into review.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'), {
+    title: 'Implementation Plan',
+    issue: 'review-me',
+    status: 'approved',
+    iteration: 1,
+    task_count: 2,
+    human_review_status: 'not-required',
+  } as PlanRecord, '## Approach\nReview the plan.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me', 'tasks', '01-cover-ac-1.md'), {
+    id: 1,
+    issue: 'review-me',
+    title: 'Cover AC-1',
+    status: 'pending',
+    kind: 'planned',
+    covers_ac: ['AC-1'],
+    depends_on: [],
+    files_to_modify: ['src/review.ts'],
+    truths: ['Keep review deterministic'],
+    artifacts: [],
+    key_links: [],
+  }, 'Implement the first review slice.\n');
+
+  writeRecord(join(codaRoot, 'issues', 'review-me', 'tasks', '02-broken-task.md'), {
+    id: 2,
+    issue: 'review-me',
+    title: 'Broken Task',
+    status: 'pending',
+    kind: 'planned',
+    covers_ac: [],
+    depends_on: [3],
+    files_to_modify: ['/tmp/not-in-repo.ts'],
+    truths: [],
+    artifacts: [],
+    key_links: [],
+  }, 'This task is intentionally malformed.\n');
+
+  writeFileSync(join(codaRoot, 'coda.json'), JSON.stringify({ max_review_iterations: 3 }, null, 2));
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'review-me',
+    phase: 'plan',
+    submode: null,
+    current_task: null,
+  }, join(codaRoot, 'state.json'));
+
+  return tempDir;
+}
+
 describe('Pi Commands', () => {
   test('registerCommands registers the coda command', () => {
     const { pi, commands } = createMockPi();
@@ -268,6 +347,28 @@ describe('Pi Commands', () => {
       const plan = readRecord<PlanRecord>(join(codaRoot, 'issues', 'review-me', 'plan-v1.md'));
       expect(plan.frontmatter.human_review_status).toBe('approved');
       expect(notifications[notifications.length - 1]?.message).toContain('to build');
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('advance into review runs autonomous review and queues the revise follow-up', async () => {
+    const tempDir = setupReviewAdvanceTriggerCodaRoot();
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands, sentUserMessages } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      registerCommands(pi, codaRoot);
+      await commands[0]?.options.handler('advance', ctx as never);
+
+      const state = JSON.parse(readFileSync(join(codaRoot, 'state.json'), 'utf-8')) as CodaState;
+      expect(state.phase).toBe('review');
+      expect(state.submode).toBe('revise');
+      expect(existsSync(join(codaRoot, 'issues', 'review-me', 'revision-instructions.md'))).toBe(true);
+      expect(sentUserMessages).toHaveLength(1);
+      expect(String(sentUserMessages[0]?.content).toLowerCase()).toContain('revise loop');
+      expect(notifications[notifications.length - 1]?.message).toContain('Autonomous review ran');
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
@@ -308,7 +409,6 @@ describe('Pi Commands', () => {
       rmSync(tempDir, { recursive: true, force: true });
     }
   });
-
 
   test('back rewinds to the requested prior phase', async () => {
     const tempDir = setupBackAndKillCodaRoot();

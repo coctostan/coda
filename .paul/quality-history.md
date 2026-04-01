@@ -9,3 +9,6 @@
 | 2026-03-29 | 11-verify-runner-correction-tasks | 222 pass / 0 fail | clean | clean | N/A | ↑ improving (+20 tests) |
 | 2026-03-29 | 13-exhaustion-handling-rewind-kill-controls | 241 pass / 0 fail | N/A | clean | N/A | ↑ improving (+19 tests) |
 | 2026-03-29 | 14-pi-integration-updates | 247 pass / 0 fail | clean | clean | N/A | ↑ improving (+6 tests) |
+| 2026-03-29 | 15-e2e-validation | 251 pass / 0 fail | N/A | clean | N/A | ↑ improving (+4 tests, live blocker documented) |
+| 2026-03-30 | 16-live-operator-trigger-resolution | 253 pass / 0 fail | N/A | clean | N/A | ↑ improving (+2 tests) |
+| 2026-03-31 | 17-repeat-live-e2e-validation | 253 pass / 0 fail | N/A | clean | N/A | → stable (validation-only phase, live blocker documented) |
