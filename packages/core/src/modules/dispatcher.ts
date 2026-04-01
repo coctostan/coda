@@ -12,7 +12,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import type { Finding, FindingSeverity, HookPoint, HookResult } from './types';
+import type { FindingSeverity, HookPoint, HookResult } from './types';
 import { SEVERITY_ORDER } from './types';
 import { validateFindings } from './finding-schema';
 import type { ModuleRegistry } from './registry';
@@ -105,15 +105,16 @@ export function exceedsThreshold(
 }
 
 /**
- * Create a module dispatcher from a registry and prompts directory.
+ * Create a module dispatcher from a registry.
+ *
+ * The registry already resolves prompt file paths — the dispatcher
+ * reads them directly via registry.resolvePromptPath.
  *
  * @param registry - The module registry for looking up active modules
- * @param promptsDir - Absolute path to the prompts directory
  * @returns A ModuleDispatcher for prompt assembly and finding parsing
  */
 export function createDispatcher(
-  registry: ModuleRegistry,
-  promptsDir: string
+  registry: ModuleRegistry
 ): ModuleDispatcher {
   return {
     assemblePrompts(hookPoint: HookPoint, context: HookContext): string {

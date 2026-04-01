@@ -59,7 +59,7 @@ function makeContext(overrides: Partial<HookContext> = {}): HookContext {
 describe('assemblePrompts', () => {
   test('returns empty string when no modules at hook point', () => {
     const registry = createRegistry({}, promptsDir);
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const result = dispatcher.assemblePrompts('pre-specify', makeContext());
     expect(result).toBe('');
@@ -67,7 +67,7 @@ describe('assemblePrompts', () => {
 
   test('combines prompts in priority order and appends output template', () => {
     const registry = createRegistry({}, promptsDir);
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const result = dispatcher.assemblePrompts('post-build', makeContext({
       issueSlug: 'add-auth',
@@ -93,7 +93,7 @@ describe('assemblePrompts', () => {
 
   test('includes task ID when present', () => {
     const registry = createRegistry({}, promptsDir);
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const result = dispatcher.assemblePrompts('post-task', makeContext({
       taskId: 3,
@@ -108,7 +108,7 @@ describe('assemblePrompts', () => {
 describe('parseAndCheckFindings', () => {
   test('critical finding at critical threshold → blocked', () => {
     const registry = createRegistry({}, promptsDir); // security threshold = critical
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const response = '```json\n' + JSON.stringify([
       { module: 'security', check: 'secrets scan', severity: 'critical', finding: 'API key in source' },
@@ -124,7 +124,7 @@ describe('parseAndCheckFindings', () => {
 
   test('high finding at critical threshold → NOT blocked', () => {
     const registry = createRegistry({}, promptsDir); // security threshold = critical
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const response = '```json\n' + JSON.stringify([
       { module: 'security', check: 'auth check', severity: 'high', finding: 'missing validation' },
@@ -138,7 +138,7 @@ describe('parseAndCheckFindings', () => {
 
   test('high finding at high threshold → blocked', () => {
     const registry = createRegistry({}, promptsDir); // tdd threshold = high
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const response = '```json\n' + JSON.stringify([
       { module: 'tdd', check: 'test coverage', severity: 'high', finding: 'AC-1 has no test' },
@@ -156,7 +156,7 @@ describe('parseAndCheckFindings', () => {
       },
     };
     const registry = createRegistry(config, promptsDir);
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const response = '```json\n' + JSON.stringify([
       { module: 'security', check: 'scan', severity: 'critical', finding: 'hardcoded secret' },
@@ -169,7 +169,7 @@ describe('parseAndCheckFindings', () => {
 
   test('no JSON in response → zero findings, not blocked (Decision #8)', () => {
     const registry = createRegistry({}, promptsDir);
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const response = 'I reviewed the code and everything looks fine. No issues found.';
 
@@ -180,7 +180,7 @@ describe('parseAndCheckFindings', () => {
 
   test('mixed valid/invalid findings → valid preserved', () => {
     const registry = createRegistry({}, promptsDir);
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const response = '```json\n' + JSON.stringify([
       { module: 'security', check: 'check-1', severity: 'info', finding: 'all good' },
@@ -194,7 +194,7 @@ describe('parseAndCheckFindings', () => {
 
   test('blockReasons includes assumption text when present', () => {
     const registry = createRegistry({}, promptsDir);
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const response = '```json\n' + JSON.stringify([
       {
@@ -213,7 +213,7 @@ describe('parseAndCheckFindings', () => {
 
   test('raw JSON array (no fenced block) is parsed', () => {
     const registry = createRegistry({}, promptsDir);
-    const dispatcher = createDispatcher(registry, promptsDir);
+    const dispatcher = createDispatcher(registry);
 
     const response = 'Here are my findings:\n' + JSON.stringify([
       { module: 'security', check: 'scan', severity: 'info', finding: 'looks good' },
