@@ -64,6 +64,24 @@ function gatherGateData(codaRoot: string, issueSlug: string): GateCheckData {
     data.planExists = false;
   }
 
+  // Module block findings — read from persisted findings (Phase 24 creates the file).
+  // Default to 0 when no findings file exists yet.
+  const findingsPath = join(codaRoot, 'issues', issueSlug, 'module-findings.json');
+  if (existsSync(findingsPath)) {
+    try {
+      const findingsData = JSON.parse(readFileSync(findingsPath, 'utf-8')) as {
+        hookResults?: Array<{ blocked?: boolean; blockReasons?: string[] }>;
+      };
+      const blockCount = (findingsData.hookResults ?? [])
+        .reduce((sum, hr) => sum + (hr.blockReasons?.length ?? 0), 0);
+      data.moduleBlockFindings = blockCount;
+    } catch {
+      data.moduleBlockFindings = 0;
+    }
+  } else {
+    data.moduleBlockFindings = 0;
+  }
+
   const recordsDir = join(codaRoot, 'records');
   if (existsSync(recordsDir)) {
     const completionFiles = readdirSync(recordsDir)

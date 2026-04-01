@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-A suite of Pi extensions for disciplined, agent-assisted software development. The CODA ecosystem provides a structured process for building durable, quality software using AI agents as a true development team.
+- v0.3 Module System in progress: types + registry + dispatcher + prompts + workflow integration landed (Phases 18-22)
 
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
@@ -20,7 +20,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 - Autonomous review/revise and verify/correct loops run deterministically from the supported `coda_advance` trigger path
 - Human review gate blocks BUILD until human approval is recorded
 - Exhaustion handling pauses automation and routes operators through `/coda back` and `/coda kill`
-- 255 tests passing, TypeScript strict, no `any` types in source, zero external deps in core
+- 315 tests passing (140 core + 175 coda), TypeScript strict, no `any` types in source, zero external deps in core
+- v0.3 Module System in progress: types + registry + dispatcher + prompts landed (Phases 18-21)
 
 ## Scope Snapshot
 ### Validated
@@ -40,13 +41,18 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Pi integration updates — submode-aware `before_agent_start`, command/status guidance, and workflow-owned runtime metadata for revise/correct flows (Phase 14 — v0.2)
 - [x] Live operator trigger resolution — successful `coda_advance` into `review`/`verify` now runs the deterministic autonomous loops and queues Pi follow-up turns when needed (Phase 16 — v0.2)
 - [x] Live E2E validation — clean CMUX/Pi rerun with review → revise → re-review → build → verify all passing (Phase 17 — v0.2)
+- [x] Module types + finding schema — HookPoint, FindingSeverity, Finding, validateFinding/validateFindings in @coda/core L3 (Phase 18 — v0.3)
+- [x] Module registry — createRegistry, MODULE_DEFINITIONS, getEnabledModules/getModulesForHook/resolvePromptPath (Phase 19 — v0.3)
+- [x] Module dispatcher — assemblePrompts() + parseAndCheckFindings(), exceedsThreshold helper (Phase 20 — v0.3)
+- [x] Module prompts — 5 prompt files for security + tdd modules following v0.3 convention, 25 structural tests (Phase 21 — v0.3)
+- [x] Workflow integration — dispatcher wired into phase-runner + build-loop, moduleBlockFindings gate, old todd/walt deleted (Phase 22 — v0.3)
 ### Active
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 - [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- [ ] Define v0.3 scope
+- [ ] v0.3 Module System — config integration, findings persistence, E2E (Phases 23-25)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -98,4 +104,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-01 after v0.2 Autonomous Loops milestone completion*
+*Last updated: 2026-04-01 after Phase 22 (Workflow Integration) completion*
