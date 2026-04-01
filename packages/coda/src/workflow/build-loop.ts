@@ -6,7 +6,7 @@
  * Does NOT drive the LLM — that's M7's job.
  */
 
-import { getModulePrompts } from '../modules';
+import { getModulePromptForHook } from './module-integration';
 import {
   loadTasks,
   getPreviousTaskSummaries,
@@ -41,8 +41,8 @@ export function buildTaskContext(
   const taskBody = task?.body ?? '';
   const truths = task?.frontmatter.truths ?? [];
 
-  // Get Todd prompt for pre-build injection
-  const toddPrompts = getModulePrompts('pre-build');
+  // Get module prompts for pre-build injection (v0.3 dispatcher)
+  const modulePrompt = getModulePromptForHook('pre-build', issueSlug, 'build', { taskId });
 
   // Get carry-forward summaries
   const prevSummaries = getPreviousTaskSummaries(
@@ -80,8 +80,8 @@ export function buildTaskContext(
     contextParts.push(`## Previous Tasks\n${prevSummaries}`);
   }
 
-  if (toddPrompts.length > 0) {
-    contextParts.push(toddPrompts.join('\n'));
+  if (modulePrompt) {
+    contextParts.push(modulePrompt);
   }
 
   const systemPrompt = task?.frontmatter.kind === 'correction' && task.frontmatter.fix_for_ac

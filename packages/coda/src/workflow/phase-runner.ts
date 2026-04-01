@@ -17,6 +17,7 @@ import {
   loadRevisionHistory,
 } from './context-builder';
 import { buildTaskContext } from './build-loop';
+import { getModulePromptForHook } from './module-integration';
 
 /**
  * Get the context object for a given lifecycle phase.
@@ -56,11 +57,13 @@ export function getPhaseContext(
 
     case 'plan': {
       const refs = loadRefDocs(codaRoot);
+      const modulePrompt = getModulePromptForHook('pre-plan', issueSlug, 'plan');
       return withMetadata({
         systemPrompt: 'You are planning tasks for this issue. Design an implementation approach.',
         context: [
           issueContext,
           refs.system ? `## System Reference\n${refs.system}` : '',
+          modulePrompt || '',
         ].filter(Boolean).join('\n\n'),
       }, phase, state);
     }
