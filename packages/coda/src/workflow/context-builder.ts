@@ -10,6 +10,7 @@ import type { IssueRecord, PlanRecord, TaskRecord } from '@coda/core';
 import type { VerificationFailureArtifact, VerificationFailedCheck } from './types';
 import { join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
+import { loadFindings, summarizeFindings } from './module-integration';
 
 /**
  * Load an issue record from `.coda/issues/{slug}.md`.
@@ -352,4 +353,23 @@ function unquote(value: string): string {
     return value.slice(1, -1);
   }
   return value;
+}
+
+/**
+ * Load and summarize module findings for cross-phase context injection.
+ *
+ * Returns a compact summary string suitable for inclusion in verify/unify context.
+ * Returns empty string if no findings exist for the issue.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param issueSlug - The issue slug
+ * @returns Compact findings summary, or '' if none
+ */
+export function loadModuleFindingsSummary(
+  codaRoot: string,
+  issueSlug: string
+): string {
+  const data = loadFindings(codaRoot, issueSlug);
+  if (data.hookResults.length === 0) return '';
+  return summarizeFindings(data.hookResults);
 }

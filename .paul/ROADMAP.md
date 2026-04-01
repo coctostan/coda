@@ -16,7 +16,7 @@ Phases: 6 of 8 complete
 | 21 | Module Prompts — Security + TDD | 1/1 | ✅ Complete | 2026-04-01 |
 | 22 | Workflow Integration | 1/1 | ✅ Complete | 2026-04-01 |
 | 23 | Config Integration | 1/1 | ✅ Complete | 2026-04-01 |
-| 24 | Findings Persistence + Context Summarization | TBD | Not started | - |
+| 24 | Findings Persistence + Context Summarization | 0/1 | 📝 Planning | - |
 | 25 | E2E Validation | TBD | Not started | - |
 
 ### Phase 18: Core Types + Finding Schema

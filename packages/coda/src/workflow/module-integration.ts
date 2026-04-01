@@ -5,7 +5,7 @@
  * Provides factory functions and helpers for creating a dispatcher,
  * building hook contexts, and assembling module prompts at phase boundaries.
  *
- * Does NOT handle findings persistence (Phase 24) or drive LLM sessions.
+ * Also handles findings persistence and cross-phase summarization (Phase 24).
  */
 
 import {
@@ -18,10 +18,12 @@ import type {
   HookPoint,
   RegistryConfig,
   FindingSeverity,
+  HookResult,
+  Finding,
 } from '@coda/core';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
 /** Resolve repo root from this file's location (packages/coda/src/workflow/). */
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -148,4 +150,148 @@ export function getModulePromptForHook(
     planPath: options?.planPath,
   });
   return dispatcher.assemblePrompts(hookPoint as HookPoint, context);
+}
+
+// ─── Findings Persistence (Phase 24) ────────────────────────────────────────
+
+/** Shape of the persisted module findings file. */
+export interface ModuleFindingsData {
+  /** The issue slug these findings belong to. */
+  issue: string;
+  /** Accumulated hook results from all lifecycle phases. */
+  hookResults: HookResult[];
+}
+
+/**
+ * Persist a hook result to `.coda/issues/{slug}/module-findings.json`.
+ *
+ * Appends the hook result to the existing file, or creates it if absent.
+ * The file grows throughout the issue lifecycle — each hook run appends.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param issueSlug - The issue slug
+ * @param hookResult - The hook result to persist
+ */
+export function persistFindings(
+  codaRoot: string,
+  issueSlug: string,
+  hookResult: HookResult
+): void {
+  const dir = join(codaRoot, 'issues', issueSlug);
+  const filePath = join(dir, 'module-findings.json');
+
+  mkdirSync(dir, { recursive: true });
+
+  let data: ModuleFindingsData;
+  if (existsSync(filePath)) {
+    try {
+      data = JSON.parse(readFileSync(filePath, 'utf-8')) as ModuleFindingsData;
+    } catch {
+      data = { issue: issueSlug, hookResults: [] };
+    }
+  } else {
+    data = { issue: issueSlug, hookResults: [] };
+  }
+
+  data.hookResults.push(hookResult);
+  writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+/**
+ * Load persisted module findings for an issue.
+ *
+ * Returns an empty structure if the file doesn't exist or is malformed.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param issueSlug - The issue slug
+ * @returns The persisted findings data
+ */
+export function loadFindings(
+  codaRoot: string,
+  issueSlug: string
+): ModuleFindingsData {
+  const filePath = join(codaRoot, 'issues', issueSlug, 'module-findings.json');
+  if (!existsSync(filePath)) {
+    return { issue: issueSlug, hookResults: [] };
+  }
+
+  try {
+    return JSON.parse(readFileSync(filePath, 'utf-8')) as ModuleFindingsData;
+  } catch {
+    return { issue: issueSlug, hookResults: [] };
+  }
+}
+
+/**
+ * Produce a compact summary of module findings for cross-phase context.
+ *
+ * Groups findings by module, shows severity counts, and marks blocked modules.
+ * Detail is included only for blocked or high+ severity findings.
+ *
+ * Example output:
+ * `"security: 1 critical (BLOCKED) — Hardcoded API key in config.ts, 2 info | tdd: 3 medium"`
+ *
+ * @param hookResults - Array of HookResult to summarize
+ * @returns Compact summary string, or '' if no findings
+ */
+export function summarizeFindings(hookResults: HookResult[]): string {
+  // Collect all findings and track which modules had blocks
+  const allFindings: Finding[] = [];
+  const blockedModules = new Set<string>();
+
+  for (const hr of hookResults) {
+    for (const f of hr.findings) {
+      allFindings.push(f);
+    }
+    for (const reason of hr.blockReasons) {
+      // Block reasons start with "MODULE_NAME BLOCK: ..."
+      const match = reason.match(/^(\S+)\s+BLOCK:/);
+      if (match?.[1]) {
+        blockedModules.add(match[1].toLowerCase());
+      }
+    }
+  }
+
+  if (allFindings.length === 0) return '';
+
+  // Group by module
+  const byModule = new Map<string, Finding[]>();
+  for (const f of allFindings) {
+    const existing = byModule.get(f.module) ?? [];
+    existing.push(f);
+    byModule.set(f.module, existing);
+  }
+
+  const severityOrder: FindingSeverity[] = ['critical', 'high', 'medium', 'low', 'info'];
+  const parts: string[] = [];
+
+  for (const [mod, findings] of byModule) {
+    const counts = new Map<FindingSeverity, number>();
+    const details: string[] = [];
+
+    for (const f of findings) {
+      counts.set(f.severity, (counts.get(f.severity) ?? 0) + 1);
+      // Include detail for blocked or high+ severity
+      if (f.severity === 'critical' || f.severity === 'high') {
+        details.push(f.finding);
+      }
+    }
+
+    const countParts: string[] = [];
+    for (const sev of severityOrder) {
+      const count = counts.get(sev);
+      if (count && count > 0) {
+        countParts.push(`${String(count)} ${sev}`);
+      }
+    }
+
+    const blocked = blockedModules.has(mod);
+    let summary = `${mod}: ${countParts.join(', ')}`;
+    if (blocked) summary += ' (BLOCKED)';
+    if (details.length > 0) summary += ` — ${details.join('; ')}`;
+
+    parts.push(summary);
+  }
+
+  return parts.join(' | ');
 }

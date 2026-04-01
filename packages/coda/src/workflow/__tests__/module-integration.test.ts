@@ -6,7 +6,11 @@ import {
   buildHookContext,
   getModulePromptForHook,
   loadModuleConfig,
+  persistFindings,
+  loadFindings,
+  summarizeFindings,
 } from '../module-integration';
+import type { ModuleFindingsData } from '../module-integration';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -211,5 +215,133 @@ describe('scaffold defaults', () => {
     expect(config.modules).toBeDefined();
     expect(config.modules!['security']).toEqual({ enabled: true, blockThreshold: 'critical' });
     expect(config.modules!['tdd']).toEqual({ enabled: true, blockThreshold: 'high' });
+  });
+});
+
+import type { HookResult, Finding } from '@coda/core';
+
+function makeFinding(overrides: Partial<Finding> = {}): Finding {
+  return {
+    module: 'security',
+    check: 'test check',
+    severity: 'info',
+    finding: 'Test finding',
+    ...overrides,
+  };
+}
+
+function makeHookResult(overrides: Partial<HookResult> = {}): HookResult {
+  return {
+    hookPoint: 'post-build',
+    findings: [],
+    blocked: false,
+    blockReasons: [],
+    timestamp: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+describe('persistFindings + loadFindings', () => {
+  const tmpDir = resolve(__dirname, '__tmp_persist_test__');
+  const codaDir = resolve(tmpDir, '.coda');
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('persistFindings creates module-findings.json with correct structure', () => {
+    const hr = makeHookResult({
+      findings: [makeFinding({ severity: 'critical', finding: 'Hardcoded key' })],
+      blocked: true,
+      blockReasons: ['SECURITY BLOCK: Hardcoded key'],
+    });
+    persistFindings(codaDir, 'test-issue', hr);
+
+    const data = loadFindings(codaDir, 'test-issue');
+    expect(data.issue).toBe('test-issue');
+    expect(data.hookResults).toHaveLength(1);
+    expect(data.hookResults[0]!.blocked).toBe(true);
+    expect(data.hookResults[0]!.findings).toHaveLength(1);
+  });
+
+  test('persistFindings appends to existing file', () => {
+    const hr1 = makeHookResult({ hookPoint: 'pre-plan', findings: [makeFinding()] });
+    const hr2 = makeHookResult({ hookPoint: 'post-build', findings: [makeFinding({ severity: 'high' })] });
+
+    persistFindings(codaDir, 'test-issue', hr1);
+    persistFindings(codaDir, 'test-issue', hr2);
+
+    const data = loadFindings(codaDir, 'test-issue');
+    expect(data.hookResults).toHaveLength(2);
+    expect(data.hookResults[0]!.hookPoint).toBe('pre-plan');
+    expect(data.hookResults[1]!.hookPoint).toBe('post-build');
+  });
+
+  test('loadFindings returns empty structure when file does not exist', () => {
+    const data = loadFindings('/nonexistent/path', 'no-issue');
+    expect(data.issue).toBe('no-issue');
+    expect(data.hookResults).toHaveLength(0);
+  });
+});
+
+describe('summarizeFindings', () => {
+  test('returns empty string for no findings', () => {
+    expect(summarizeFindings([])).toBe('');
+  });
+
+  test('returns empty string for hookResults with empty findings', () => {
+    expect(summarizeFindings([makeHookResult()])).toBe('');
+  });
+
+  test('groups findings by module and shows severity counts', () => {
+    const hr = makeHookResult({
+      findings: [
+        makeFinding({ module: 'security', severity: 'critical', finding: 'Key exposed' }),
+        makeFinding({ module: 'security', severity: 'info', finding: 'Check done' }),
+        makeFinding({ module: 'tdd', severity: 'medium', finding: 'Missing test' }),
+      ],
+    });
+    const summary = summarizeFindings([hr]);
+    expect(summary).toContain('security:');
+    expect(summary).toContain('1 critical');
+    expect(summary).toContain('1 info');
+    expect(summary).toContain('tdd:');
+    expect(summary).toContain('1 medium');
+  });
+
+  test('marks blocked modules with (BLOCKED)', () => {
+    const hr = makeHookResult({
+      findings: [
+        makeFinding({ module: 'security', severity: 'critical', finding: 'API key' }),
+      ],
+      blocked: true,
+      blockReasons: ['SECURITY BLOCK: API key found'],
+    });
+    const summary = summarizeFindings([hr]);
+    expect(summary).toContain('(BLOCKED)');
+  });
+
+  test('includes detail for high+ severity findings', () => {
+    const hr = makeHookResult({
+      findings: [
+        makeFinding({ module: 'security', severity: 'high', finding: 'SQL injection risk' }),
+        makeFinding({ module: 'security', severity: 'info', finding: 'Check passed' }),
+      ],
+    });
+    const summary = summarizeFindings([hr]);
+    expect(summary).toContain('SQL injection risk');
+    // info-level detail is NOT included inline
+    expect(summary).not.toContain('Check passed');
+  });
+
+  test('separates modules with pipe', () => {
+    const hr = makeHookResult({
+      findings: [
+        makeFinding({ module: 'security', severity: 'info' }),
+        makeFinding({ module: 'tdd', severity: 'info' }),
+      ],
+    });
+    const summary = summarizeFindings([hr]);
+    expect(summary).toContain(' | ');
   });
 });

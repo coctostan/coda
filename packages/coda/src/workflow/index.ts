@@ -65,4 +65,8 @@ export {
   buildHookContext,
   getModulePromptForHook,
   loadModuleConfig,
+  persistFindings,
+  loadFindings,
+  summarizeFindings,
 } from './module-integration';
+export type { ModuleFindingsData } from './module-integration';
