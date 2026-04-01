@@ -6,7 +6,7 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.3 Module System** (v0.3.0)
 Status: 🚧 In Progress
-Phases: 4 of 8 complete
+Phases: 5 of 8 complete
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
@@ -14,7 +14,7 @@ Phases: 4 of 8 complete
 | 19 | Module Registry | 1/1 | ✅ Complete | 2026-04-01 |
 | 20 | Module Dispatcher | 1/1 | ✅ Complete | 2026-04-01 |
 | 21 | Module Prompts — Security + TDD | 1/1 | ✅ Complete | 2026-04-01 |
-| 22 | Workflow Integration | TBD | Not started | - |
+| 22 | Workflow Integration | 1/1 | ✅ Complete | 2026-04-01 |
 | 23 | Config Integration | TBD | Not started | - |
 | 24 | Findings Persistence + Context Summarization | TBD | Not started | - |
 | 25 | E2E Validation | TBD | Not started | - |
