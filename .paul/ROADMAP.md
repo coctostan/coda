@@ -20,7 +20,7 @@ Phases: 8 of 9 complete
 | 14 | Pi Integration Updates | 1/1 | ✅ Complete | 2026-03-29 |
 | 15 | E2E Validation | 1/1 | ✅ Complete | 2026-03-29 |
 | 16 | Live Operator Trigger Resolution | 1/1 | ✅ Complete | 2026-03-30 |
-| 17 | Repeat Live E2E Validation | TBD | Not started | - |
+| 17 | Repeat Live E2E Validation | 1/1 | ✅ Complete (blocker documented) | 2026-03-31 |
 
 ## Phase Details
 
@@ -37,7 +37,7 @@ Focus: Add `verify-runner.ts`, per-AC verification, failure artifacts, correctio
 Plans: `11-01-PLAN.md`, `11-01-SUMMARY.md`
 
 ### Phase 12: Human Review Gate
-Focus: Add `human_review_status`, review→build gate updates, conversational human change requests, and durable review state.
+Focus: Add `human_review_status`, review→build gating, conversational human change requests, and durable review state.
 Plans: `12-01-PLAN.md`, `12-01-SUMMARY.md`
 
 ### Phase 13: Exhaustion Handling + Rewind/Kill Controls
@@ -58,7 +58,7 @@ Plans: `16-01-PLAN.md`, `16-01-SUMMARY.md`
 
 ### Phase 17: Repeat Live E2E Validation
 Focus: Re-run the canonical CMUX/Pi validation from a clean baseline after the live trigger gap is fixed and record a fully green transcript.
-Plans: TBD (defined during /paul:plan)
+Plans: `17-01-PLAN.md`
 
 ## Completed Milestones
 
@@ -84,4 +84,4 @@ Plans: TBD (defined during /paul:plan)
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-03-30 after Phase 16 transition*
+*Roadmap updated: 2026-04-01 after Phase 17 UNIFY*
