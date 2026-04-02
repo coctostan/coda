@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.3 Module System in progress: types + registry + dispatcher + prompts + workflow + config + persistence landed (Phases 18-24)
+- v0.3 Module System complete: types + registry + dispatcher + prompts + workflow + config + persistence + E2E validation (Phases 18-25)
 
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
@@ -9,9 +9,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Current State
 | Attribute | Value |
 |-----------|-------|
-| Version | 0.2.0 |
-| Status | Milestone v0.2 complete |
-| Last Updated | 2026-04-01 |
+| Version | 0.3.0 |
+| Status | Milestone v0.3 complete |
+| Last Updated | 2026-03-29 |
 
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
@@ -20,8 +20,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 - Autonomous review/revise and verify/correct loops run deterministically from the supported `coda_advance` trigger path
 - Human review gate blocks BUILD until human approval is recorded
 - Exhaustion handling pauses automation and routes operators through `/coda back` and `/coda kill`
-- 315 tests passing (140 core + 175 coda), TypeScript strict, no `any` types in source, zero external deps in core
-- v0.3 Module System in progress: types + registry + dispatcher + prompts + workflow + config + persistence landed (Phases 18-24)
+- 363 tests passing (144 core + 219 coda), TypeScript strict, no `any` types in source, zero external deps in core
+- v0.3 Module System complete: types + registry + dispatcher + prompts + workflow + config + persistence + E2E validation (Phases 18-25)
 
 ## Scope Snapshot
 ### Validated
@@ -48,13 +48,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Workflow integration — dispatcher wired into phase-runner + build-loop, moduleBlockFindings gate, old todd/walt deleted (Phase 22 — v0.3)
 - [x] Config integration — coda.json modules section drives enable/disable + blockThreshold per project (Phase 23 — v0.3)
 - [x] Findings persistence + context summarization — module-findings.json, summarizeFindings, cross-phase context in verify/unify (Phase 24 — v0.3)
+- [x] E2E validation — 22 E2E tests covering full module system path: config → registry → dispatcher → prompts → findings → persistence → gates → context (Phase 25 — v0.3)
 ### Active
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 - [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- [ ] v0.3 Module System — E2E validation (Phase 25)
+- (none — v0.3 complete)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -72,8 +73,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.2 progress | 9 phases complete | 9 of 9 complete ✅ |
-| Test suite | Green | 255 passing, 0 failing |
+| Milestone v0.3 progress | 8 phases complete | 8 of 8 complete ✅ |
+| Test suite | Green | 363 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Review/verify primitives | Landed in core | PASS |
 | Human review gate | Durable pending/approval/change-request flow | PASS |
@@ -106,4 +107,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-01 after Phase 24 (Findings Persistence) completion*
+*Last updated: 2026-03-29 after Phase 25 (E2E Validation) completion — v0.3 milestone complete*

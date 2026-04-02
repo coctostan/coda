@@ -5,8 +5,8 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
 **v0.3 Module System** (v0.3.0)
-Status: 🚧 In Progress
-Phases: 7 of 8 complete
+Status: ✅ Complete
+Phases: 8 of 8 complete
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
@@ -17,7 +17,7 @@ Phases: 7 of 8 complete
 | 22 | Workflow Integration | 1/1 | ✅ Complete | 2026-04-01 |
 | 23 | Config Integration | 1/1 | ✅ Complete | 2026-04-01 |
 | 24 | Findings Persistence + Context Summarization | 1/1 | ✅ Complete | 2026-04-01 |
-| 25 | E2E Validation | 0/1 | 📝 Planning | - |
+| 25 | E2E Validation | 1/1 | ✅ Complete | 2026-03-29 |
 
 ### Phase 18: Core Types + Finding Schema
 Focus: HookPoint, ModuleDefinition, FindingSeverity, Finding, HookResult types + validateFinding/validateFindings in @coda/core src/modules/
@@ -108,4 +108,4 @@ Plans: TBD (defined during /paul:plan)
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-01 — v0.3 Module System milestone created*
+*Roadmap updated: 2026-03-29 — v0.3 Module System milestone complete*
