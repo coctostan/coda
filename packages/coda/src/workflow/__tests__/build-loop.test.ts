@@ -52,6 +52,20 @@ describe('Workflow Build Loop', () => {
       expect(ctx.context).toContain('First done');
     });
 
+    test('includes post-task module analysis for the most recently completed task', () => {
+      const ctx = buildTaskContext(codaRoot, 'my-feature', 2, [1]);
+      expect(ctx.context).toContain('Module Analysis: post-task');
+      expect(ctx.context).toContain('Task: 1');
+      expect(ctx.context).toContain('coda_report_findings');
+    });
+
+    test('includes post-build module analysis when assembling the final build task', () => {
+      const ctx = buildTaskContext(codaRoot, 'my-feature', 3, [1, 2]);
+      expect(ctx.context).toContain('Module Analysis: post-build');
+      expect(ctx.context).toContain('Changed files: src/main.ts');
+      expect(ctx.context).toContain('coda_report_findings');
+    });
+
     test('systemPrompt references the task', () => {
       const ctx = buildTaskContext(codaRoot, 'my-feature', 2, [1]);
       expect(ctx.systemPrompt).toContain('task');
@@ -87,6 +101,7 @@ describe('Workflow Build Loop', () => {
       expect(ctx.context).toContain('saveTodo test still fails');
       expect(ctx.context).toContain('Second Task');
       expect(ctx.systemPrompt).toContain('verification failure');
+      expect(ctx.context).not.toContain('Module Analysis: post-build');
     });
   });
 
@@ -104,7 +119,6 @@ describe('Workflow Build Loop', () => {
     });
 
     test('returns empty array when all tasks complete', () => {
-      // Mark all tasks as complete
       writeRecord(join(codaRoot, 'issues', 'my-feature', 'tasks', '02-second.md'), {
         id: 2, issue: 'my-feature', title: 'Second Task', status: 'complete',
         kind: 'planned', covers_ac: [], depends_on: [1],

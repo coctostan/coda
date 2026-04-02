@@ -10,6 +10,8 @@ import type { IssueRecord, PlanRecord, TaskRecord } from '@coda/core';
 import type { VerificationFailureArtifact, VerificationFailedCheck } from './types';
 import { join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
+import { loadFindings, summarizeFindings } from './module-integration';
+import { sortByNumericSuffix } from '../tools/sort-utils';
 
 /**
  * Load an issue record from `.coda/issues/{slug}.md`.
@@ -28,11 +30,11 @@ export function loadIssue(
 }
 
 /**
- * Load the plan record for an issue. Finds the first `plan-v*.md` in the issue directory.
+ * Load the latest plan record for an issue.
  *
  * @param codaRoot - Path to the `.coda/` directory
  * @param issueSlug - The issue slug
- * @returns The plan record or null if not found
+ * @returns The latest plan record or null if not found
  */
 export function loadPlan(
   codaRoot: string,
@@ -42,10 +44,10 @@ export function loadPlan(
   if (!existsSync(issueDir)) return null;
 
   try {
-    const files = readdirSync(issueDir).filter((f) => f.startsWith('plan-v') && f.endsWith('.md'));
+    const files = sortByNumericSuffix(
+      readdirSync(issueDir).filter((f) => f.startsWith('plan-v') && f.endsWith('.md'))
+    );
     if (files.length === 0) return null;
-
-    files.sort();
     const planFile = files[files.length - 1]!;
     return readRecord<PlanRecord>(join(issueDir, planFile));
   } catch {
@@ -352,4 +354,23 @@ function unquote(value: string): string {
     return value.slice(1, -1);
   }
   return value;
+}
+
+/**
+ * Load and summarize module findings for cross-phase context injection.
+ *
+ * Returns a compact summary string suitable for inclusion in verify/unify context.
+ * Returns empty string if no findings exist for the issue.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param issueSlug - The issue slug
+ * @returns Compact findings summary, or '' if none
+ */
+export function loadModuleFindingsSummary(
+  codaRoot: string,
+  issueSlug: string
+): string {
+  const data = loadFindings(codaRoot, issueSlug);
+  if (data.hookResults.length === 0) return '';
+  return summarizeFindings(data.hookResults);
 }

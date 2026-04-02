@@ -4,14 +4,49 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-**v0.2 Autonomous Loops** (v0.2.0)
+**v0.4 Live Validation** (v0.4.0)
 Status: ✅ Complete
-Completed: 2026-04-01
+Phases: 3 of 3 complete
 
-## Next Milestone
-Run /paul:discuss-milestone or /paul:milestone to define.
+| Phase | Name | Plans | Status | Completed |
+|-------|------|-------|--------|-----------|
+| 26 | Operational Fixes | 1/1 | ✅ Complete | 2026-03-29 |
+| 27 | Deep Code Review + Fixes | 1/1 | ✅ Complete | 2026-03-29 |
+| 28 | CMUX Stress Test | 1/1 | ✅ Complete | 2026-03-29 |
+
+### Phase 26: Operational Fixes
+Focus: Fix 10 known issues (LIVE-01 through LIVE-10) blocking live Pi/CMUX sessions
+Plans: TBD (defined during /paul:plan)
+
+### Phase 27: Deep Code Review + Fixes
+Focus: Production-readiness review of packages/coda/src/ — catch issues the sweep missed, fix them
+Plans: TBD (defined during /paul:plan)
+
+### Phase 28: CMUX Stress Test
+Focus: Scripted live Pi session building a real Pi extension through full CODA lifecycle (user-supplied test script)
+Model: openai-codex/gpt-5.4-mini, thinking high
+Test project: ~/pi/workspace/coda-test1 (coctostan/coda-test1)
+Plans: TBD (defined during /paul:plan)
 
 ## Completed Milestones
+
+<details>
+<summary>v0.3 Module System — 2026-03-29 (8 phases, 8 plans)</summary>
+
+| Phase | Name | Plans | Completed |
+|-------|------|-------|-----------|
+| 18 | Core Types + Finding Schema | 1/1 | 2026-04-01 |
+| 19 | Module Registry | 1/1 | 2026-04-01 |
+| 20 | Module Dispatcher | 1/1 | 2026-04-01 |
+| 21 | Module Prompts — Security + TDD | 1/1 | 2026-04-01 |
+| 22 | Workflow Integration | 1/1 | 2026-04-01 |
+| 23 | Config Integration | 1/1 | 2026-04-01 |
+| 24 | Findings Persistence + Context Summarization | 1/1 | 2026-04-01 |
+| 25 | E2E Validation | 1/1 | 2026-03-29 |
+
+Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd only), D4 (clean migration), D5 (gate authority)
+
+</details>
 
 <details>
 <summary>v0.2 Autonomous Loops — 2026-04-01 (9 phases, 10 plans)</summary>
@@ -49,7 +84,8 @@ Run /paul:discuss-milestone or /paul:milestone to define.
 ## Milestone Notes
 - v0.2 archive: `.paul/milestones/v0.2.0-ROADMAP.md`
 - v0.1 archive: `.paul/milestones/v0.1.0-ROADMAP.md`
+- v0.3 archive: `.paul/milestones/v0.3.0-ROADMAP.md`
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-01 after v0.2 milestone completion*
+*Roadmap updated: 2026-03-29 — v0.4 Live Validation milestone created*

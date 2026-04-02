@@ -196,4 +196,48 @@ describe('codaCreate', () => {
     expect(result.success).toBe(true);
     expect(result.path).toContain('records/completion-note.md');
   });
+
+  test('rejects plan issue slugs with path traversal characters', () => {
+    const result = codaCreate(
+      {
+        type: 'plan',
+        fields: {
+          title: 'Traversal Plan',
+          issue: '../escape',
+          status: 'draft',
+          iteration: 1,
+          task_count: 0,
+          human_review_status: 'not-required',
+        },
+      },
+      codaRoot
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('issue slug');
+  });
+
+  test('rejects titles that produce an empty slug', () => {
+    const result = codaCreate(
+      {
+        type: 'issue',
+        fields: {
+          title: '!!!',
+          issue_type: 'feature',
+          status: 'proposed',
+          phase: 'specify',
+          priority: 3,
+          topics: [],
+          acceptance_criteria: [],
+          open_questions: [],
+          deferred_items: [],
+          human_review: false,
+        },
+      },
+      codaRoot
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('non-empty slug');
+  });
 });

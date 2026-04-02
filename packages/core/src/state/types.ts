@@ -95,6 +95,8 @@ export interface GateCheckData {
   humanReviewRequired?: boolean;
   /** Current human review status for the plan. */
   humanReviewStatus?: string;
+  /** Count of module findings exceeding block threshold. 0 or undefined means no blocks. */
+  moduleBlockFindings?: number;
 }
 
 /** Result of a phase transition attempt. */

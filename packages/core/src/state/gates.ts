@@ -50,10 +50,15 @@ export const GATES: Record<string, Gate> = {
   },
   'build→verify': {
     name: 'build→verify',
-    check: (d: GateCheckData) => ({
-      passed: d.allPlannedTasksComplete === true,
-      reason: 'All planned tasks must be complete',
-    }),
+    check: (d: GateCheckData) => {
+      if (d.allPlannedTasksComplete !== true) {
+        return { passed: false, reason: 'All planned tasks must be complete' };
+      }
+      if ((d.moduleBlockFindings ?? 0) > 0) {
+        return { passed: false, reason: 'Module findings require attention' };
+      }
+      return { passed: true };
+    },
   },
   'verify→unify': {
     name: 'verify→unify',

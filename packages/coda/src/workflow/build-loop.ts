@@ -6,7 +6,7 @@
  * Does NOT drive the LLM — that's M7's job.
  */
 
-import { getModulePrompts } from '../modules';
+import { getModulePromptForHook } from './module-integration';
 import {
   loadTasks,
   getPreviousTaskSummaries,
@@ -16,11 +16,14 @@ import {
 import type { BuildTaskContext } from './types';
 import { DEFAULT_CARRY_FORWARD } from './types';
 
+type BuildTaskRecord = ReturnType<typeof loadTasks>[number];
+
 /**
  * Build the context for a specific task in the BUILD phase.
  *
- * Assembles the task record, Todd TDD prompt, and carry-forward
- * summaries from previously completed tasks.
+ * Assembles the task record, pre-build module prompts, carry-forward
+ * summaries from previously completed tasks, and runtime module follow-up
+ * prompts for post-task/post-build analysis when applicable.
  *
  * @param codaRoot - Path to the `.coda/` directory
  * @param issueSlug - The issue slug
@@ -41,10 +44,26 @@ export function buildTaskContext(
   const taskBody = task?.body ?? '';
   const truths = task?.frontmatter.truths ?? [];
 
-  // Get Todd prompt for pre-build injection
-  const toddPrompts = getModulePrompts('pre-build');
+  const latestCompletedTaskId = getLatestCompletedTaskId(completedTasks, taskId);
+  const postTaskModulePrompt = latestCompletedTaskId === null
+    ? ''
+    : getModulePromptForHook('post-task', issueSlug, 'build', {
+      taskId: latestCompletedTaskId,
+      codaRoot,
+    });
 
-  // Get carry-forward summaries
+  const preBuildModulePrompt = getModulePromptForHook('pre-build', issueSlug, 'build', {
+    taskId,
+    codaRoot,
+  });
+
+  const postBuildModulePrompt = task?.frontmatter.kind === 'correction' || !isFinalBuildTask(tasks, taskId)
+    ? ''
+    : getModulePromptForHook('post-build', issueSlug, 'build', {
+      codaRoot,
+      changedFiles: collectChangedFiles(tasks, [...completedTasks, taskId]),
+    });
+
   const prevSummaries = getPreviousTaskSummaries(
     codaRoot,
     issueSlug,
@@ -80,8 +99,16 @@ export function buildTaskContext(
     contextParts.push(`## Previous Tasks\n${prevSummaries}`);
   }
 
-  if (toddPrompts.length > 0) {
-    contextParts.push(toddPrompts.join('\n'));
+  if (postTaskModulePrompt) {
+    contextParts.push(postTaskModulePrompt);
+  }
+
+  if (preBuildModulePrompt) {
+    contextParts.push(preBuildModulePrompt);
+  }
+
+  if (postBuildModulePrompt) {
+    contextParts.push(postBuildModulePrompt);
   }
 
   const systemPrompt = task?.frontmatter.kind === 'correction' && task.frontmatter.fix_for_ac
@@ -114,6 +141,32 @@ export function getBuildSequence(
   return tasks
     .filter((t) => t.frontmatter.status === 'pending' || t.frontmatter.status === 'active')
     .map((t) => t.frontmatter.id);
+}
+
+function getLatestCompletedTaskId(completedTasks: number[], currentTaskId: number): number | null {
+  const priorTaskIds = completedTasks
+    .filter((candidate) => candidate !== currentTaskId)
+    .sort((a, b) => a - b);
+
+  return priorTaskIds[priorTaskIds.length - 1] ?? null;
+}
+
+function isFinalBuildTask(tasks: BuildTaskRecord[], currentTaskId: number): boolean {
+  const buildTaskIds = tasks
+    .filter((candidate) => candidate.frontmatter.kind !== 'correction')
+    .map((candidate) => candidate.frontmatter.id)
+    .sort((a, b) => a - b);
+
+  return buildTaskIds[buildTaskIds.length - 1] === currentTaskId;
+}
+
+function collectChangedFiles(tasks: BuildTaskRecord[], taskIds: number[]): string[] {
+  const relevantTaskIds = new Set(taskIds);
+  const changedFiles = tasks
+    .filter((candidate) => relevantTaskIds.has(candidate.frontmatter.id))
+    .flatMap((candidate) => candidate.frontmatter.files_to_modify ?? []);
+
+  return Array.from(new Set(changedFiles));
 }
 
 function formatVerificationFailure(failure: {

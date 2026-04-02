@@ -41,28 +41,32 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
   });
 
   pi.on('before_agent_start', async () => {
-    const state = stateProvider.refreshState();
-    if (!state?.focus_issue || !state.phase) {
+    try {
+      const state = stateProvider.refreshState();
+      if (!state?.focus_issue || !state.phase) {
+        return {};
+      }
+    const phaseContext = getPhaseContext(state.phase, codaRoot, state.focus_issue, state);
+      return {
+        systemPrompt: phaseContext.systemPrompt,
+        message: {
+          customType: 'coda-context',
+          content: phaseContext.context,
+          display: true,
+          details: {
+            focusIssue: state.focus_issue,
+            phase: phaseContext.metadata.phase,
+            submode: phaseContext.metadata.submode,
+            loopIteration: phaseContext.metadata.loopIteration,
+            currentTask: phaseContext.metadata.currentTask,
+            taskKind: phaseContext.metadata.taskKind,
+          },
+        },
+      };
+    } catch (err) {
+      console.error('CODA before_agent_start hook failed:', formatCodaError(err), err);
       return {};
     }
-
-    const phaseContext = getPhaseContext(state.phase, codaRoot, state.focus_issue, state);
-    return {
-      systemPrompt: phaseContext.systemPrompt,
-      message: {
-        customType: 'coda-context',
-        content: phaseContext.context,
-        display: true,
-        details: {
-          focusIssue: state.focus_issue,
-          phase: phaseContext.metadata.phase,
-          submode: phaseContext.metadata.submode,
-          loopIteration: phaseContext.metadata.loopIteration,
-          currentTask: phaseContext.metadata.currentTask,
-          taskKind: phaseContext.metadata.taskKind,
-        },
-      },
-    };
   });
 
   pi.on('tool_call', async (event, ctx) => {
@@ -87,35 +91,37 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
   });
 
   pi.on('tool_result', async (event, ctx) => {
-    if (!isSuccessfulAdvanceToolResult(event)) {
-      return {};
-    }
-
+    try {
+      if (!isSuccessfulAdvanceToolResult(event)) {
+        return {};
+      }
     const trigger = handleAutonomousAdvanceTrigger(
-      pi,
-      ctx,
-      codaRoot,
-      statePath,
-      event.input as AdvanceInput,
-      event.details as AdvanceResult
-    );
+        pi,
+        ctx,
+        codaRoot,
+        statePath,
+        event.input as AdvanceInput,
+        event.details as AdvanceResult
+      );
 
-    stateProvider.refreshState();
-
+      stateProvider.refreshState();
     if (!trigger.summary) {
+        return {};
+      }
+    return {
+        content: [
+          ...event.content,
+          { type: 'text', text: trigger.summary },
+        ],
+        details: {
+          ...(typeof event.details === 'object' && event.details !== null ? event.details as unknown as Record<string, unknown> : {}),
+          autonomous_trigger: trigger.summary,
+        },
+      };
+    } catch (err) {
+      console.error('CODA tool_result hook failed:', formatCodaError(err), err);
       return {};
     }
-
-    return {
-      content: [
-        ...event.content,
-        { type: 'text', text: trigger.summary },
-      ],
-      details: {
-        ...(typeof event.details === 'object' && event.details !== null ? event.details as unknown as Record<string, unknown> : {}),
-        autonomous_trigger: trigger.summary,
-      },
-    };
   });
 }
 
@@ -249,16 +255,22 @@ function evaluateWriteGate(
     };
   }
 
-  const state = stateProvider.refreshState() ?? stateProvider.getState();
+  let state: ReturnType<StateProvider['getState']>;
+  try {
+    state = stateProvider.refreshState() ?? stateProvider.getState();
+  } catch (err) {
+    return {
+      block: true,
+      reason: `Could not read CODA state; blocking write for safety: ${formatCodaError(err)}`,
+    };
+  }
   if (state?.tdd_gate !== 'locked') {
     return {};
   }
-
   const gateResult = checkWriteGate({ operation, path }, { tdd_gate: state.tdd_gate });
   if (gateResult.allowed) {
     return {};
   }
-
   return {
     block: true,
     reason: gateResult.reason ?? 'TDD gate locked. Write a failing test first.',
@@ -320,21 +332,103 @@ function isProtectedCodaPath(path: string, codaRoot: string, cwd: string): boole
   return absolutePath === absoluteCodaRoot || absolutePath.startsWith(`${absoluteCodaRoot}${sep}`);
 }
 
+function formatCodaError(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  return `CODA error: ${message}`;
+}
+
+function tokenizeShellCommand(command: string): string[] {
+  return command.match(/"[^"]*"|'[^']*'|`[^`]*`|[^\s]+/g) ?? [];
+}
+
+function normalizeShellToken(token: string): string {
+  let normalized = token.trim();
+  if (
+    (normalized.startsWith('"') && normalized.endsWith('"'))
+    || (normalized.startsWith("'") && normalized.endsWith("'"))
+    || (normalized.startsWith('`') && normalized.endsWith('`'))
+  ) {
+    normalized = normalized.slice(1, -1);
+  }
+  return normalized.replace(/[;|&]+$/g, '');
+}
+
+function tokenTargetsCodaPath(token: string): boolean {
+  return /(^|[\\/])\.coda(?:[\\/]|$)/.test(normalizeShellToken(token));
+}
+
+function findTargetPathToken(commandName: string, args: string[]): string | null {
+  const normalizedArgs = args.map((arg) => normalizeShellToken(arg));
+  const targetDirFlagIndex = normalizedArgs.findIndex((arg) => arg === '-t' || arg === '--target-directory');
+  if (targetDirFlagIndex >= 0) {
+    return normalizedArgs[targetDirFlagIndex + 1] ?? null;
+  }
+
+  if (commandName === 'cp' || commandName === 'mv' || commandName === 'install' || commandName === 'ln') {
+    for (let index = normalizedArgs.length - 1; index >= 0; index -= 1) {
+      const token = normalizedArgs[index];
+      if (!token || token === '--') {
+        continue;
+      }
+      if (token.startsWith('-')) {
+        continue;
+      }
+      return token;
+    }
+  }
+
+  return null;
+}
+
+function hasRedirectWriteToCoda(command: string): boolean {
+  return /(?:^|[^\w])(?:1>>?|>>?)\s*['"]?(?:[^\s'"`]*[\\/])?\.coda(?:[\\/]|$)/.test(command);
+}
+
 /**
  * Detect bash commands that write to `.coda/` via redirection or common write patterns.
  *
- * Catches: `> .coda/`, `>> .coda/`, `tee .coda/`, `cp ... .coda/`, `mv ... .coda/`,
- * `printf ... > .coda/`, `echo ... > .coda/`, `cat ... > .coda/`
+ * Catches: `> .coda/`, `>> .coda/`, `1> .coda/`, `tee .coda/`, `cp ... .coda/`,
+ * `mv ... .coda/`, `touch .coda/`, `mkdir .coda/`, `printf ... > .coda/`,
+ * interpreter stdout redirects like `python -c ... > .coda/` or `node -e ... > .coda/`,
+ * `sed -i .coda/`, `perl -i .coda/`, `truncate .coda/`, `chmod .coda/`,
+ * `chown .coda/`, `ln ... .coda/`, and `install ... .coda/`.
  */
-function isBashWriteToCoda(command: string): boolean {
-  // Redirect operators targeting .coda/
-  if (/>>?\s*['"]?\.coda\//.test(command)) return true;
-  if (/>>?\s*['"]?\.coda\\/.test(command)) return true;
-  // tee writing to .coda/
-  if (/\btee\b.*\.coda\//.test(command)) return true;
-  // cp/mv with .coda/ as destination
-  if (/\b(?:cp|mv)\b.*\s\.coda\//.test(command)) return true;
-  // rm inside .coda/
-  if (/\brm\b.*\.coda\//.test(command)) return true;
+  function isBashWriteToCoda(command: string): boolean {
+  if (hasRedirectWriteToCoda(command)) {
+    return true;
+  }
+  if (/\btee\b[\s\S]*\.coda(?:[\\/]|$)/.test(command)) {
+    return true;
+  }
+  if (/\bsed\b[\s\S]*\s-i(?:\s|$|['".]|[^a-zA-Z])[\s\S]*\.coda(?:[\\/]|$)/.test(command)) {
+    return true;
+  }
+  if (/\bperl\b[\s\S]*\s-i(?:\S*)?(?:\s|$)[\s\S]*\.coda(?:[\\/]|$)/.test(command)) {
+    return true;
+  }
+  const tokens = tokenizeShellCommand(command);
+  const commandName = normalizeShellToken(tokens[0] ?? '');
+  const args = tokens.slice(1);
+  if (commandName === 'tee') {
+    return args.some((arg) => tokenTargetsCodaPath(arg));
+  }
+  if (commandName === 'cp' || commandName === 'mv' || commandName === 'install' || commandName === 'ln') {
+    const targetPath = findTargetPathToken(commandName, args);
+    return targetPath !== null && tokenTargetsCodaPath(targetPath);
+  }
+  if (commandName === 'touch' || commandName === 'mkdir') {
+    return args
+      .filter((arg) => !normalizeShellToken(arg).startsWith('-'))
+      .some((arg) => tokenTargetsCodaPath(arg));
+  }
+
+  if (
+    commandName === 'rm'
+    || commandName === 'truncate'
+    || commandName === 'chmod'
+    || commandName === 'chown'
+  ) {
+    return args.some((arg) => tokenTargetsCodaPath(arg));
+  }
   return false;
 }

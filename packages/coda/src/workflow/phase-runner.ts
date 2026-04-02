@@ -15,8 +15,10 @@ import {
   getPreviousTaskSummaries,
   loadRevisionInstructions,
   loadRevisionHistory,
+  loadModuleFindingsSummary,
 } from './context-builder';
 import { buildTaskContext } from './build-loop';
+import { getModulePromptForHook } from './module-integration';
 
 /**
  * Get the context object for a given lifecycle phase.
@@ -56,11 +58,13 @@ export function getPhaseContext(
 
     case 'plan': {
       const refs = loadRefDocs(codaRoot);
+      const modulePrompt = getModulePromptForHook('pre-plan', issueSlug, 'plan', { codaRoot });
       return withMetadata({
         systemPrompt: 'You are planning tasks for this issue. Design an implementation approach.',
         context: [
           issueContext,
           refs.system ? `## System Reference\n${refs.system}` : '',
+          modulePrompt || '',
         ].filter(Boolean).join('\n\n'),
       }, phase, state);
     }
@@ -121,12 +125,14 @@ export function getPhaseContext(
         codaRoot, issueSlug, completedTasks, completedTasks.length
       );
       const plan = loadPlan(codaRoot, issueSlug);
+      const findingsSummary = loadModuleFindingsSummary(codaRoot, issueSlug);
       return withMetadata({
         systemPrompt: 'You are verifying acceptance criteria against built artifacts.',
         context: [
           issueContext,
           plan ? `## Plan\n${plan.body}` : '',
           summaries ? `## Task Summaries\n${summaries}` : '',
+          findingsSummary ? `## Module Findings\n${findingsSummary}` : '',
         ].filter(Boolean).join('\n\n'),
       }, phase, state);
     }
@@ -138,6 +144,7 @@ export function getPhaseContext(
         codaRoot, issueSlug, completedTasks, completedTasks.length
       );
       const refs = loadRefDocs(codaRoot);
+      const findingsSummary = loadModuleFindingsSummary(codaRoot, issueSlug);
       return withMetadata({
         systemPrompt: 'You are closing the loop. Write the completion record and update reference docs.',
         context: [
@@ -145,6 +152,7 @@ export function getPhaseContext(
           plan ? `## Plan\n${plan.body}` : '',
           summaries ? `## Task Summaries\n${summaries}` : '',
           refs.system ? `## System Reference\n${refs.system}` : '',
+          findingsSummary ? `## Module Findings\n${findingsSummary}` : '',
         ].filter(Boolean).join('\n\n'),
       }, phase, state);
     }

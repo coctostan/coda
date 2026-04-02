@@ -3,6 +3,7 @@ import type { CodaState, IssueRecord, Phase, PlanRecord } from '@coda/core';
 import { existsSync, readdirSync } from 'fs';
 import { join } from 'path';
 import type { AdvanceResult, BackInput } from './types';
+import { sortByNumericSuffix } from './sort-utils';
 
 const PHASE_ORDER: Phase[] = ['specify', 'plan', 'review', 'build', 'verify', 'unify', 'done'];
 
@@ -115,9 +116,10 @@ function getLatestPlanPath(codaRoot: string, issueSlug: string): string | null {
     return null;
   }
 
-  const planFiles = readdirSync(issueDir)
-    .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
-    .sort();
+  const planFiles = sortByNumericSuffix(
+    readdirSync(issueDir)
+      .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
+  );
   const planFile = planFiles[planFiles.length - 1];
   return planFile ? join(issueDir, planFile) : null;
 }

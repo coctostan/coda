@@ -6,6 +6,7 @@ Completed milestone log for this project.
 |-----------|-----------|----------|-------|
 | v0.1 Initial Release | 2026-03-29 | ~12 hours | 8 phases, 9 plans, 63 files |
 | v0.2 Autonomous Loops | 2026-04-01 | 4 days | 9 phases, 10 plans, 255 tests |
+| v0.3 Module System | 2026-03-29 | ~2 days | 8 phases, 8 plans, 33 files |
 
 ---
 
@@ -85,5 +86,43 @@ Completed milestone log for this project.
 - Pi-facing runtime metadata comes from workflow-owned phase context — keeps Pi integration thin.
 - Successful `coda_advance` into `review`/`verify` is the supported live autonomous trigger — closes the operator-surface gap without widening the command surface.
 - Optional frontmatter arrays are normalized at the `loadTasks()` boundary — single defense point protects all downstream runners.
+
+---
+
+## ✅ v0.3 Module System
+
+**Completed:** 2026-03-29
+**Version:** v0.3.0
+**Duration:** ~2 days (2026-04-01 to 2026-03-29)
+
+### Stats
+
+| Metric | Value |
+|--------|-------|
+| Phases | 8 |
+| Plans | 8 |
+| Files changed | 33 |
+| Tests | 363 passing (144 core + 219 coda) |
+| TypeScript | `tsc --noEmit` clean |
+| External deps in core | 0 |
+
+### Key Accomplishments
+
+- Built foundational module types in `@coda/core` L3: `HookPoint`, `FindingSeverity`, `Finding`, `HookResult`, `ModuleDefinition` with `validateFinding`/`validateFindings` schema validation.
+- Implemented module registry with hardcoded `security` + `tdd` definitions, config-driven enable/disable, priority-sorted hook lookup, and prompt path resolution.
+- Created the two-method dispatcher API: `assemblePrompts()` for phase-boundary prompt injection and `parseAndCheckFindings()` for structured finding extraction with `exceedsThreshold` blocking.
+- Shipped 5 prompt files (security/pre-plan, security/post-build, tdd/pre-build, tdd/post-task, tdd/post-build) with 25 structural tests.
+- Wired modules into the workflow engine: dispatcher fires at phase boundaries, `moduleBlockFindings` blocks build→verify gate, old todd/walt system deleted.
+- Added config integration: `coda.json` `modules` section drives per-project enable/disable and `blockThreshold` overrides.
+- Implemented findings persistence to `.coda/issues/{slug}/module-findings.json` with `summarizeFindings` for cross-phase context injection in verify/unify phases.
+- Created 22 E2E tests validating the complete integrated path: config → registry → dispatcher → prompts → findings → persistence → gates → context summarization.
+
+### Key Decisions
+
+- D1: `blockThreshold: FindingSeverity | 'none'` — enables advisory-only modules that never block.
+- D2: Two-method dispatcher API (`assemblePrompts` + `parseAndCheckFindings`) — keeps the dispatcher session-unaware.
+- D3: Only security + tdd in v0.3 — no half-registered modules; architecture/quality/knowledge modules deferred to v0.3.1.
+- D4: Old todd/walt deleted at workflow integration — single clean migration cut.
+- D5: `moduleBlockFindings` in `GateCheckData` — gate system remains the authority for phase transitions.
 
 ---

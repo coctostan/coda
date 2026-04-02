@@ -14,6 +14,7 @@ import {
   loadVerificationFailure,
   loadVerificationFailures,
   getSourceTaskSummaries,
+  loadModuleFindingsSummary,
 } from '../context-builder';
 
 describe('Workflow Context Builder', () => {
@@ -275,5 +276,35 @@ describe('Workflow Context Builder', () => {
       expect(summaries.indexOf('Task One')).toBeLessThan(summaries.indexOf('Task Two'));
     });
   });
+  });
+
+  describe('loadModuleFindingsSummary', () => {
+    test('returns empty string when no findings file exists', () => {
+      const summary = loadModuleFindingsSummary(codaRoot, 'no-findings');
+      expect(summary).toBe('');
+    });
+
+    test('returns summary when findings exist', () => {
+      const issueDir = join(codaRoot, 'issues', 'with-findings');
+      mkdirSync(issueDir, { recursive: true });
+      writeFileSync(join(issueDir, 'module-findings.json'), JSON.stringify({
+        issue: 'with-findings',
+        hookResults: [{
+          hookPoint: 'post-build',
+          findings: [
+            { module: 'security', check: 'secrets', severity: 'critical', finding: 'API key found' },
+            { module: 'security', check: 'validation', severity: 'info', finding: 'No issues' },
+          ],
+          blocked: true,
+          blockReasons: ['SECURITY BLOCK: API key found'],
+          timestamp: '2026-04-01T00:00:00Z',
+        }],
+      }));
+
+      const summary = loadModuleFindingsSummary(codaRoot, 'with-findings');
+      expect(summary).toContain('security:');
+      expect(summary).toContain('1 critical');
+      expect(summary).toContain('(BLOCKED)');
+    });
   });
 });

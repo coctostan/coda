@@ -14,6 +14,7 @@ import {
   codaCreate,
   codaEditBody,
   codaRead,
+  codaReportFindings,
   codaRunTests,
   codaStatus,
   codaUpdate,
@@ -73,13 +74,18 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     pattern: Type.Optional(Type.String()),
   });
 
+  const reportFindingsSchema = Type.Object({
+    hook_point: Type.String(),
+    findings_json: Type.String(),
+  });
+
   pi.registerTool({
     name: 'coda_create',
     label: 'Create Record',
     description: 'Create a new mdbase record in .coda/ (issue, plan, task, reference, record).',
     parameters: createSchema,
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-      return createTextToolResult(codaCreate(params, codaRoot));
+      return executeWithCodaErrorHandling(() => codaCreate(params, codaRoot));
     },
   });
 
@@ -89,7 +95,7 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     description: 'Read a record from .coda/ with an optional section filter.',
     parameters: readSchema,
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-      return createTextToolResult(codaRead(params, codaRoot));
+      return executeWithCodaErrorHandling(() => codaRead(params, codaRoot));
     },
   });
 
@@ -99,7 +105,7 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     description: 'Update frontmatter fields of an existing .coda/ record.',
     parameters: updateSchema,
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-      return createTextToolResult(codaUpdate(params, codaRoot));
+      return executeWithCodaErrorHandling(() => codaUpdate(params, codaRoot));
     },
   });
 
@@ -109,7 +115,7 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     description: 'Edit the body of a .coda/ record using section-aware operations.',
     parameters: editBodySchema,
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-      return createTextToolResult(codaEditBody(params, codaRoot));
+      return executeWithCodaErrorHandling(() => codaEditBody(params, codaRoot));
     },
   });
 
@@ -119,7 +125,17 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     description: 'Advance the focused issue to the next lifecycle phase.',
     parameters: advanceSchema,
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-      return createTextToolResult(codaAdvance(params, codaRoot, statePath));
+      return executeWithCodaErrorHandling(() => codaAdvance(params, codaRoot, statePath));
+    },
+  });
+
+  pi.registerTool({
+    name: 'coda_report_findings',
+    label: 'Report Module Findings',
+    description: 'Parse and persist module findings JSON for the focused issue.',
+    parameters: reportFindingsSchema,
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      return executeWithCodaErrorHandling(() => codaReportFindings(params, codaRoot, statePath));
     },
   });
 
@@ -129,7 +145,7 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     description: 'Get the current CODA status (phase, task, next action).',
     parameters: statusSchema,
     async execute(_toolCallId, _params, _signal, _onUpdate, _ctx) {
-      return createTextToolResult(codaStatus(statePath));
+      return executeWithCodaErrorHandling(() => codaStatus(statePath, codaRoot));
     },
   });
 
@@ -139,8 +155,10 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     description: 'Run tests in TDD or suite mode.',
     parameters: runTestsSchema,
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-      const config = loadCodaConfig(codaRoot);
-      return createTextToolResult(codaRunTests(params, statePath, config));
+      return executeWithCodaErrorHandling(() => {
+        const config = loadCodaConfig(codaRoot);
+        return codaRunTests(params, statePath, config);
+      });
     },
   });
 }
@@ -154,6 +172,24 @@ function createTextToolResult<TDetails>(details: TDetails): {
     content: [{ type: 'text', text: JSON.stringify(details, null, 2) }],
     details,
   };
+}
+
+async function executeWithCodaErrorHandling<TDetails>(
+  operation: () => TDetails | Promise<TDetails>
+): Promise<{
+  content: [{ type: 'text'; text: string }];
+  details: TDetails | { error: string };
+}> {
+  try {
+    return createTextToolResult(await operation());
+  } catch (err) {
+    return createTextToolResult({ error: formatCodaError(err) });
+  }
+}
+
+function formatCodaError(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  return `CODA error: ${message}`;
 }
 
 /** Load coda.json config from the .coda/ directory. */

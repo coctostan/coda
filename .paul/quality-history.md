@@ -12,3 +12,8 @@
 | 2026-03-29 | 15-e2e-validation | 251 pass / 0 fail | N/A | clean | N/A | ↑ improving (+4 tests, live blocker documented) |
 | 2026-03-30 | 16-live-operator-trigger-resolution | 253 pass / 0 fail | N/A | clean | N/A | ↑ improving (+2 tests) |
 | 2026-03-31 | 17-repeat-live-e2e-validation | 253 pass / 0 fail | N/A | clean | N/A | → stable (validation-only phase, live blocker documented) |
+
+| 2026-03-29 | 25-e2e-validation | 363 pass / 0 fail | N/A | clean | N/A | ↑ improving (+22 E2E tests, milestone complete) |
+| 2026-03-29 | 26-operational-fixes | 381 pass / 0 fail | N/A | clean | N/A | ↑ improving (+18 tests, 10 LIVE fixes) |
+| 2026-03-29 | 27-deep-code-review | 386 pass / 0 fail | N/A | clean | N/A | ↑ improving (+5 tests, 10 review fixes) |
+| 2026-03-29 | 28-cmux-stress-test | 386 pass / 0 fail | N/A | clean | N/A | → stable (observational — 8/8 lifecycle phases PASS, 4 issues cataloged) |

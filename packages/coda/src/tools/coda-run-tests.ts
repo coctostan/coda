@@ -8,11 +8,100 @@
  */
 
 import { loadState, persistState } from '@coda/core';
-import { spawnSync } from 'child_process';
+import { dirname, resolve } from 'path';
 import type { RunTestsInput, RunTestsResult } from './types';
 
 /** Maximum output length to capture (characters). */
 const MAX_OUTPUT_LENGTH = 2000;
+
+/** Maximum test command runtime in milliseconds. */
+const COMMAND_TIMEOUT_MS = 120_000;
+
+/** Shared decoder for subprocess output. */
+const textDecoder = new TextDecoder();
+
+/**
+ * Split a configured command string into an executable and argument list.
+ *
+ * Supports shell-style whitespace, single quotes, double quotes, and
+ * backslash escaping without invoking a shell.
+ *
+ * @param command - Command string from configuration
+ * @returns Tokenized executable and argument array
+ */
+function splitCommand(command: string): string[] {
+  const trimmedCommand = command.trim();
+
+  if (trimmedCommand.length === 0) {
+    throw new Error('Test command cannot be empty');
+  }
+
+  const parts: string[] = [];
+  let current = '';
+  let activeQuote: '"' | '\'' | null = null;
+  let isEscaping = false;
+
+  for (const character of trimmedCommand) {
+    if (isEscaping) {
+      current += character;
+      isEscaping = false;
+      continue;
+    }
+
+    if (character === '\\' && activeQuote !== '\'') {
+      isEscaping = true;
+      continue;
+    }
+
+    if (activeQuote) {
+      if (character === activeQuote) {
+        activeQuote = null;
+      } else {
+        current += character;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === '\'') {
+      activeQuote = character;
+      continue;
+    }
+
+    if (/\s/.test(character)) {
+      if (current.length > 0) {
+        parts.push(current);
+        current = '';
+      }
+      continue;
+    }
+
+    current += character;
+  }
+
+  if (isEscaping || activeQuote) {
+    throw new Error('Test command contains unmatched quotes or escaping');
+  }
+
+  if (current.length > 0) {
+    parts.push(current);
+  }
+
+  if (parts.length === 0) {
+    throw new Error('Test command cannot be empty');
+  }
+
+  return parts;
+}
+
+/**
+ * Decode subprocess output for result reporting.
+ *
+ * @param output - Buffered subprocess stream
+ * @returns UTF-8 decoded output text
+ */
+function decodeOutput(output: Uint8Array<ArrayBufferLike>): string {
+  return textDecoder.decode(output);
+}
 
 /**
  * Execute a test command and manage the TDD gate.
@@ -31,7 +120,6 @@ export function codaRunTests(
   statePath: string,
   config: { tdd_test_command?: string; full_suite_command?: string }
 ): RunTestsResult {
-  // Resolve command based on mode
   const command = input.mode === 'tdd'
     ? config.tdd_test_command
     : config.full_suite_command;
@@ -47,22 +135,58 @@ export function codaRunTests(
     };
   }
 
-  // Build the full command with optional pattern
-  const fullCommand = input.pattern ? `${command} ${input.pattern}` : command;
+  const displayCommand = input.pattern ? `${command} ${input.pattern}` : command;
 
-  // Execute the command
-  const result = spawnSync('sh', ['-c', fullCommand], {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    timeout: 120_000,
-  });
+  let parsedCommand: string[];
+  try {
+    parsedCommand = splitCommand(command);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      exit_code: -1,
+      passed: false,
+      output: '',
+      command: displayCommand,
+      error: message,
+    };
+  }
 
-  const stdout = result.stdout?.toString('utf-8') ?? '';
-  const stderr = result.stderr?.toString('utf-8') ?? '';
+  const codaRoot = dirname(statePath);
+  const projectRoot = resolve(codaRoot, '..');
+  const cmd = input.pattern ? [...parsedCommand, input.pattern] : parsedCommand;
+
+  let stdout = '';
+  let stderr = '';
+  let exitCode = -1;
+
+  try {
+    const result = Bun.spawnSync({
+      cmd,
+      cwd: projectRoot,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      timeout: COMMAND_TIMEOUT_MS,
+    });
+
+    stdout = decodeOutput(result.stdout);
+    stderr = decodeOutput(result.stderr);
+    exitCode = result.exitCode;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      exit_code: -1,
+      passed: false,
+      output: message.slice(0, MAX_OUTPUT_LENGTH),
+      command: displayCommand,
+      error: message,
+    };
+  }
+
   const output = (stdout + stderr).slice(0, MAX_OUTPUT_LENGTH);
-  const exitCode = result.status ?? 1;
   const passed = exitCode === 0;
 
-  // TDD gate management (tdd mode only)
   if (input.mode === 'tdd') {
     const state = loadState(statePath);
     if (state) {
@@ -71,7 +195,6 @@ export function codaRunTests(
       persistState(state, statePath);
     }
   } else {
-    // Suite mode: just record exit code, no gate effect
     const state = loadState(statePath);
     if (state) {
       state.last_test_exit_code = exitCode;
@@ -84,6 +207,6 @@ export function codaRunTests(
     exit_code: exitCode,
     passed,
     output,
-    command: fullCommand,
+    command: displayCommand,
   };
 }

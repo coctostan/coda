@@ -7,19 +7,49 @@
  * issue record and state.json on success.
  */
 import {
+  createRegistry,
   readRecord,
   updateFrontmatter,
   transition,
   loadState,
   persistState,
 } from '@coda/core';
-import type { CodaState, GateCheckData, IssueRecord, Phase, PlanRecord } from '@coda/core';
+import type {
+  CodaState,
+  FindingSeverity,
+  GateCheckData,
+  HookPoint,
+  IssueRecord,
+  Phase,
+  PlanRecord,
+  RegistryConfig,
+} from '@coda/core';
 import { basename, join } from 'path';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { isLoopExhausted } from '../../../core/src/state/machine';
 import type { LoopIterationConfig } from '../../../core/src/state/types';
 import { codaEditBody } from './coda-edit-body';
 import type { AdvanceInput, AdvanceResult } from './types';
+import { sortByNumericSuffix } from './sort-utils';
+
+type PersistedHookResult = {
+  hookPoint?: string;
+  blockReasons?: string[];
+};
+
+function getLatestPersistedHookResults(hookResults: PersistedHookResult[]): PersistedHookResult[] {
+  const latestByHookPoint = new Map<string, PersistedHookResult>();
+
+  for (const hookResult of hookResults) {
+    if (!hookResult.hookPoint) {
+      continue;
+    }
+
+    latestByHookPoint.set(hookResult.hookPoint, hookResult);
+  }
+
+  return [...latestByHookPoint.values()];
+}
 
 /**
  * Gather gate check data from the issue's mdbase records.
@@ -62,6 +92,24 @@ function gatherGateData(codaRoot: string, issueSlug: string): GateCheckData {
     }
   } else {
     data.planExists = false;
+  }
+
+  // Module block findings — read from persisted findings (Phase 24 creates the file).
+  // Only the latest result for each hook point should affect gates.
+  const findingsPath = join(codaRoot, 'issues', issueSlug, 'module-findings.json');
+  if (existsSync(findingsPath)) {
+    try {
+      const findingsData = JSON.parse(readFileSync(findingsPath, 'utf-8')) as {
+        hookResults?: PersistedHookResult[];
+      };
+      const blockCount = getLatestPersistedHookResults(findingsData.hookResults ?? [])
+        .reduce((sum, hr) => sum + (hr.blockReasons?.length ?? 0), 0);
+      data.moduleBlockFindings = blockCount;
+    } catch {
+      data.moduleBlockFindings = 0;
+    }
+  } else {
+    data.moduleBlockFindings = 0;
   }
 
   const recordsDir = join(codaRoot, 'records');
@@ -124,6 +172,22 @@ export function codaAdvance(
       }
     }
 
+    // v0.4 does not tag persisted findings with a build iteration.
+    // We treat the latest persisted post-build result as current for the active build loop.
+    if (
+      state.phase === 'build'
+      && targetPhase === 'verify'
+      && hasActiveModulesForHook(codaRoot, 'post-build')
+      && !hasPersistedHookResult(codaRoot, state.focus_issue, 'post-build')
+    ) {
+      return {
+        success: false,
+        previous_phase: previousPhase ?? undefined,
+        gate_name: 'module-findings',
+        reason: 'Post-build module findings must be reported via coda_report_findings before advancing to verify',
+      };
+    }
+
     const gateData = gatherGateData(codaRoot, state.focus_issue);
     const result = transition(state, targetPhase, gateData);
 
@@ -141,6 +205,9 @@ export function codaAdvance(
       if (result.state.phase) {
         updateIssuePhase(codaRoot, state.focus_issue, result.state.phase);
       }
+      // Write state.json last because it is the authoritative lifecycle record.
+      // If a frontmatter update succeeds but state persistence fails, the workflow
+      // state remains unchanged instead of claiming a completed transition.
       persistState(result.state, statePath);
     }
 
@@ -201,6 +268,7 @@ function handleHumanReviewDecision(
 
     updateFrontmatter<PlanRecord>(planPath, { human_review_status: 'changes-requested' });
     updateIssuePhase(codaRoot, state.focus_issue, 'review');
+    // Write state.json last because it is the authoritative lifecycle record.
     persistState({
       ...state,
       phase: 'review',
@@ -264,6 +332,7 @@ function handleExhaustedReviewApproval(
   }
 
   updateIssuePhase(codaRoot, state.focus_issue, 'build');
+  // Write state.json last because it is the authoritative lifecycle record.
   persistState(transitionResult.state, statePath);
   return {
     success: true,
@@ -290,12 +359,68 @@ function resumeVerifyAfterExhaustion(
   };
 
   updateIssuePhase(codaRoot, state.focus_issue, 'verify');
+  // Write state.json last because it is the authoritative lifecycle record.
   persistState(nextState, statePath);
   return {
     success: true,
     previous_phase: state.phase ?? undefined,
     new_phase: 'verify',
   };
+}
+
+function hasActiveModulesForHook(codaRoot: string, hookPoint: HookPoint): boolean {
+  const registry = createRegistry(loadModuleRegistryConfig(codaRoot), '');
+  return registry.getModulesForHook(hookPoint).length > 0;
+}
+
+function hasPersistedHookResult(codaRoot: string, issueSlug: string, hookPoint: HookPoint): boolean {
+  const findingsPath = join(codaRoot, 'issues', issueSlug, 'module-findings.json');
+  if (!existsSync(findingsPath)) {
+    return false;
+  }
+
+  try {
+    const findingsData = JSON.parse(readFileSync(findingsPath, 'utf-8')) as {
+      hookResults?: PersistedHookResult[];
+    };
+
+    return getLatestPersistedHookResults(findingsData.hookResults ?? [])
+      .some((hookResult) => hookResult.hookPoint === hookPoint);
+  } catch {
+    return false;
+  }
+}
+
+function loadModuleRegistryConfig(codaRoot: string): RegistryConfig {
+  const configPath = join(codaRoot, 'coda.json');
+  if (!existsSync(configPath)) {
+    return {};
+  }
+
+  try {
+    const raw = JSON.parse(readFileSync(configPath, 'utf-8')) as {
+      modules?: Record<string, { enabled?: boolean; blockThreshold?: string }>;
+    };
+
+    if (!raw.modules) {
+      return {};
+    }
+
+    const modules = Object.fromEntries(
+      Object.entries(raw.modules).map(([name, cfg]) => [
+        name,
+        {
+          enabled: cfg.enabled !== false,
+          ...(cfg.blockThreshold
+            ? { blockThreshold: cfg.blockThreshold as FindingSeverity | 'none' }
+            : {}),
+        },
+      ])
+    ) as RegistryConfig['modules'];
+    return { modules };
+  } catch {
+    return {};
+  }
 }
 
 function resolveLoopConfig(codaRoot: string): LoopIterationConfig {
@@ -321,9 +446,10 @@ function getLatestPlanPath(codaRoot: string, issueSlug: string): string | null {
     return null;
   }
 
-  const planFiles = readdirSync(issueDir)
-    .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
-    .sort();
+  const planFiles = sortByNumericSuffix(
+    readdirSync(issueDir)
+      .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
+  );
   const planFile = planFiles[planFiles.length - 1];
 
   return planFile ? join(issueDir, planFile) : null;

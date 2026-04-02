@@ -7,8 +7,8 @@
  */
 
 import { readRecord, getSection } from '@coda/core';
-import { join } from 'path';
 import type { ReadInput, ReadResult } from './types';
+import { validateRecordPath } from './path-validation';
 
 /**
  * Read a record from the `.coda/` directory.
@@ -22,7 +22,7 @@ import type { ReadInput, ReadResult } from './types';
  */
 export function codaRead(input: ReadInput, codaRoot: string): ReadResult {
   try {
-    const fullPath = join(codaRoot, input.record);
+    const fullPath = validateRecordPath(codaRoot, input.record);
     const { frontmatter, body } = readRecord<Record<string, unknown>>(fullPath);
 
     if (input.section) {

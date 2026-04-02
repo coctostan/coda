@@ -4,8 +4,10 @@
  *
  * Registers the `/coda` slash command and dispatches supported subcommands.
  */
-import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-coding-agent';
+import { scaffoldCoda } from '../forge';
 import { codaAdvance, codaBack, codaCreate, codaKill, codaStatus } from '../tools';
 import type { AdvanceInput, StatusResult } from '../tools';
 import { getBuildSequence } from '../workflow';
@@ -19,14 +21,23 @@ type IssueType = 'feature' | 'bugfix' | 'refactor' | 'chore' | 'docs';
  *
  * @param pi - The Pi extension API
  * @param codaRoot - Path to the `.coda/` directory
+ * @param projectRoot - Absolute path to the project root
  */
-export function registerCommands(pi: ExtensionAPI, codaRoot: string): void {
+export function registerCommands(
+  pi: ExtensionAPI,
+  codaRoot: string,
+  projectRoot: string = dirname(codaRoot)
+): void {
   const statePath = join(codaRoot, 'state.json');
 
   pi.registerCommand('coda', {
     description: 'Manage CODA lifecycle actions (status, forge, new, advance, back, kill, build)',
     handler: async (args, ctx) => {
-      await handleCodaCommand(args, ctx, pi, codaRoot, statePath);
+      try {
+        await handleCodaCommand(args, ctx, pi, codaRoot, statePath, projectRoot);
+      } catch (err) {
+        ctx.ui.notify(formatCodaError(err), 'error');
+      }
     },
   });
 }
@@ -37,7 +48,8 @@ async function handleCodaCommand(
   ctx: ExtensionCommandContext,
   pi: ExtensionAPI,
   codaRoot: string,
-  statePath: string
+  statePath: string,
+  projectRoot: string
 ): Promise<void> {
   const parsed = parseCommandArgs(args);
 
@@ -52,9 +64,14 @@ async function handleCodaCommand(
     }
 
     case 'forge': {
+      if (existsSync(codaRoot)) {
+        ctx.ui.notify('CODA is already initialized in this project. Use `/coda status` to see current state.');
+        return;
+      }
+
+      scaffoldCoda(projectRoot);
       ctx.ui.notify(
-        'Interactive FORGE flow is not wired to the Pi extension yet. Use CODA forge APIs directly for now.',
-        'warning'
+        '✓ Project scaffolded. `.coda/` directory created with default configuration.\n\nNext: Create an issue to describe what you want to build:\n  Use the `coda_create` tool to create an issue in `.coda/issues/`'
       );
       return;
     }
@@ -189,6 +206,11 @@ async function handleCodaCommand(
       );
     }
   }
+}
+
+function formatCodaError(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  return `CODA error: ${message}`;
 }
 
 /** Parse the raw `/coda` argument string into a subcommand and remainder. */

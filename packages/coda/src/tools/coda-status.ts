@@ -12,6 +12,7 @@ import { join } from 'path';
 import { isLoopExhausted } from '../../../core/src/state/machine';
 import type { LoopIterationConfig } from '../../../core/src/state/types';
 import type { StatusResult } from './types';
+import { sortByNumericSuffix } from './sort-utils';
 
 /** Phase-specific next action suggestions. */
 const NEXT_ACTIONS: Record<string, string> = {
@@ -129,9 +130,10 @@ function loadHumanReviewState(
   }
 
   const issue = readRecord<IssueRecord>(issuePath);
-  const planFiles = readdirSync(issueDir)
-    .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
-    .sort();
+  const planFiles = sortByNumericSuffix(
+    readdirSync(issueDir)
+      .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
+  );
   const planFile = planFiles[planFiles.length - 1];
 
   if (!planFile) {
