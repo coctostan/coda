@@ -4,7 +4,29 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-None active. Run `/paul:discuss` or `/paul:milestone` to define the next milestone.
+**v0.4 Live Validation** (v0.4.0)
+Status: 🚧 In Progress
+Phases: 0 of 3 complete
+
+| Phase | Name | Plans | Status | Completed |
+|-------|------|-------|--------|-----------|
+| 26 | Operational Fixes | TBD | Not started | - |
+| 27 | Deep Code Review + Fixes | TBD | Not started | - |
+| 28 | CMUX Stress Test | TBD | Not started | - |
+
+### Phase 26: Operational Fixes
+Focus: Fix 10 known issues (LIVE-01 through LIVE-10) blocking live Pi/CMUX sessions
+Plans: TBD (defined during /paul:plan)
+
+### Phase 27: Deep Code Review + Fixes
+Focus: Production-readiness review of packages/coda/src/ — catch issues the sweep missed, fix them
+Plans: TBD (defined during /paul:plan)
+
+### Phase 28: CMUX Stress Test
+Focus: Scripted live Pi session building a real Pi extension through full CODA lifecycle (user-supplied test script)
+Model: openai-codex/gpt-5.4-mini, thinking high
+Test project: ~/pi/workspace/coda-test1 (coctostan/coda-test1)
+Plans: TBD (defined during /paul:plan)
 
 ## Completed Milestones
 
@@ -25,7 +47,6 @@ None active. Run `/paul:discuss` or `/paul:milestone` to define the next milesto
 Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd only), D4 (clean migration), D5 (gate authority)
 
 </details>
-## Completed Milestones
 
 <details>
 <summary>v0.2 Autonomous Loops — 2026-04-01 (9 phases, 10 plans)</summary>
@@ -67,4 +88,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-03-29 — v0.3 Module System milestone complete, ready for next*
+*Roadmap updated: 2026-03-29 — v0.4 Live Validation milestone created*
