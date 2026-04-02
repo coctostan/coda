@@ -7,19 +7,30 @@
  * issue record and state.json on success.
  */
 import {
+  createRegistry,
   readRecord,
   updateFrontmatter,
   transition,
   loadState,
   persistState,
 } from '@coda/core';
-import type { CodaState, GateCheckData, IssueRecord, Phase, PlanRecord } from '@coda/core';
+import type {
+  CodaState,
+  FindingSeverity,
+  GateCheckData,
+  HookPoint,
+  IssueRecord,
+  Phase,
+  PlanRecord,
+  RegistryConfig,
+} from '@coda/core';
 import { basename, join } from 'path';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { isLoopExhausted } from '../../../core/src/state/machine';
 import type { LoopIterationConfig } from '../../../core/src/state/types';
 import { codaEditBody } from './coda-edit-body';
 import type { AdvanceInput, AdvanceResult } from './types';
+import { sortByNumericSuffix } from './sort-utils';
 
 /**
  * Gather gate check data from the issue's mdbase records.
@@ -140,6 +151,20 @@ export function codaAdvance(
       if (humanReviewResult) {
         return humanReviewResult;
       }
+    }
+
+    if (
+      state.phase === 'build'
+      && targetPhase === 'verify'
+      && hasActiveModulesForHook(codaRoot, 'post-build')
+      && !hasPersistedHookResult(codaRoot, state.focus_issue, 'post-build')
+    ) {
+      return {
+        success: false,
+        previous_phase: previousPhase ?? undefined,
+        gate_name: 'module-findings',
+        reason: 'Post-build module findings must be reported via coda_report_findings before advancing to verify',
+      };
     }
 
     const gateData = gatherGateData(codaRoot, state.focus_issue);
@@ -316,6 +341,61 @@ function resumeVerifyAfterExhaustion(
   };
 }
 
+function hasActiveModulesForHook(codaRoot: string, hookPoint: HookPoint): boolean {
+  const registry = createRegistry(loadModuleRegistryConfig(codaRoot), '');
+  return registry.getModulesForHook(hookPoint).length > 0;
+}
+
+function hasPersistedHookResult(codaRoot: string, issueSlug: string, hookPoint: HookPoint): boolean {
+  const findingsPath = join(codaRoot, 'issues', issueSlug, 'module-findings.json');
+  if (!existsSync(findingsPath)) {
+    return false;
+  }
+
+  try {
+    const findingsData = JSON.parse(readFileSync(findingsPath, 'utf-8')) as {
+      hookResults?: Array<{ hookPoint?: string }>;
+    };
+
+    return (findingsData.hookResults ?? [])
+      .some((hookResult) => hookResult.hookPoint === hookPoint);
+  } catch {
+    return false;
+  }
+}
+
+function loadModuleRegistryConfig(codaRoot: string): RegistryConfig {
+  const configPath = join(codaRoot, 'coda.json');
+  if (!existsSync(configPath)) {
+    return {};
+  }
+
+  try {
+    const raw = JSON.parse(readFileSync(configPath, 'utf-8')) as {
+      modules?: Record<string, { enabled?: boolean; blockThreshold?: string }>;
+    };
+
+    if (!raw.modules) {
+      return {};
+    }
+
+    const modules = Object.fromEntries(
+      Object.entries(raw.modules).map(([name, cfg]) => [
+        name,
+        {
+          enabled: cfg.enabled !== false,
+          ...(cfg.blockThreshold
+            ? { blockThreshold: cfg.blockThreshold as FindingSeverity | 'none' }
+            : {}),
+        },
+      ])
+    ) as RegistryConfig['modules'];
+    return { modules };
+  } catch {
+    return {};
+  }
+}
+
 function resolveLoopConfig(codaRoot: string): LoopIterationConfig {
   const configPath = join(codaRoot, 'coda.json');
   if (!existsSync(configPath)) {
@@ -339,9 +419,10 @@ function getLatestPlanPath(codaRoot: string, issueSlug: string): string | null {
     return null;
   }
 
-  const planFiles = readdirSync(issueDir)
-    .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
-    .sort();
+  const planFiles = sortByNumericSuffix(
+    readdirSync(issueDir)
+      .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
+  );
   const planFile = planFiles[planFiles.length - 1];
 
   return planFile ? join(issueDir, planFile) : null;

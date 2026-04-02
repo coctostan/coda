@@ -11,6 +11,7 @@ import type { VerificationFailureArtifact, VerificationFailedCheck } from './typ
 import { join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { loadFindings, summarizeFindings } from './module-integration';
+import { sortByNumericSuffix } from '../tools/sort-utils';
 
 /**
  * Load an issue record from `.coda/issues/{slug}.md`.
@@ -29,11 +30,11 @@ export function loadIssue(
 }
 
 /**
- * Load the plan record for an issue. Finds the first `plan-v*.md` in the issue directory.
+ * Load the latest plan record for an issue.
  *
  * @param codaRoot - Path to the `.coda/` directory
  * @param issueSlug - The issue slug
- * @returns The plan record or null if not found
+ * @returns The latest plan record or null if not found
  */
 export function loadPlan(
   codaRoot: string,
@@ -43,10 +44,10 @@ export function loadPlan(
   if (!existsSync(issueDir)) return null;
 
   try {
-    const files = readdirSync(issueDir).filter((f) => f.startsWith('plan-v') && f.endsWith('.md'));
+    const files = sortByNumericSuffix(
+      readdirSync(issueDir).filter((f) => f.startsWith('plan-v') && f.endsWith('.md'))
+    );
     if (files.length === 0) return null;
-
-    files.sort();
     const planFile = files[files.length - 1]!;
     return readRecord<PlanRecord>(join(issueDir, planFile));
   } catch {

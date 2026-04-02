@@ -20,13 +20,17 @@ export { registerTools } from './tools';
 export { registerHooks } from './hooks';
 
 /**
- * Register CODA with Pi using the current working directory's `.coda/` folder.
+ * Register CODA with Pi using the project root's `.coda/` folder.
  *
  * @param pi - The Pi extension API
  */
 export function codaExtension(pi: ExtensionAPI): void {
-  const codaRoot = join(process.cwd(), '.coda');
-  registerCommands(pi, codaRoot);
+  // ExtensionAPI does not expose a cwd accessor at initialization time in Pi v0.4,
+  // so derive the project root explicitly once from process.cwd().
+  const projectRoot = process.cwd();
+  const codaRoot = join(projectRoot, '.coda');
+
+  registerCommands(pi, codaRoot, projectRoot);
   registerTools(pi, codaRoot);
   registerHooks(pi, codaRoot);
 }

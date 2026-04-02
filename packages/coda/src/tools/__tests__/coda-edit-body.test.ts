@@ -109,6 +109,25 @@ describe('codaEditBody', () => {
     expect(result.error).toBeDefined();
   });
 
+  test('create_if_missing creates a new record with the provided body', () => {
+    const result = codaEditBody(
+      {
+        record: 'issues/new-issue/notes.md',
+        op: 'append_text',
+        content: '## Notes\n\nCreated on demand.\n',
+        create_if_missing: true,
+      },
+      codaRoot
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.diff_summary).toContain('Created record');
+
+    const record = readRecord<Record<string, unknown>>(join(codaRoot, 'issues', 'new-issue', 'notes.md'));
+    expect(record.frontmatter).toEqual({});
+    expect(record.body).toBe('## Notes\n\nCreated on demand.\n');
+  });
+
   test('returns diff_summary describing the change', () => {
     const path = createTestRecord();
 

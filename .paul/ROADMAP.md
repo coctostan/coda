@@ -10,7 +10,7 @@ Phases: 0 of 3 complete
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 26 | Operational Fixes | TBD | Not started | - |
+| 26 | Operational Fixes | 0/1 | 📝 Planning | - |
 | 27 | Deep Code Review + Fixes | TBD | Not started | - |
 | 28 | CMUX Stress Test | TBD | Not started | - |
 

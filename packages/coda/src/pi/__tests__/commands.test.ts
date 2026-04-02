@@ -334,6 +334,50 @@ describe('Pi Commands', () => {
     expect(typeof commands[0]?.options.handler).toBe('function');
   });
 
+  test('forge scaffolds a new .coda directory for greenfield projects', async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), 'coda-forge-command-'));
+    const codaRoot = join(projectRoot, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      registerCommands(pi, codaRoot, projectRoot);
+      await commands[0]?.options.handler('forge', ctx as never);
+
+      expect(existsSync(join(codaRoot, 'coda.json'))).toBe(true);
+      const config = JSON.parse(readFileSync(join(codaRoot, 'coda.json'), 'utf-8')) as {
+        modules?: {
+          security?: { enabled?: boolean };
+          tdd?: { enabled?: boolean };
+        };
+      };
+      expect(config.modules?.security?.enabled).toBe(true);
+      expect(config.modules?.tdd?.enabled).toBe(true);
+      expect(notifications[notifications.length - 1]?.message).toContain('Project scaffolded');
+    } finally {
+      rmSync(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  test('forge reports when CODA is already initialized', async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), 'coda-forge-command-'));
+    const codaRoot = join(projectRoot, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      mkdirSync(codaRoot, { recursive: true });
+      registerCommands(pi, codaRoot, projectRoot);
+      await commands[0]?.options.handler('forge', ctx as never);
+
+      expect(notifications[notifications.length - 1]?.message).toBe(
+        'CODA is already initialized in this project. Use `/coda status` to see current state.'
+      );
+    } finally {
+      rmSync(projectRoot, { recursive: true, force: true });
+    }
+  });
+
   test('advance auto-approves pending human review before moving to build', async () => {
     const tempDir = setupPendingHumanReviewCodaRoot();
     const codaRoot = join(tempDir, '.coda');
@@ -448,10 +492,10 @@ describe('Pi Commands', () => {
 });
 
 describe('Pi Tools', () => {
-  test('registerTools registers 7 tools', () => {
+  test('registerTools registers 8 tools', () => {
     const { pi, tools } = createMockPi();
     registerTools(pi, '/tmp/test/.coda');
-    expect(tools.length).toBe(7);
+    expect(tools.length).toBe(8);
   });
 
   test('registered tools include all coda_* tool names', () => {

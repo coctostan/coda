@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync } from 'fs
 import { join } from 'path';
 import { isLoopExhausted, transitionSubmode } from '../../../core/src/state/machine';
 import { loadIssue, loadPlan, loadTasks } from './context-builder';
+import { sortByNumericSuffix } from '../tools/sort-utils';
 
 /** A deterministic review issue emitted by structural checks or injected review feedback. */
 export interface ReviewIssue {
@@ -250,9 +251,10 @@ function getPlanPath(codaRoot: string, issueSlug: string): string | null {
   const latestPlan = loadPlan(codaRoot, issueSlug);
   if (!latestPlan) return null;
 
-  const candidates = readdirSync(issueDir)
-    .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
-    .sort();
+  const candidates = sortByNumericSuffix(
+    readdirSync(issueDir)
+      .filter((file) => file.startsWith('plan-v') && file.endsWith('.md'))
+  );
 
   for (const candidate of candidates) {
     const path = join(issueDir, candidate);

@@ -43,6 +43,9 @@ export { codaBack } from './coda-back';
 export { codaKill } from './coda-kill';
 export { codaStatus } from './coda-status';
 export { codaRunTests } from './coda-run-tests';
+export { codaReportFindings } from './coda-report-findings';
+export { validateRecordPath } from './path-validation';
+export { sortByNumericSuffix } from './sort-utils';
 
 // Write-gate interceptor
 export { checkWriteGate, isTestFile } from './write-gate';

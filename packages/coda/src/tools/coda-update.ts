@@ -7,8 +7,8 @@
  */
 
 import { updateFrontmatter } from '@coda/core';
-import { join } from 'path';
 import type { UpdateInput, UpdateResult } from './types';
+import { validateRecordPath } from './path-validation';
 
 /**
  * Update frontmatter fields on an existing record.
@@ -22,7 +22,7 @@ import type { UpdateInput, UpdateResult } from './types';
  */
 export function codaUpdate(input: UpdateInput, codaRoot: string): UpdateResult {
   try {
-    const fullPath = join(codaRoot, input.record);
+    const fullPath = validateRecordPath(codaRoot, input.record);
     updateFrontmatter(fullPath, input.fields);
 
     return {

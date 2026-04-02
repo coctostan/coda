@@ -6,9 +6,11 @@
  * and appending raw text — all without touching frontmatter.
  */
 
+import { mkdirSync, existsSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { readRecord, writeRecord, appendSection, replaceSection } from '@coda/core';
-import { join } from 'path';
 import type { EditBodyInput, EditBodyResult } from './types';
+import { validateRecordPath } from './path-validation';
 
 /**
  * Edit the body of an existing `.coda/` record.
@@ -26,7 +28,21 @@ import type { EditBodyInput, EditBodyResult } from './types';
  */
 export function codaEditBody(input: EditBodyInput, codaRoot: string): EditBodyResult {
   try {
-    const fullPath = join(codaRoot, input.record);
+    const fullPath = validateRecordPath(codaRoot, input.record);
+
+    if (!existsSync(fullPath)) {
+      if (input.create_if_missing) {
+        mkdirSync(dirname(fullPath), { recursive: true });
+        writeRecord(fullPath, {}, input.content);
+        return {
+          success: true,
+          diff_summary: `Created record "${input.record}" with ${String(input.content.length)} characters of body content`,
+        };
+      }
+
+      readRecord<Record<string, unknown>>(fullPath);
+    }
+
     const { frontmatter, body } = readRecord<Record<string, unknown>>(fullPath);
 
     let newBody: string;

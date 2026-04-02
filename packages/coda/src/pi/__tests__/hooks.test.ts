@@ -95,6 +95,12 @@ function createTempCodaRoot(state: CodaState | null = null): { projectRoot: stri
   return { projectRoot, codaRoot };
 }
 
+function createMalformedStateCodaRoot(): { projectRoot: string; codaRoot: string } {
+  const base = createTempCodaRoot();
+  writeFileSync(join(base.codaRoot, 'state.json'), '{ malformed json', 'utf-8');
+  return base;
+}
+
 function setupSubmodeAwareCodaRoot(submode: 'revise' | 'correct'): { projectRoot: string; codaRoot: string } {
   const base = createTempCodaRoot();
   const { codaRoot } = base;
@@ -389,6 +395,31 @@ describe('Pi Hooks', () => {
     expect(result).toEqual({});
   });
 
+  test('before_agent_start returns empty context when state loading fails', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = createMalformedStateCodaRoot();
+    registerHooks(pi, codaRoot);
+
+    const beforeAgentStart = hooks.get('before_agent_start');
+    const originalConsoleError = console.error;
+    const consoleErrors: unknown[][] = [];
+    console.error = (...args: unknown[]) => {
+      consoleErrors.push(args);
+    };
+
+    try {
+      const result = await beforeAgentStart?.(
+        { type: 'before_agent_start', prompt: 'help', systemPrompt: 'base prompt' },
+        createMockContext(projectRoot)
+      ) as BeforeAgentStartResult;
+
+      expect(result).toEqual({});
+      expect(consoleErrors.length).toBeGreaterThan(0);
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+
   test('tool_call blocks writes to .coda/ paths', async () => {
     const { pi, hooks } = createMockPi();
     const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'unlocked' }));
@@ -460,30 +491,30 @@ describe('Pi Hooks', () => {
     registerHooks(pi, codaRoot);
 
     const toolCall = hooks.get('tool_call');
+    const commands = [
+      "printf '%s' 'HACKED' > .coda/test.md",
+      'echo hello >> .coda/issues/x.md',
+      'cp /tmp/x .coda/issues/y.md',
+      'mv /tmp/x .coda/issues/y.md',
+      'echo hello | tee .coda/issues/y.md',
+      "sed -i '' 's/a/b/' .coda/state.json",
+      "perl -i -pe 's/a/b/' .coda/state.json",
+      'truncate -s 0 .coda/state.json',
+      'chmod 644 .coda/state.json',
+      'chown user:staff .coda/state.json',
+      'ln -s /tmp/x .coda/state-link',
+      'install /tmp/x .coda/issues/y.md',
+      'rm .coda/state.json',
+    ];
 
-    const r1 = await toolCall?.(
-      { type: 'tool_call', toolCallId: '1', toolName: 'bash', input: { command: "printf '%s' 'HACKED' > .coda/test.md" } },
-      createMockContext(projectRoot)
-    ) as ToolCallResult;
-    expect(r1.block).toBe(true);
+    for (const [index, command] of commands.entries()) {
+      const result = await toolCall?.(
+        { type: 'tool_call', toolCallId: String(index + 1), toolName: 'bash', input: { command } },
+        createMockContext(projectRoot)
+      ) as ToolCallResult;
 
-    const r2 = await toolCall?.(
-      { type: 'tool_call', toolCallId: '2', toolName: 'bash', input: { command: 'echo hello >> .coda/issues/x.md' } },
-      createMockContext(projectRoot)
-    ) as ToolCallResult;
-    expect(r2.block).toBe(true);
-
-    const r3 = await toolCall?.(
-      { type: 'tool_call', toolCallId: '3', toolName: 'bash', input: { command: 'cp /tmp/x .coda/issues/y.md' } },
-      createMockContext(projectRoot)
-    ) as ToolCallResult;
-    expect(r3.block).toBe(true);
-
-    const r4 = await toolCall?.(
-      { type: 'tool_call', toolCallId: '4', toolName: 'bash', input: { command: 'rm .coda/state.json' } },
-      createMockContext(projectRoot)
-    ) as ToolCallResult;
-    expect(r4.block).toBe(true);
+      expect(result.block).toBe(true);
+    }
   });
 
   test('tool_call allows bash commands that do not write to .coda/', async () => {
@@ -497,6 +528,57 @@ describe('Pi Hooks', () => {
       createMockContext(projectRoot)
     ) as ToolCallResult;
     expect(result.block).not.toBe(true);
+  });
+
+  test('tool_call allows bash commands that only read from .coda/', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'unlocked' }));
+    registerHooks(pi, codaRoot);
+
+    const toolCall = hooks.get('tool_call');
+    const result = await toolCall?.(
+      { type: 'tool_call', toolCallId: '2', toolName: 'bash', input: { command: 'cp .coda/state.json /tmp/state.json' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+
+    expect(result.block).not.toBe(true);
+  });
+
+  test('tool_result returns no action when autonomous advance handling fails', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = createMalformedStateCodaRoot();
+    registerHooks(pi, codaRoot);
+
+    const toolResult = hooks.get('tool_result');
+    const originalConsoleError = console.error;
+    const consoleErrors: unknown[][] = [];
+    console.error = (...args: unknown[]) => {
+      consoleErrors.push(args);
+    };
+
+    try {
+      const result = await toolResult?.(
+        {
+          type: 'tool_result',
+          toolCallId: '1',
+          toolName: 'coda_advance',
+          input: { target_phase: 'verify' },
+          content: [{ type: 'text', text: '{"success":true}' }],
+          isError: false,
+          details: {
+            success: true,
+            previous_phase: 'build',
+            new_phase: 'verify',
+          },
+        },
+        createMockContext(projectRoot)
+      ) as ToolResultHookResult;
+
+      expect(result).toEqual({});
+      expect(consoleErrors.length).toBeGreaterThan(0);
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 
   test('tool_result runs verify autonomously after coda_advance and queues a correction follow-up', async () => {
@@ -541,7 +623,8 @@ describe('Pi Extension Entry Point', () => {
     codaExtension(pi);
 
     expect(commands.length).toBe(1);
-    expect(tools.length).toBe(7);
+    expect(tools.length).toBe(8);
+    expect(tools.some((tool) => tool.name === 'coda_report_findings')).toBe(true);
     expect(hooks.size).toBe(4);
   });
 });

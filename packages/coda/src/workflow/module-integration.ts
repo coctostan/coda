@@ -149,7 +149,24 @@ export function getModulePromptForHook(
     taskId: options?.taskId,
     planPath: options?.planPath,
   });
-  return dispatcher.assemblePrompts(hookPoint as HookPoint, context);
+  const prompt = dispatcher.assemblePrompts(hookPoint as HookPoint, context);
+  if (!prompt) {
+    return '';
+  }
+
+  return [
+    prompt,
+    buildFindingsSubmissionInstruction(hookPoint),
+  ].join('\n\n');
+}
+
+function buildFindingsSubmissionInstruction(hookPoint: string): string {
+  return [
+    '## Findings Submission',
+    'After completing this module analysis, call `coda_report_findings` to persist the required findings for runtime gating and verify/unify context.',
+    `Use \`hook_point: "${hookPoint}"\` and pass the same JSON array as \`findings_json\`.`,
+    'Report findings even when no issues are found by submitting the required single info finding.',
+  ].join('\n');
 }
 
 // ─── Findings Persistence (Phase 24) ────────────────────────────────────────
