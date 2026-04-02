@@ -40,10 +40,14 @@ Remote: https://github.com/coctostan/coda.git
 
 ## Session Continuity
 
-Last session: 2026-03-29T15:30:00Z
-Stopped at: v0.4 milestone complete
-Next action: Complete milestone or start next
-Resume file: .paul/phases/28-cmux-stress-test/28-01-SUMMARY.md
+Last session: 2026-03-29T15:45:00Z
+Stopped at: v0.4 milestone complete — ceremony pending
+Next action: /paul:milestone to complete v0.4 (tag, archive, MILESTONES.md)
+Resume file: .paul/HANDOFF-2026-03-29.md
+Resume context:
+- v0.4 all 3 phases done, needs milestone completion ceremony
+- 4 E2E findings (F2, F4, F6, F8) need tracking in PROJECT.md Active
+- Then define v0.5 to fix those findings
 
 ---
 *STATE.md — Updated after every significant action*

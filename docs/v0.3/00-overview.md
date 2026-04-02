@@ -77,15 +77,16 @@ L4: Workflow ──calls──▶ Dispatcher ──runs──▶ Module hooks
 ## Build Order
 
 | Phase | What | Depends On |
-|-------|------|-----------|
+|-------|------|------------|
+| 0 | **E2E fixes from v0.2.2** — F4: scaffold creates state.json, F2: coda_config tool or coda.json write-gate exemption, F6: build context includes auto-advance instruction, F8: post-build context explicitly instructs coda_report_findings | — |
 | 1 | Core types + finding schema | — |
 | 2 | Module registry | Phase 1 |
 | 3 | Module dispatcher | Phases 1-2 |
 | 4 | 2 module prompts: security (2 files) + tdd (3 files) | — |
-| 5 | Workflow integration (hook dispatch at phase boundaries) | Phases 1-3 |
+| 5 | Workflow integration (hook dispatch at phase boundaries) | Phases 0-3 |
 | 6 | Config integration (coda.json modules section) | Phase 2 |
 | 7 | Findings persistence + context summarization | Phase 3 |
-| 8 | E2E test | All |
+| 8 | E2E test (re-run real project test, all findings resolved) | All |
 
 ## Key Design Decisions
 From prior discussions + spec review — do not re-open:
