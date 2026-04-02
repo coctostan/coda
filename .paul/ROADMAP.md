@@ -5,14 +5,14 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
 **v0.4 Live Validation** (v0.4.0)
-Status: 🚧 In Progress
-Phases: 2 of 3 complete
+Status: ✅ Complete
+Phases: 3 of 3 complete
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 26 | Operational Fixes | 1/1 | ✅ Complete | 2026-03-29 |
 | 27 | Deep Code Review + Fixes | 1/1 | ✅ Complete | 2026-03-29 |
-| 28 | CMUX Stress Test | 0/1 | 📝 Planning | - |
+| 28 | CMUX Stress Test | 1/1 | ✅ Complete | 2026-03-29 |
 
 ### Phase 26: Operational Fixes
 Focus: Fix 10 known issues (LIVE-01 through LIVE-10) blocking live Pi/CMUX sessions
