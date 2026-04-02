@@ -6,12 +6,12 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.4 Live Validation** (v0.4.0)
 Status: 🚧 In Progress
-Phases: 1 of 3 complete
+Phases: 2 of 3 complete
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 26 | Operational Fixes | 1/1 | ✅ Complete | 2026-03-29 |
-| 27 | Deep Code Review + Fixes | 0/1 | 📝 Planning | - |
+| 27 | Deep Code Review + Fixes | 1/1 | ✅ Complete | 2026-03-29 |
 | 28 | CMUX Stress Test | TBD | Not started | - |
 
 ### Phase 26: Operational Fixes
