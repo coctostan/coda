@@ -7,6 +7,41 @@ Completed milestone log for this project.
 | v0.1 Initial Release | 2026-03-29 | ~12 hours | 8 phases, 9 plans, 63 files |
 | v0.2 Autonomous Loops | 2026-04-01 | 4 days | 9 phases, 10 plans, 255 tests |
 | v0.3 Module System | 2026-03-29 | ~2 days | 8 phases, 8 plans, 33 files |
+| v0.4 Live Validation | 2026-03-29 | ~3 hours | 3 phases, 3 plans, 21 files |
+
+---
+
+## ✅ v0.4 Live Validation
+
+**Completed:** 2026-03-29  
+**Version:** v0.4.0  
+**Duration:** ~3 hours (single day)
+
+### Stats
+
+| Metric | Value |
+|--------|-------|
+| Phases | 3 |
+| Plans | 3 |
+| Files changed | 21 |
+| Tests | 386 passing (144 core + 242 coda) |
+| TypeScript | `tsc --noEmit` clean |
+| External deps in core | 0 |
+
+### Key Accomplishments
+
+- Fixed 10 operational issues (LIVE-01 through LIVE-10): path traversal, shell injection, forge wiring, findings persistence at runtime, post-task/post-build module dispatch, create_if_missing, explicit project root, error handling, numeric sorting, write gate strengthening.
+- Deep code review found and fixed 10 of 11 findings (2 critical + 5 high + 3 medium): slug validation, sticky findings replacement semantics, write gate fail-closed, tool_call error handling, coda_status context, blockThreshold validation.
+- Ran a full E2E real-project test via CMUX-scripted Pi session: GPT-5.4 built a TODO CLI through the complete CODA lifecycle (forge → specify → plan → build with TDD → verify → unify → done). **8/8 lifecycle phases PASS.**
+- Module system confirmed firing at runtime — security analysis produced real findings during the plan phase.
+- TDD gate confirmed working — agent wrote tests first, gate enforced discipline.
+- Cataloged 4 findings (F2, F4, F6, F8) for v0.5: scaffoldCoda state.json gap, coda.json config tool gap, build loop auto-advance, coda_report_findings UX.
+
+### Key Decisions
+
+- D6: `coda_report_findings` explicit tool approach — agent submits findings via tool call rather than passive response interception. More reliable, Pi API compatible.
+- Sticky findings replaced with latest-per-hookPoint semantics — prevents stale findings from accumulating across phases.
+- Write gate fail-closed on malformed state — if state can't be read, block writes rather than allowing unguarded access.
 
 ---
 

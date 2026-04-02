@@ -6,30 +6,23 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.4 Live Validation** (v0.4.0)
 Status: ✅ Complete
-Phases: 3 of 3 complete
+Completed: 2026-04-02
 
-| Phase | Name | Plans | Status | Completed |
-|-------|------|-------|--------|-----------|
-| 26 | Operational Fixes | 1/1 | ✅ Complete | 2026-03-29 |
-| 27 | Deep Code Review + Fixes | 1/1 | ✅ Complete | 2026-03-29 |
-| 28 | CMUX Stress Test | 1/1 | ✅ Complete | 2026-03-29 |
-
-### Phase 26: Operational Fixes
-Focus: Fix 10 known issues (LIVE-01 through LIVE-10) blocking live Pi/CMUX sessions
-Plans: TBD (defined during /paul:plan)
-
-### Phase 27: Deep Code Review + Fixes
-Focus: Production-readiness review of packages/coda/src/ — catch issues the sweep missed, fix them
-Plans: TBD (defined during /paul:plan)
-
-### Phase 28: CMUX Stress Test
-Focus: Scripted live Pi session building a real Pi extension through full CODA lifecycle (user-supplied test script)
-Model: openai-codex/gpt-5.4-mini, thinking high
-Test project: ~/pi/workspace/coda-test1 (coctostan/coda-test1)
-Plans: TBD (defined during /paul:plan)
-
+## Next Milestone
+Run /paul:discuss or /paul:milestone to define.
 ## Completed Milestones
+<details>
+<summary>v0.4 Live Validation — 2026-04-02 (3 phases, 3 plans)</summary>
 
+| Phase | Name | Plans | Completed |
+|-------|------|-------|-----------|
+| 26 | Operational Fixes | 1/1 | 2026-03-29 |
+| 27 | Deep Code Review + Fixes | 1/1 | 2026-03-29 |
+| 28 | CMUX Stress Test | 1/1 | 2026-03-29 |
+
+Resolved Decisions: D6 (coda_report_findings tool), sticky findings replacement, write gate fail-closed
+
+</details>
 <details>
 <summary>v0.3 Module System — 2026-03-29 (8 phases, 8 plans)</summary>
 
@@ -85,7 +78,8 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - v0.2 archive: `.paul/milestones/v0.2.0-ROADMAP.md`
 - v0.1 archive: `.paul/milestones/v0.1.0-ROADMAP.md`
 - v0.3 archive: `.paul/milestones/v0.3.0-ROADMAP.md`
+- v0.4 archive: `.paul/milestones/v0.4.0-ROADMAP.md`
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-03-29 — v0.4 Live Validation milestone created*
+*Roadmap updated: 2026-04-02 — v0.4 Live Validation milestone complete*

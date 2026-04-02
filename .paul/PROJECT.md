@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.3 Module System complete: types + registry + dispatcher + prompts + workflow + config + persistence + E2E validation (Phases 18-25)
+- v0.4 Live Validation complete: 10 operational fixes + deep code review (10 findings fixed) + E2E real-project stress test (8/8 lifecycle phases PASS) — 386 tests, tsc clean
 
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
@@ -9,9 +9,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Current State
 | Attribute | Value |
 |-----------|-------|
-| Version | 0.3.0 |
-| Status | Milestone v0.3 complete |
-| Last Updated | 2026-03-29 |
+| Version | 0.4.0 |
+| Status | Milestone v0.4 complete |
+| Last Updated | 2026-04-02 |
 
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
@@ -20,8 +20,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 - Autonomous review/revise and verify/correct loops run deterministically from the supported `coda_advance` trigger path
 - Human review gate blocks BUILD until human approval is recorded
 - Exhaustion handling pauses automation and routes operators through `/coda back` and `/coda kill`
-- 363 tests passing (144 core + 219 coda), TypeScript strict, no `any` types in source, zero external deps in core
-- v0.3 Module System complete: types + registry + dispatcher + prompts + workflow + config + persistence + E2E validation (Phases 18-25)
+- 386 tests passing (144 core + 242 coda), TypeScript strict, no `any` types in source, zero external deps in core
+- v0.4 Live Validation complete: 10 operational fixes, deep code review (10/11 fixed), E2E real-project stress test (8/8 PASS)
 
 ## Scope Snapshot
 ### Validated
@@ -49,13 +49,20 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Config integration — coda.json modules section drives enable/disable + blockThreshold per project (Phase 23 — v0.3)
 - [x] Findings persistence + context summarization — module-findings.json, summarizeFindings, cross-phase context in verify/unify (Phase 24 — v0.3)
 - [x] E2E validation — 22 E2E tests covering full module system path: config → registry → dispatcher → prompts → findings → persistence → gates → context (Phase 25 — v0.3)
+- [x] Operational fixes — path traversal, shell injection, forge wiring, findings persistence, module dispatch, create_if_missing, project root, error handling, numeric sorting, write gate (Phase 26 — v0.4)
+- [x] Deep code review — 2 critical + 5 high + 3 medium findings fixed: slug validation, sticky findings, write gate fail-closed, tool_call error handling, config validation (Phase 27 — v0.4)
+- [x] E2E real-project stress test — CMUX-scripted Pi session, GPT-5.4 built TODO CLI through full lifecycle, 8/8 phases PASS, module system fires at runtime (Phase 28 — v0.4)
 ### Active
+- [ ] `scaffoldCoda()` doesn't create `state.json` — coda_advance fails on fresh projects (F4, Critical)
+- [ ] `coda.json` not updatable via coda_* tools — write gate blocks bash, no config tool exists (F2, High)
+- [ ] Build loop doesn't auto-advance between tasks — needs orchestrator nudging (F6, Medium)
+- [ ] `coda_report_findings` UX rough — call not obvious to agent (F8, Medium)
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 - [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- (none — v0.3 complete)
+- (none — v0.4 complete)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -73,14 +80,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.3 progress | 8 phases complete | 8 of 8 complete ✅ |
-| Test suite | Green | 363 passing, 0 failing |
+| Milestone v0.4 progress | 3 phases complete | 3 of 3 complete ✅ |
+| Test suite | Green | 386 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
-| Review/verify primitives | Landed in core | PASS |
-| Human review gate | Durable pending/approval/change-request flow | PASS |
-| Exhaustion recovery controls | Durable pause, rewind, and kill behavior | PASS |
-| Pi validation | Live extension exposes the supported autonomous trigger path for review/verify | PASS |
-| Live E2E | Clean CMUX/Pi rerun with all autonomous scenarios passing | PASS |
+| Operational fixes | 10 LIVE issues resolved | 10/10 ✅ |
+| Code review | Critical/high findings fixed | 10/11 fixed (1 low deferred) ✅ |
+| E2E stress test | Full lifecycle PASS | 8/8 phases PASS ✅ |
+| Module runtime | Fires during live session | Security findings produced at runtime ✅ |
+| TDD gate | Enforces test-first | Agent wrote tests first ✅ |
 
 ## Key Decisions
 | Decision | Rationale | Date | Status |
@@ -99,6 +106,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Pi-facing runtime metadata is emitted from workflow-owned phase context | Keep Pi integration thin while exposing canonical phase/submode/task state to the extension surface | 2026-03-29 | Active |
 | Successful `coda_advance` into `review`/`verify` is the supported live autonomous trigger | Close the Phase 15 operator-surface gap without widening the command surface or changing core state semantics | 2026-03-30 | Active |
 | Optional frontmatter arrays normalized at the `loadTasks()` boundary | Single defense point protects all downstream runners from missing optional fields | 2026-04-01 | Active |
+| `coda_report_findings` explicit tool for findings persistence | Agent submits findings via tool call; Pi doesn't expose `after_agent_turn` hook | 2026-03-29 | Active |
+| Sticky findings replaced with latest-per-hookPoint semantics | Prevent stale findings from accumulating across phases | 2026-03-29 | Active |
+| Write gate fail-closed on malformed state | If state can't be read, block writes rather than allowing unguarded access | 2026-03-29 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -107,4 +117,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-03-29 after Phase 25 (E2E Validation) completion — v0.3 milestone complete*
+*Last updated: 2026-04-02 after v0.4 Live Validation milestone completion*
