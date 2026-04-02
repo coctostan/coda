@@ -17,7 +17,7 @@ Phases: 7 of 8 complete
 | 22 | Workflow Integration | 1/1 | ✅ Complete | 2026-04-01 |
 | 23 | Config Integration | 1/1 | ✅ Complete | 2026-04-01 |
 | 24 | Findings Persistence + Context Summarization | 1/1 | ✅ Complete | 2026-04-01 |
-| 25 | E2E Validation | TBD | Not started | - |
+| 25 | E2E Validation | 0/1 | 📝 Planning | - |
 
 ### Phase 18: Core Types + Finding Schema
 Focus: HookPoint, ModuleDefinition, FindingSeverity, Finding, HookResult types + validateFinding/validateFindings in @coda/core src/modules/
