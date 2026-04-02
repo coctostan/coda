@@ -12,3 +12,5 @@
 | 2026-03-29 | 15-e2e-validation | 251 pass / 0 fail | N/A | clean | N/A | ↑ improving (+4 tests, live blocker documented) |
 | 2026-03-30 | 16-live-operator-trigger-resolution | 253 pass / 0 fail | N/A | clean | N/A | ↑ improving (+2 tests) |
 | 2026-03-31 | 17-repeat-live-e2e-validation | 253 pass / 0 fail | N/A | clean | N/A | → stable (validation-only phase, live blocker documented) |
+
+| 2026-03-29 | 25-e2e-validation | 363 pass / 0 fail | N/A | clean | N/A | ↑ improving (+22 E2E tests, milestone complete) |
