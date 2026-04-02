@@ -12,7 +12,7 @@ Phases: 2 of 3 complete
 |-------|------|-------|--------|-----------|
 | 26 | Operational Fixes | 1/1 | ✅ Complete | 2026-03-29 |
 | 27 | Deep Code Review + Fixes | 1/1 | ✅ Complete | 2026-03-29 |
-| 28 | CMUX Stress Test | TBD | Not started | - |
+| 28 | CMUX Stress Test | 0/1 | 📝 Planning | - |
 
 ### Phase 26: Operational Fixes
 Focus: Fix 10 known issues (LIVE-01 through LIVE-10) blocking live Pi/CMUX sessions
