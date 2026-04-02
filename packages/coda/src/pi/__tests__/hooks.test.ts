@@ -452,6 +452,21 @@ describe('Pi Hooks', () => {
     expect(result.reason).toBeTruthy();
   });
 
+  test('tool_call fails closed when the CODA state file is malformed', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = createMalformedStateCodaRoot();
+    registerHooks(pi, codaRoot);
+
+    const toolCall = hooks.get('tool_call');
+    const result = await toolCall?.(
+      { type: 'tool_call', toolCallId: '1', toolName: 'write', input: { path: 'src/main.ts', content: '' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+
+    expect(result.block).toBe(true);
+    expect(result.reason).toContain('Could not read CODA state');
+  });
+
   test('tool_call allows test file writes when tdd_gate is locked', async () => {
     const { pi, hooks } = createMockPi();
     const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'locked' }));
@@ -494,6 +509,8 @@ describe('Pi Hooks', () => {
     const commands = [
       "printf '%s' 'HACKED' > .coda/test.md",
       'echo hello >> .coda/issues/x.md',
+      'python -c "print(1)" > .coda/issues/python.md',
+      'node -e "console.log(1)" >> .coda/issues/node.md',
       'cp /tmp/x .coda/issues/y.md',
       'mv /tmp/x .coda/issues/y.md',
       'echo hello | tee .coda/issues/y.md',
@@ -504,6 +521,8 @@ describe('Pi Hooks', () => {
       'chown user:staff .coda/state.json',
       'ln -s /tmp/x .coda/state-link',
       'install /tmp/x .coda/issues/y.md',
+      'touch .coda/new-file.md',
+      'mkdir -p .coda/issues/new-issue',
       'rm .coda/state.json',
     ];
 

@@ -145,7 +145,7 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     description: 'Get the current CODA status (phase, task, next action).',
     parameters: statusSchema,
     async execute(_toolCallId, _params, _signal, _onUpdate, _ctx) {
-      return executeWithCodaErrorHandling(() => codaStatus(statePath));
+      return executeWithCodaErrorHandling(() => codaStatus(statePath, codaRoot));
     },
   });
 

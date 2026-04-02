@@ -32,6 +32,25 @@ import { codaEditBody } from './coda-edit-body';
 import type { AdvanceInput, AdvanceResult } from './types';
 import { sortByNumericSuffix } from './sort-utils';
 
+type PersistedHookResult = {
+  hookPoint?: string;
+  blockReasons?: string[];
+};
+
+function getLatestPersistedHookResults(hookResults: PersistedHookResult[]): PersistedHookResult[] {
+  const latestByHookPoint = new Map<string, PersistedHookResult>();
+
+  for (const hookResult of hookResults) {
+    if (!hookResult.hookPoint) {
+      continue;
+    }
+
+    latestByHookPoint.set(hookResult.hookPoint, hookResult);
+  }
+
+  return [...latestByHookPoint.values()];
+}
+
 /**
  * Gather gate check data from the issue's mdbase records.
  */
@@ -76,14 +95,14 @@ function gatherGateData(codaRoot: string, issueSlug: string): GateCheckData {
   }
 
   // Module block findings — read from persisted findings (Phase 24 creates the file).
-  // Default to 0 when no findings file exists yet.
+  // Only the latest result for each hook point should affect gates.
   const findingsPath = join(codaRoot, 'issues', issueSlug, 'module-findings.json');
   if (existsSync(findingsPath)) {
     try {
       const findingsData = JSON.parse(readFileSync(findingsPath, 'utf-8')) as {
-        hookResults?: Array<{ blocked?: boolean; blockReasons?: string[] }>;
+        hookResults?: PersistedHookResult[];
       };
-      const blockCount = (findingsData.hookResults ?? [])
+      const blockCount = getLatestPersistedHookResults(findingsData.hookResults ?? [])
         .reduce((sum, hr) => sum + (hr.blockReasons?.length ?? 0), 0);
       data.moduleBlockFindings = blockCount;
     } catch {
@@ -153,6 +172,8 @@ export function codaAdvance(
       }
     }
 
+    // v0.4 does not tag persisted findings with a build iteration.
+    // We treat the latest persisted post-build result as current for the active build loop.
     if (
       state.phase === 'build'
       && targetPhase === 'verify'
@@ -184,6 +205,9 @@ export function codaAdvance(
       if (result.state.phase) {
         updateIssuePhase(codaRoot, state.focus_issue, result.state.phase);
       }
+      // Write state.json last because it is the authoritative lifecycle record.
+      // If a frontmatter update succeeds but state persistence fails, the workflow
+      // state remains unchanged instead of claiming a completed transition.
       persistState(result.state, statePath);
     }
 
@@ -244,6 +268,7 @@ function handleHumanReviewDecision(
 
     updateFrontmatter<PlanRecord>(planPath, { human_review_status: 'changes-requested' });
     updateIssuePhase(codaRoot, state.focus_issue, 'review');
+    // Write state.json last because it is the authoritative lifecycle record.
     persistState({
       ...state,
       phase: 'review',
@@ -307,6 +332,7 @@ function handleExhaustedReviewApproval(
   }
 
   updateIssuePhase(codaRoot, state.focus_issue, 'build');
+  // Write state.json last because it is the authoritative lifecycle record.
   persistState(transitionResult.state, statePath);
   return {
     success: true,
@@ -333,6 +359,7 @@ function resumeVerifyAfterExhaustion(
   };
 
   updateIssuePhase(codaRoot, state.focus_issue, 'verify');
+  // Write state.json last because it is the authoritative lifecycle record.
   persistState(nextState, statePath);
   return {
     success: true,
@@ -354,10 +381,10 @@ function hasPersistedHookResult(codaRoot: string, issueSlug: string, hookPoint: 
 
   try {
     const findingsData = JSON.parse(readFileSync(findingsPath, 'utf-8')) as {
-      hookResults?: Array<{ hookPoint?: string }>;
+      hookResults?: PersistedHookResult[];
     };
 
-    return (findingsData.hookResults ?? [])
+    return getLatestPersistedHookResults(findingsData.hookResults ?? [])
       .some((hookResult) => hookResult.hookPoint === hookPoint);
   } catch {
     return false;

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtempSync, rmSync } from 'fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { basename, join } from 'path';
 import { tmpdir } from 'os';
 import { codaAdvance } from '../coda-advance';
@@ -169,6 +169,79 @@ function setupExhaustedVerify(): void {
   }, statePath);
 }
 
+function setupBuildReadyIssue(): void {
+  codaCreate(
+    {
+      type: 'issue',
+      fields: {
+        title: 'Test Issue',
+        issue_type: 'feature',
+        status: 'active',
+        phase: 'build',
+        priority: 3,
+        topics: [],
+        acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'pending' }],
+        open_questions: [],
+        deferred_items: [],
+        human_review: false,
+      },
+    },
+    codaRoot
+  );
+
+  writeRecord<PlanRecord>(join(codaRoot, 'issues', 'test-issue', 'plan-v1.md'), {
+    title: 'Implementation Plan',
+    issue: 'test-issue',
+    status: 'approved',
+    iteration: 1,
+    task_count: 1,
+    human_review_status: 'not-required',
+  }, '## Approach\nShip the built work.\n');
+
+  codaCreate(
+    {
+      type: 'task',
+      fields: {
+        id: 1,
+        issue: 'test-issue',
+        title: 'Complete Build Task',
+        status: 'complete',
+        kind: 'planned',
+        covers_ac: ['AC-1'],
+        depends_on: [],
+        files_to_modify: ['src/main.ts'],
+        truths: [],
+        artifacts: [],
+        key_links: [],
+      },
+    },
+    codaRoot
+  );
+
+  persistState({
+    ...createDefaultState(),
+    focus_issue: 'test-issue',
+    phase: 'build',
+    current_task: null,
+    completed_tasks: [1],
+  }, statePath);
+}
+
+function writeModuleFindings(hookResults: Array<{ hookPoint: string; blocked: boolean; blockReasons: string[] }>): void {
+  writeFileSync(
+    join(codaRoot, 'issues', 'test-issue', 'module-findings.json'),
+    JSON.stringify({
+      issue: 'test-issue',
+      hookResults: hookResults.map((hookResult, index) => ({
+        ...hookResult,
+        findings: [],
+        timestamp: `2026-04-02T00:00:0${String(index)}Z`,
+      })),
+    }, null, 2),
+    'utf-8'
+  );
+}
+
 describe('codaAdvance', () => {
   test('advance specify→plan with ACs succeeds', () => {
     setupIssue(2);
@@ -323,5 +396,48 @@ describe('codaAdvance', () => {
     expect(state?.loop_iteration).toBe(0);
     expect(state?.current_task).toBeNull();
     expect(state?.completed_tasks).toEqual([1, 2, 3]);
+  });
+
+  test('build→verify ignores older blocked findings when the latest post-build result is clean', () => {
+    setupBuildReadyIssue();
+    writeModuleFindings([
+      {
+        hookPoint: 'post-build',
+        blocked: true,
+        blockReasons: ['SECURITY BLOCK: stale finding'],
+      },
+      {
+        hookPoint: 'post-build',
+        blocked: false,
+        blockReasons: [],
+      },
+    ]);
+
+    const result = codaAdvance({ target_phase: 'verify' }, codaRoot, statePath);
+
+    expect(result.success).toBe(true);
+    expect(result.new_phase).toBe('verify');
+    expect(loadState(statePath)?.phase).toBe('verify');
+  });
+
+  test('build→verify still blocks when the latest post-build result has block reasons', () => {
+    setupBuildReadyIssue();
+    writeModuleFindings([
+      {
+        hookPoint: 'post-build',
+        blocked: false,
+        blockReasons: [],
+      },
+      {
+        hookPoint: 'post-build',
+        blocked: true,
+        blockReasons: ['SECURITY BLOCK: current finding'],
+      },
+    ]);
+
+    const result = codaAdvance({ target_phase: 'verify' }, codaRoot, statePath);
+
+    expect(result.success).toBe(false);
+    expect(result.reason).toContain('Module findings require attention');
   });
 });

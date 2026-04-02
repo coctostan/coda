@@ -255,16 +255,22 @@ function evaluateWriteGate(
     };
   }
 
-  const state = stateProvider.refreshState() ?? stateProvider.getState();
+  let state: ReturnType<StateProvider['getState']>;
+  try {
+    state = stateProvider.refreshState() ?? stateProvider.getState();
+  } catch (err) {
+    return {
+      block: true,
+      reason: `Could not read CODA state; blocking write for safety: ${formatCodaError(err)}`,
+    };
+  }
   if (state?.tdd_gate !== 'locked') {
     return {};
   }
-
   const gateResult = checkWriteGate({ operation, path }, { tdd_gate: state.tdd_gate });
   if (gateResult.allowed) {
     return {};
   }
-
   return {
     block: true,
     reason: gateResult.reason ?? 'TDD gate locked. Write a failing test first.',
@@ -374,42 +380,46 @@ function findTargetPathToken(commandName: string, args: string[]): string | null
   return null;
 }
 
+function hasRedirectWriteToCoda(command: string): boolean {
+  return /(?:^|[^\w])(?:1>>?|>>?)\s*['"]?(?:[^\s'"`]*[\\/])?\.coda(?:[\\/]|$)/.test(command);
+}
+
 /**
  * Detect bash commands that write to `.coda/` via redirection or common write patterns.
  *
- * Catches: `> .coda/`, `>> .coda/`, `tee .coda/`, `cp ... .coda/`, `mv ... .coda/`,
- * `printf ... > .coda/`, `echo ... > .coda/`, `cat ... > .coda/`, `sed -i .coda/`,
- * `perl -i .coda/`, `truncate .coda/`, `chmod .coda/`, `chown .coda/`, `ln ... .coda/`,
- * and `install ... .coda/`.
+ * Catches: `> .coda/`, `>> .coda/`, `1> .coda/`, `tee .coda/`, `cp ... .coda/`,
+ * `mv ... .coda/`, `touch .coda/`, `mkdir .coda/`, `printf ... > .coda/`,
+ * interpreter stdout redirects like `python -c ... > .coda/` or `node -e ... > .coda/`,
+ * `sed -i .coda/`, `perl -i .coda/`, `truncate .coda/`, `chmod .coda/`,
+ * `chown .coda/`, `ln ... .coda/`, and `install ... .coda/`.
  */
-function isBashWriteToCoda(command: string): boolean {
-  if (/>>?\s*['"]?(?:[^\s'"`]*[\\/])?\.coda(?:[\\/]|$)/.test(command)) {
+  function isBashWriteToCoda(command: string): boolean {
+  if (hasRedirectWriteToCoda(command)) {
     return true;
   }
-
   if (/\btee\b[\s\S]*\.coda(?:[\\/]|$)/.test(command)) {
     return true;
   }
-
   if (/\bsed\b[\s\S]*\s-i(?:\s|$|['".]|[^a-zA-Z])[\s\S]*\.coda(?:[\\/]|$)/.test(command)) {
     return true;
   }
-
   if (/\bperl\b[\s\S]*\s-i(?:\S*)?(?:\s|$)[\s\S]*\.coda(?:[\\/]|$)/.test(command)) {
     return true;
   }
-
   const tokens = tokenizeShellCommand(command);
   const commandName = normalizeShellToken(tokens[0] ?? '');
   const args = tokens.slice(1);
-
   if (commandName === 'tee') {
     return args.some((arg) => tokenTargetsCodaPath(arg));
   }
-
   if (commandName === 'cp' || commandName === 'mv' || commandName === 'install' || commandName === 'ln') {
     const targetPath = findTargetPathToken(commandName, args);
     return targetPath !== null && tokenTargetsCodaPath(targetPath);
+  }
+  if (commandName === 'touch' || commandName === 'mkdir') {
+    return args
+      .filter((arg) => !normalizeShellToken(arg).startsWith('-'))
+      .some((arg) => tokenTargetsCodaPath(arg));
   }
 
   if (

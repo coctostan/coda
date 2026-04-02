@@ -49,12 +49,14 @@ export function loadModuleConfig(codaRoot: string): RegistryConfig {
     };
     if (!raw.modules) return {};
 
+    const validThresholds = new Set(['critical', 'high', 'medium', 'low', 'info', 'none']);
     const modules: Record<string, { enabled: boolean; blockThreshold?: FindingSeverity | 'none' }> = {};
     for (const [name, cfg] of Object.entries(raw.modules)) {
+      const threshold = cfg.blockThreshold;
       modules[name] = {
         enabled: cfg.enabled !== false,
-        ...(cfg.blockThreshold
-          ? { blockThreshold: cfg.blockThreshold as FindingSeverity | 'none' }
+        ...(threshold && validThresholds.has(threshold)
+          ? { blockThreshold: threshold as FindingSeverity | 'none' }
           : {}),
       };
     }
@@ -182,8 +184,8 @@ export interface ModuleFindingsData {
 /**
  * Persist a hook result to `.coda/issues/{slug}/module-findings.json`.
  *
- * Appends the hook result to the existing file, or creates it if absent.
- * The file grows throughout the issue lifecycle — each hook run appends.
+ * Replaces any previously persisted result for the same hook point so runtime
+ * gates only consider the latest findings for each lifecycle boundary.
  *
  * @param codaRoot - Path to the `.coda/` directory
  * @param issueSlug - The issue slug
@@ -210,7 +212,10 @@ export function persistFindings(
     data = { issue: issueSlug, hookResults: [] };
   }
 
-  data.hookResults.push(hookResult);
+  data.hookResults = [
+    ...data.hookResults.filter((existingResult) => existingResult.hookPoint !== hookResult.hookPoint),
+    hookResult,
+  ];
   writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
