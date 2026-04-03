@@ -25,3 +25,13 @@ export { generateRefDocs, createFirstMilestone, forgeGreenfield } from './greenf
 // Evidence management (v0.7)
 export type { EvidenceFrontmatter, EvidenceRecord } from './evidence';
 export { EVIDENCE_DIR, writeEvidence, readEvidence, readAllEvidence } from './evidence';
+
+// Brownfield SCAN (v0.7)
+export type { ScanContext } from './brownfield';
+export {
+  UNIVERSAL_SCAN_TARGETS,
+  UNIVERSAL_COMMANDS,
+  getUniversalScanTargets,
+  getSourceDirectory,
+  assembleScanContext,
+} from './brownfield';

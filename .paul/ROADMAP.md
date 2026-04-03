@@ -6,7 +6,7 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.7 Brownfield & Context** (v0.7.0)
 Status: 🚧 In Progress
-Phases: 5 of 11 complete
+Phases: 6 of 11 complete
 Spec: docs/v0.4/00-overview.md
 
 | Phase | Name | Plans | Status | Completed |
@@ -16,7 +16,7 @@ Spec: docs/v0.4/00-overview.md
 | 38 | Adaptive Ceremony Rules | 1/1 | ✅ Complete | 2026-04-03 |
 | 39 | Context Budget Management | 1/1 | ✅ Complete | 2026-04-03 |
 | 40 | Module Init-scan Hooks | 1/1 | ✅ Complete | 2026-04-03 |
-| 41 | Brownfield SCAN | TBD | Not started | - |
+| 41 | Brownfield SCAN | 1/1 | ✅ Complete | 2026-04-03 |
 | 42 | Brownfield SYNTHESIZE | TBD | Not started | - |
 | 43 | Brownfield GAP ANALYSIS | TBD | Not started | - |
 | 44 | Brownfield VALIDATE + ORIENT | TBD | Not started | - |

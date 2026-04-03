@@ -28,3 +28,4 @@
 | 2026-04-03 | 38-adaptive-ceremony | 487 pass / 0 fail | N/A | clean | N/A | ↑ improving (+9 new ceremony tests) |
 | 2026-04-03 | 39-context-budgets | 498 pass / 0 fail | N/A | clean | N/A | ↑ improving (+11 new budget tests) |
 | 2026-04-03 | 40-module-init-scan-hooks | 534 pass / 0 fail | N/A | clean | N/A | ↑ improving (+36 net: 13 new + 5 prompts trigger 25 structural, -2 updated) |
+| 2026-04-03 | 41-brownfield-scan | 546 pass / 0 fail | N/A | clean | N/A | ↑ improving (+12 new brownfield scan tests) |
