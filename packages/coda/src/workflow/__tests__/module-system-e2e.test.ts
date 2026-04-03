@@ -155,12 +155,13 @@ describe('Module System E2E', () => {
       expect(prompt).toContain('src/auth.ts');
     });
 
-    test('post-unify returns empty (no v0.3 modules at this hook)', () => {
+    test('post-unify returns prompts for quality and knowledge modules', () => {
       const dispatcher = createModuleSystem({}, promptsDir);
       const ctx = buildHookContext('e2e-issue', 'unify');
       const prompt = dispatcher.assemblePrompts('post-unify', ctx);
-
-      expect(prompt).toBe('');
+      expect(prompt).not.toBe('');
+      expect(prompt.toLowerCase()).toContain('quality');
+      expect(prompt.toLowerCase()).toContain('knowledge');
     });
 
     test('all hook points produce expected module participation', () => {
@@ -169,11 +170,11 @@ describe('Module System E2E', () => {
 
       // Map of hookPoint → expected modules present (by name in prompt)
       const expectations: Record<string, { present: string[]; absent: string[] }> = {
-        'pre-plan':   { present: ['security'], absent: [] },
-        'pre-build':  { present: ['TDD'],      absent: [] },
+        'pre-plan':   { present: ['security', 'architecture'], absent: [] },
+        'pre-build':  { present: ['TDD', 'quality'],      absent: [] },
         'post-task':  { present: ['TDD'],      absent: [] },
-        'post-build': { present: ['security', 'TDD'], absent: [] },
-        'post-unify': { present: [],           absent: [] },
+        'post-build': { present: ['security', 'TDD', 'architecture', 'quality', 'knowledge'], absent: [] },
+        'post-unify': { present: ['quality', 'knowledge'], absent: [] },
       };
 
       for (const [hp, expected] of Object.entries(expectations)) {
@@ -322,21 +323,19 @@ describe('Module System E2E', () => {
   // ─── AC-4: Config-Disabled Module → Silent Skip ──────────────────────────
 
   describe('AC-4: Config-disabled module → silent skip', () => {
-    test('disabling tdd produces no pre-build prompt', () => {
+    test('disabling tdd removes tdd from pre-build prompt but quality still fires', () => {
       // Write coda.json with tdd disabled
       writeFileSync(
         join(codaRoot, 'coda.json'),
         JSON.stringify({ modules: { tdd: { enabled: false } } })
       );
-
       const config = loadModuleConfig(codaRoot);
       const dispatcher = createModuleSystem(config, promptsDir);
       const ctx = buildHookContext('e2e-issue', 'build');
-
-      // pre-build only has tdd — should be empty
+      // pre-build has tdd + quality — with tdd disabled, quality still fires
       const prompt = dispatcher.assemblePrompts('pre-build', ctx);
-      expect(prompt).toBe('');
-
+      expect(prompt.toLowerCase()).not.toContain('tdd');
+      expect(prompt.toLowerCase()).toContain('quality');
       // post-task only has tdd — should be empty
       const postTaskPrompt = dispatcher.assemblePrompts('post-task', ctx);
       expect(postTaskPrompt).toBe('');

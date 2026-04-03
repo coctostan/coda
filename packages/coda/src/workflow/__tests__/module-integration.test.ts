@@ -35,19 +35,19 @@ describe('createModuleSystem', () => {
   test('dispatcher returns empty string for hook with no modules', () => {
     const dispatcher = createModuleSystem({}, promptsDir);
     const context = buildHookContext('test-issue', 'build');
-    // post-unify has no modules in v0.3
-    const prompt = dispatcher.assemblePrompts('post-unify', context);
+    // init-scan and pre-specify have no modules
+    const prompt = dispatcher.assemblePrompts('init-scan', context);
     expect(prompt).toBe('');
   });
 
-  test('disabled module produces no prompt', () => {
+  test('disabled module produces no prompt for that module', () => {
     const dispatcher = createModuleSystem(
-      { modules: { tdd: { enabled: false } } },
+      { modules: { tdd: { enabled: false }, quality: { enabled: false } } },
       promptsDir
     );
     const context = buildHookContext('test-issue', 'build');
     const prompt = dispatcher.assemblePrompts('pre-build', context);
-    // Only tdd fires at pre-build; with it disabled, should be empty
+    // Both tdd and quality fire at pre-build; with both disabled, should be empty
     expect(prompt).toBe('');
   });
 });
@@ -97,7 +97,7 @@ describe('getModulePromptForHook', () => {
   });
 
   test('returns empty string for hookPoint with no modules', () => {
-    const prompt = getModulePromptForHook('post-unify', 'test-issue', 'unify', {
+    const prompt = getModulePromptForHook('init-scan', 'test-issue', 'build', {
       promptsDir,
     });
     expect(prompt).toBe('');
@@ -184,10 +184,10 @@ describe('getModulePromptForHook with codaRoot', () => {
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  test('uses project config when codaRoot provided (tdd disabled → no pre-build prompt)', () => {
+  test('uses project config when codaRoot provided (tdd+quality disabled → no pre-build prompt)', () => {
     mkdirSync(codaDir, { recursive: true });
     writeFileSync(resolve(codaDir, 'coda.json'), JSON.stringify({
-      modules: { tdd: { enabled: false } },
+      modules: { tdd: { enabled: false }, quality: { enabled: false } },
     }));
     const prompt = getModulePromptForHook('pre-build', 'test-issue', 'build', {
       codaRoot: codaDir,
@@ -214,9 +214,9 @@ describe('getModulePromptForHook with codaRoot', () => {
     writeFileSync(resolve(codaDir, 'coda.json'), JSON.stringify({
       modules: { tdd: { enabled: true } },
     }));
-    // Explicit config disables tdd, should override coda.json
+    // Explicit config disables both tdd and quality, should override coda.json
     const prompt = getModulePromptForHook('pre-build', 'test-issue', 'build', {
-      config: { modules: { tdd: { enabled: false } } },
+      config: { modules: { tdd: { enabled: false }, quality: { enabled: false } } },
       codaRoot: codaDir,
       promptsDir,
     });

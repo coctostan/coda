@@ -3,7 +3,7 @@
  * Module registry — discovers enabled modules, resolves definitions,
  * and provides lookup by hook point.
  *
- * v0.3 ships 2 module definitions: security and tdd.
+ * v0.3.1 ships 5 module definitions: security, tdd, architecture, quality, and knowledge.
  * Definitions are hardcoded (dynamic discovery is v0.6).
  *
  * Dependency rule: L3 modules MUST NOT import from L1 (data) or L2 (state).
@@ -45,8 +45,8 @@ export interface ModuleRegistry {
 }
 
 /**
- * v0.3 module definitions — security and tdd only (Decision D3).
- * Architecture, quality, and knowledge are added in v0.3.1.
+ * v0.3.1 module definitions — security, tdd, architecture, quality, and knowledge (Decision D3).
+ * Architecture, quality, and knowledge are included in v0.3.1.
  */
 export const MODULE_DEFINITIONS: Record<
   string,
@@ -71,6 +71,34 @@ export const MODULE_DEFINITIONS: Record<
       { hookPoint: 'post-build', priority: 200, promptFile: 'tdd/post-build.md' },
     ],
   },
+  architecture: {
+    name: 'architecture',
+    domain: 'Architecture Patterns',
+    version: '1.0.0',
+    hooks: [
+      { hookPoint: 'pre-plan', priority: 75, promptFile: 'architecture/pre-plan.md' },
+      { hookPoint: 'post-build', priority: 125, promptFile: 'architecture/post-build.md' },
+    ],
+  },
+  quality: {
+    name: 'quality',
+    domain: 'Quality Assurance',
+    version: '1.0.0',
+    hooks: [
+      { hookPoint: 'pre-build', priority: 100, promptFile: 'quality/pre-build.md' },
+      { hookPoint: 'post-build', priority: 100, promptFile: 'quality/post-build.md' },
+      { hookPoint: 'post-unify', priority: 100, promptFile: 'quality/post-unify.md' },
+    ],
+  },
+  knowledge: {
+    name: 'knowledge',
+    domain: 'Knowledge Capture',
+    version: '1.0.0',
+    hooks: [
+      { hookPoint: 'post-build', priority: 300, promptFile: 'knowledge/post-build.md' },
+      { hookPoint: 'post-unify', priority: 200, promptFile: 'knowledge/post-unify.md' },
+    ],
+  },
 } as const;
 
 /**
@@ -80,6 +108,9 @@ export const MODULE_DEFINITIONS: Record<
 export const DEFAULT_THRESHOLDS: Record<string, FindingSeverity | 'none'> = {
   security: 'critical',
   tdd: 'high',
+  architecture: 'high',
+  quality: 'high',
+  knowledge: 'none',
 } as const;
 
 /**
