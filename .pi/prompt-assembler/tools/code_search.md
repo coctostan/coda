@@ -1,0 +1,2 @@
+Search GitHub/docs/SO for working code examples. Returns formatted snippets, not web pages.
+Be specific in queries. Set `tokensNum` higher (5000+) for comprehensive examples, lower (500) for quick syntax.

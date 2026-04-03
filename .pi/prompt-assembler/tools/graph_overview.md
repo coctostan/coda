@@ -1,0 +1,1 @@
+Return a high-level overview of the indexed codebase: symbol distribution, hub symbols, most-imported files, and suggested queries

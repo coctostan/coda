@@ -3,25 +3,26 @@
 ## Project Reference
 
 See: .paul/PROJECT.md (updated 2026-04-03)
-Version: v0.5.0
+Version: v0.6.0
 
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Awaiting next milestone
+**Current focus:** v0.6 VCS & Workflow Gaps — VCS integration, coda_query, module cleanup, findings summarization
 
 ## Current Position
-Milestone: Awaiting next milestone
-Phase: None active
-Plan: None
-Status: Milestone v0.5 Module Completion complete — ready for next
-Last activity: 2026-04-03T02:00:00Z — Milestone completed
+Milestone: v0.6 VCS & Workflow Gaps
+Phase: 32 of 35 (Module Cleanup) — Planning
+Plan: 32-01 created, awaiting approval
+Status: PLAN created, ready for APPLY
+Last activity: 2026-04-03T02:20:00Z — Created .paul/phases/32-module-cleanup/32-01-PLAN.md
 Progress:
-- v0.5 Module Completion: [██████████] 100% ✓
+- v0.6 VCS & Workflow Gaps: [░░░░░░░░░░] 0%
+- Phase 32: [░░░░░░░░░░] 0%
 
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Milestone complete - ready for next]
+  ✓        ○        ○     [Plan created, awaiting approval]
 ```
 
 ## Accumulated Context
@@ -38,10 +39,14 @@ Branch: main
 Remote: https://github.com/coctostan/coda.git
 
 ## Session Continuity
-Last session: 2026-04-03T02:00:00Z
-Stopped at: Milestone v0.5 Module Completion complete
-Next action: /paul:discuss-milestone or /paul:milestone
-Resume file: .paul/MILESTONES.md
+Last session: 2026-04-03T02:20:00Z
+Stopped at: Plan 32-01 created
+Next action: Review and approve plan, then run /paul:apply .paul/phases/32-module-cleanup/32-01-PLAN.md
+Resume file: .paul/phases/32-module-cleanup/32-01-PLAN.md
+Resume context:
+- Phase 32 is low-effort cleanup (~15 min): delete old prompt files + remove legacy barrel
+- 2 tasks: delete todd.md/walt.md, remove modules/ barrel and update index.ts
+- Autonomous (no checkpoints needed)
 
 ---
 *STATE.md — Updated after every significant action*

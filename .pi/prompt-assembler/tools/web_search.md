@@ -1,0 +1,2 @@
+Search the web. Returns highlights (excerpts), not full pages — use `fetch_content` for that.
+Supports `query`/`queries` (batch), `numResults`, `type` (auto/instant/deep), `category`, `includeDomains`.

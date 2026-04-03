@@ -1,0 +1,1 @@
+Look up a symbol and return its anchored neighborhood

@@ -1,0 +1,1 @@
+Extract behavioral contract for a symbol: what it takes, returns, throws, and what tests assert about it

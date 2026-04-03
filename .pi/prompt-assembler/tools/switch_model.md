@@ -1,0 +1,1 @@
+List, search, or switch models. Supports aliases defined in aliases.json (e.g. 'cheap', 'coding'). Use when the user asks to change models or when you need a model with different capabilities (reasoning, vision, cost, context window).

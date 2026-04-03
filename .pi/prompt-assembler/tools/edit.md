@@ -1,0 +1,2 @@
+Surgical edits using `LINE:HASH` anchors from `read`/`grep`. Ops: `set_line`, `replace_lines`, `insert_after`, `replace`.
+Anchors must match exactly — re-read the file if you get a hash mismatch (`>>>`).

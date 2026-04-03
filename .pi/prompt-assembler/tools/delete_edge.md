@@ -1,0 +1,1 @@
+Delete an agent-created edge from the symbol graph
