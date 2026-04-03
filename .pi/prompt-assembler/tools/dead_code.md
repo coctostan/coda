@@ -1,0 +1,1 @@
+Find unreferenced symbols. With name: check if a symbol has references. Without name: find all exported symbols with zero inbound edges.

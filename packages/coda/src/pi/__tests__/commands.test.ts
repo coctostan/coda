@@ -489,13 +489,107 @@ describe('Pi Commands', () => {
       rmSync(tempDir, { recursive: true, force: true });
     }
   });
+
+  test('activate sets focus_issue and phase from existing issue', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'coda-activate-'));
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      writeRecord(join(codaRoot, 'issues', 'my-feature.md'), {
+        title: 'My Feature',
+        issue_type: 'feature',
+        status: 'proposed',
+        phase: 'specify',
+        priority: 3,
+        topics: [],
+        acceptance_criteria: [],
+        open_questions: [],
+        deferred_items: [],
+        human_review: false,
+      } as IssueRecord, '## Description\nA test feature.\n');
+      persistState(createDefaultState(), join(codaRoot, 'state.json'));
+
+      registerCommands(pi, codaRoot, tempDir);
+      await commands[0]?.options.handler('activate my-feature', ctx as never);
+
+      const state = JSON.parse(readFileSync(join(codaRoot, 'state.json'), 'utf-8')) as CodaState;
+      expect(state.focus_issue).toBe('my-feature');
+      expect(state.phase).toBe('specify');
+      expect(notifications[notifications.length - 1]?.message).toContain('Activated');
+      expect(notifications[notifications.length - 1]?.message).toContain('specify');
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('activate without slug shows usage warning', async () => {
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+    registerCommands(pi, '/tmp/test/.coda');
+    await commands[0]?.options.handler('activate', ctx as never);
+    expect(notifications[notifications.length - 1]?.message).toContain('Usage');
+    expect(notifications[notifications.length - 1]?.level).toBe('warning');
+  });
+
+  test('activate nonexistent issue shows error', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'coda-activate-'));
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      mkdirSync(join(codaRoot, 'issues'), { recursive: true });
+      registerCommands(pi, codaRoot, tempDir);
+      await commands[0]?.options.handler('activate no-such-issue', ctx as never);
+      expect(notifications[notifications.length - 1]?.message).toContain('not found');
+      expect(notifications[notifications.length - 1]?.level).toBe('error');
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('activate already-focused issue shows warning', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'coda-activate-'));
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      writeRecord(join(codaRoot, 'issues', 'my-feature.md'), {
+        title: 'My Feature',
+        issue_type: 'feature',
+        status: 'active',
+        phase: 'build',
+        priority: 3,
+        topics: [],
+        acceptance_criteria: [],
+        open_questions: [],
+        deferred_items: [],
+        human_review: false,
+      } as IssueRecord, '## Description\nAlready focused.\n');
+      persistState({
+        ...createDefaultState(),
+        focus_issue: 'my-feature',
+        phase: 'build',
+      }, join(codaRoot, 'state.json'));
+
+      registerCommands(pi, codaRoot, tempDir);
+      await commands[0]?.options.handler('activate my-feature', ctx as never);
+      expect(notifications[notifications.length - 1]?.message).toContain('already focused');
+      expect(notifications[notifications.length - 1]?.level).toBe('warning');
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('Pi Tools', () => {
   test('registerTools registers 9 tools', () => {
     const { pi, tools } = createMockPi();
     registerTools(pi, '/tmp/test/.coda');
-    expect(tools.length).toBe(9);
+    expect(tools.length).toBe(10);
   });
 
   test('registered tools include all coda_* tool names', () => {

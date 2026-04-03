@@ -31,7 +31,7 @@ export function codaExtension(pi: ExtensionAPI): void {
   const codaRoot = join(projectRoot, '.coda');
 
   registerCommands(pi, codaRoot, projectRoot);
-  registerTools(pi, codaRoot);
+  registerTools(pi, codaRoot, projectRoot);
   registerHooks(pi, codaRoot);
 }
 

@@ -1,0 +1,2 @@
+Query the language server: `definition`, `references`, `hover`, `symbols`, `diagnostics`, `workspace-diagnostics`, `signature`, `rename`, `codeAction`.
+Use `query` param instead of line/column when you know the symbol name. Use `workspace-diagnostics` after edits.

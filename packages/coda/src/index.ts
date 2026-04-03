@@ -15,8 +15,13 @@
 // L4: Tool Layer
 export * from './tools';
 
-// L4.5: Module Prompts
-export * from './modules';
+// L4.5: Module System (re-exports from workflow layer)
+export {
+  createModuleSystem,
+  buildHookContext,
+  getModulePromptForHook,
+  loadModuleConfig,
+} from './workflow/module-integration';
 
 // L5: FORGE Design Layer
 export * from './forge';

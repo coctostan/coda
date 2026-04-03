@@ -1,0 +1,1 @@
+Return a compact symbol summary: definition, signature, tests, relationships, and signals

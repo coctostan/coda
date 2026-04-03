@@ -29,6 +29,9 @@ export type {
   RunTestsResult,
   WriteGateCheck,
   WriteGateResult,
+  QueryInput,
+  QueryResult,
+  QueryRecordType,
 } from './types';
 
 // CRUD tools
@@ -45,6 +48,7 @@ export { codaStatus } from './coda-status';
 export { codaRunTests } from './coda-run-tests';
 export { codaReportFindings } from './coda-report-findings';
 export { codaConfig } from './coda-config';
+export { codaQuery } from './coda-query';
 export { validateRecordPath } from './path-validation';
 export { sortByNumericSuffix } from './sort-utils';
 

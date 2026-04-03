@@ -70,3 +70,7 @@ export {
   summarizeFindings,
 } from './module-integration';
 export type { ModuleFindingsData } from './module-integration';
+
+// VCS integration (v0.6)
+export { createBranch, commitTask, getCurrentBranch } from './vcs';
+export type { CreateBranchResult, CommitTaskResult } from './vcs';

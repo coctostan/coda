@@ -171,3 +171,27 @@ export interface WriteGateResult {
   /** Reason the write was blocked (on block) */
   reason?: string;
 }
+
+/** Supported record types for coda_query. */
+export type QueryRecordType = 'issue' | 'task' | 'plan' | 'record' | 'reference' | 'decision';
+
+/** Input for coda_query — list and filter mdbase records. */
+export interface QueryInput {
+  /** Record type to query. */
+  type: QueryRecordType;
+  /** Optional filters to narrow results. */
+  filter?: {
+    /** Issue slug — required for task and plan queries. */
+    issue?: string;
+    /** Filter by topic (matches against frontmatter.topics array). */
+    topic?: string;
+    /** Filter by status (exact match against frontmatter.status). */
+    status?: string;
+  };
+}
+
+/** Result from coda_query. */
+export interface QueryResult extends ToolResult {
+  /** Matching records with frontmatter only (no body). */
+  records: Array<{ path: string; frontmatter: Record<string, unknown> }>;
+}

@@ -5,29 +5,33 @@
  * Registers all `coda_*` tools using Pi's real ExtensionAPI and TypeBox schemas.
  */
 
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { Type } from '@sinclair/typebox';
 import type { ExtensionAPI } from '@mariozechner/pi-coding-agent';
+import { loadState } from '@coda/core';
 import {
   codaAdvance,
   codaConfig,
   codaCreate,
   codaEditBody,
+  codaQuery,
   codaRead,
   codaReportFindings,
   codaRunTests,
   codaStatus,
   codaUpdate,
 } from '../tools';
+import { commitTask } from '../workflow';
 
 /**
  * Register all CODA Pi tools.
  *
  * @param pi - The Pi extension API
  * @param codaRoot - Path to the `.coda/` directory
+ * @param projectRoot - Absolute path to the project root (for VCS operations)
  */
-export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
+export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: string = dirname(codaRoot)): void {
   const statePath = join(codaRoot, 'state.json');
 
   const createSchema = Type.Object({
@@ -86,6 +90,22 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     findings_json: Type.String(),
   });
 
+  const querySchema = Type.Object({
+    type: Type.Union([
+      Type.Literal('issue'),
+      Type.Literal('task'),
+      Type.Literal('plan'),
+      Type.Literal('record'),
+      Type.Literal('reference'),
+      Type.Literal('decision'),
+    ]),
+    filter: Type.Optional(Type.Object({
+      issue: Type.Optional(Type.String()),
+      topic: Type.Optional(Type.String()),
+      status: Type.Optional(Type.String()),
+    })),
+  });
+
   pi.registerTool({
     name: 'coda_create',
     label: 'Create Record',
@@ -112,7 +132,9 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     description: 'Update frontmatter fields of an existing .coda/ record.',
     parameters: updateSchema,
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-      return executeWithCodaErrorHandling(() => codaUpdate(params, codaRoot));
+      const result = await executeWithCodaErrorHandling(() => codaUpdate(params, codaRoot));
+      tryCommitAfterTaskComplete(params, statePath, projectRoot);
+      return result;
     },
   });
 
@@ -179,6 +201,16 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
       });
     },
   });
+
+  pi.registerTool({
+    name: 'coda_query',
+    label: 'Query Records',
+    description: 'List and filter .coda/ records by type. Returns frontmatter only for compact results. Types: issue, task, plan, record, reference, decision.',
+    parameters: querySchema,
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      return executeWithCodaErrorHandling(() => codaQuery(params, codaRoot));
+    },
+  });
 }
 
 /** Convert a CODA tool result into Pi's text content shape. */
@@ -222,4 +254,46 @@ function loadCodaConfig(codaRoot: string): {
   } catch {
     return {};
   }
+}
+
+/**
+ * Auto-commit after a BUILD task is marked complete.
+ *
+ * Best-effort: VCS failures never break the coda_update operation.
+ * Only triggers when: record is a task, status set to "complete", current phase is "build".
+ */
+function tryCommitAfterTaskComplete(
+  params: { record: string; fields: Record<string, unknown> },
+  statePath: string,
+  projectRoot: string
+): void {
+  try {
+    if (!params.record.includes('/tasks/') || params.fields.status !== 'complete') return;
+    const state = loadState(statePath);
+    if (!state || state.phase !== 'build') return;
+
+    const taskId = extractTaskId(params.record);
+    if (taskId === null) return;
+
+    const taskTitle = typeof params.fields.title === 'string'
+      ? params.fields.title
+      : `task-${String(taskId)}`;
+
+    commitTask(projectRoot, taskId, taskTitle);
+  } catch {
+    // Best-effort — VCS failures don't break the update
+  }
+}
+
+/**
+ * Extract task numeric ID from a record path like "issues/my-issue/tasks/01-setup.md".
+ *
+ * @param record - The record path
+ * @returns The task ID number, or null if not parseable
+ */
+function extractTaskId(record: string): number | null {
+  const match = record.match(/tasks\/(\d+)/);
+  if (!match?.[1]) return null;
+  const id = parseInt(match[1], 10);
+  return Number.isNaN(id) ? null : id;
 }

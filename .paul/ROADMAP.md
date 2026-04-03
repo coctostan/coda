@@ -4,12 +4,34 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-**v0.5 Module Completion** (v0.5.0)
-Status: ✅ Complete
-Completed: 2026-04-03
+**v0.6 VCS & Workflow Gaps** (v0.6.0)
+Status: 🚧 In Progress
+Phases: 4 of 4 complete
 
-## Next Milestone
-Run /paul:discuss-milestone or /paul:milestone to define.
+| Phase | Name | Plans | Status | Completed |
+|-------|------|-------|--------|-----------|
+| 32 | Module Cleanup | 1/1 | ✅ Complete | 2026-04-03 |
+| 33 | VCS Integration + /coda activate | 1/1 | ✅ Complete | 2026-04-03 |
+| 34 | coda_query + Findings Summarization | 1/1 | ✅ Complete | 2026-04-03 |
+| 35 | E2E Validation | 1/1 | ✅ Complete | 2026-04-03 |
+
+### Phase 32: Module Cleanup
+Focus: Remove old todd.md, walt.md, and legacy TS module files replaced by registry system
+Plans: TBD (defined during /paul:plan)
+
+### Phase 33: VCS Integration + /coda activate
+Focus: `vcs.ts` with createBranch/commitTask/getCurrentBranch, `/coda activate` command, wire into BUILD task completion
+Spec: docs/v0.3.1/00-overview.md
+Plans: TBD (defined during /paul:plan)
+
+### Phase 34: coda_query + Findings Summarization
+Focus: `coda_query` tool (list/filter issues, tasks, plans, decisions, references), cross-phase findings context in context-builder
+Spec: docs/v0.3.1/00-overview.md
+Plans: TBD (defined during /paul:plan)
+
+### Phase 35: E2E Validation
+Focus: Regression test run + VCS smoke test in real lifecycle
+Plans: TBD (defined during /paul:plan)
 ## Completed Milestones
 <details>
 <summary>v0.5 Module Completion — 2026-04-03 (3 phases, 3 plans)</summary>
@@ -95,4 +117,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-03 — v0.5 Module Completion milestone completed*
+*Roadmap updated: 2026-04-03 — v0.6 VCS & Workflow Gaps milestone created*
