@@ -7,10 +7,12 @@
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-coding-agent';
+import { createDefaultState, loadState, persistState } from '@coda/core';
+import type { Phase } from '@coda/core';
 import { scaffoldCoda } from '../forge';
-import { codaAdvance, codaBack, codaCreate, codaKill, codaStatus } from '../tools';
+import { codaAdvance, codaBack, codaCreate, codaKill, codaRead, codaStatus } from '../tools';
 import type { AdvanceInput, StatusResult } from '../tools';
-import { getBuildSequence } from '../workflow';
+import { createBranch, getBuildSequence } from '../workflow';
 import { handleAutonomousAdvanceTrigger } from './hooks';
 
 /** Supported issue types for `/coda new`. */
@@ -31,7 +33,7 @@ export function registerCommands(
   const statePath = join(codaRoot, 'state.json');
 
   pi.registerCommand('coda', {
-    description: 'Manage CODA lifecycle actions (status, forge, new, advance, back, kill, build)',
+    description: 'Manage CODA lifecycle actions (status, forge, new, activate, advance, back, kill, build)',
     handler: async (args, ctx) => {
       try {
         await handleCodaCommand(args, ctx, pi, codaRoot, statePath, projectRoot);
@@ -76,6 +78,53 @@ async function handleCodaCommand(
       return;
     }
 
+    case 'activate': {
+      const slug = parsed.remainder.trim();
+      if (slug.length === 0) {
+        ctx.ui.notify('Usage: /coda activate <issue-slug>', 'warning');
+        return;
+      }
+
+      const issuePath = join(codaRoot, 'issues', slug + '.md');
+      if (!existsSync(issuePath)) {
+        ctx.ui.notify(`Issue "${slug}" not found.`, 'error');
+        return;
+      }
+
+      const currentState = loadState(statePath);
+      if (currentState?.focus_issue === slug) {
+        ctx.ui.notify(`Issue "${slug}" is already focused.`, 'warning');
+        return;
+      }
+
+      const issueRecord = codaRead({ record: `issues/${slug}` }, codaRoot);
+      const issueType = typeof issueRecord.frontmatter.issue_type === 'string'
+        ? issueRecord.frontmatter.issue_type
+        : 'feature';
+      const issuePhase = typeof issueRecord.frontmatter.phase === 'string'
+        ? (issueRecord.frontmatter.phase as Phase)
+        : 'specify';
+
+      const state = currentState ?? createDefaultState();
+      state.focus_issue = slug;
+      state.phase = issuePhase;
+      state.current_task = null;
+      state.completed_tasks = [];
+      persistState(state, statePath);
+
+      let branchMsg = '';
+      try {
+        const branchResult = createBranch(projectRoot, slug, issueType);
+        branchMsg = branchResult.created
+          ? ` Branch ${branchResult.branch} created.`
+          : ` On branch ${branchResult.branch}.`;
+      } catch {
+        branchMsg = ' (VCS branch creation skipped — git error)';
+      }
+
+      ctx.ui.notify(`Activated issue "${slug}" at phase ${issuePhase}.${branchMsg}`);
+      return;
+    }
     case 'new': {
       const { issueType, title } = parseNewIssueArgs(parsed.remainder);
       const result = codaCreate({
@@ -201,7 +250,7 @@ async function handleCodaCommand(
 
     default: {
       ctx.ui.notify(
-        'Usage: /coda [status|forge|new <type> <title>|advance [approve|changes <feedback>]|back <phase>|kill|build]',
+        'Usage: /coda [status|forge|new <type> <title>|activate <slug>|advance [approve|changes <feedback>]|back <phase>|kill|build]',
         'warning'
       );
     }
