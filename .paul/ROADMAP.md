@@ -4,12 +4,29 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-**v0.4 Live Validation** (v0.4.0)
-Status: ✅ Complete
-Completed: 2026-04-02
+**v0.5 Module Completion** (v0.5.0)
+Status: 🚧 In Progress
+Phases: 0 of 3 complete
 
-## Next Milestone
-Run /paul:discuss or /paul:milestone to define.
+| Phase | Name | Plans | Status | Completed |
+|-------|------|-------|--------|-----------|
+| 29 | E2E Fixes | TBD | Not started | - |
+| 30 | Module Prompts — Architecture + Quality + Knowledge | TBD | Not started | - |
+| 31 | E2E Validation | TBD | Not started | - |
+
+### Phase 29: E2E Fixes
+Focus: Fix 4 issues from v0.4 real-project E2E — F4: state.json creation, F2: coda_config tool, F6: build auto-advance instruction, F8: findings submission UX
+Spec: docs/v0.3/00a-e2e-fixes.md
+Plans: TBD (defined during /paul:plan)
+
+### Phase 30: Module Prompts — Architecture + Quality + Knowledge
+Focus: Ship 3 remaining modules (7 prompt files, 3 registry definitions, structural tests) — no infrastructure changes
+Spec: docs/v0.3/04-module-prompts.md
+Plans: TBD (defined during /paul:plan)
+
+### Phase 31: E2E Validation
+Focus: Archive old test project, fresh CMUX stress test with all 5 modules active
+Plans: TBD (defined during /paul:plan)
 ## Completed Milestones
 <details>
 <summary>v0.4 Live Validation — 2026-04-02 (3 phases, 3 plans)</summary>
@@ -82,4 +99,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-02 — v0.4 Live Validation milestone complete*
+*Roadmap updated: 2026-04-02 — v0.5 Module Completion milestone created*
