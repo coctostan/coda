@@ -79,3 +79,7 @@ export type { CreateBranchResult, CommitTaskResult } from './vcs';
 // Ceremony rules (v0.7)
 export type { CeremonyRules } from './ceremony';
 export { CEREMONY_DEFAULTS, getCeremonyRules } from './ceremony';
+
+// Context budgets (v0.7)
+export type { ContextSection, BudgetResult } from './context-budgets';
+export { PHASE_BUDGETS, estimateTokens, assembleWithinBudget } from './context-budgets';

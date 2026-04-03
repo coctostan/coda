@@ -11,13 +11,13 @@ Version: v0.7.0
 ## Current Position
 
 Milestone: v0.7 Brownfield & Context
-Phase: 39 of 46 (Context Budget Management)
+Phase: 40 of 46 (Module Init-scan Hooks)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-04-03T05:05:00Z — Phase 38 complete, transitioned to Phase 39
+Last activity: 2026-04-03T05:20:00Z — Phase 39 complete, transitioned to Phase 40
 
 Progress:
-- v0.7 Brownfield & Context: [███░░░░░░░] 27%
+- v0.7 Brownfield & Context: [████░░░░░░] 36%
 
 ## Loop Position
 
@@ -38,13 +38,14 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | moduleBlockFindings in GateCheckData | v0.3 D5 | Gate system authority |
 | coda_report_findings tool for findings persistence | v0.4 D6 | Agent submits findings explicitly |
 | Overview always-include uses exact heading match (case-insensitive) | v0.7 P36 | Topic retrieval behavior |
+| context-budgets.ts separate from context-builder.ts | v0.7 P39 | Keeps context-builder under 500 lines |
 Branch: main
 Remote: https://github.com/coctostan/coda.git
 
 ## Session Continuity
-Last session: 2026-04-03T05:05:00Z
-Stopped at: Phase 38 complete, ready to plan Phase 39
-Next action: /paul:plan for Phase 39
+Last session: 2026-04-03T05:20:00Z
+Stopped at: Phase 39 complete, ready to plan Phase 40
+Next action: /paul:plan for Phase 40
 Resume file: .paul/ROADMAP.md
 
 ---
