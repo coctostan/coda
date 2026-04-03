@@ -4,6 +4,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { scaffoldCoda, detectBackdrop, getDefaultConfig } from '../scaffold';
 import type { CodaConfig } from '../types';
+import { createDefaultState } from '@coda/core';
 
 describe('FORGE Scaffold', () => {
   let tempDir: string;
@@ -114,6 +115,14 @@ describe('FORGE Scaffold', () => {
     test('returns codaRoot path', () => {
       const codaRoot = scaffoldCoda(tempDir);
       expect(codaRoot).toBe(join(tempDir, '.coda'));
+    });
+
+    test('creates state.json with the default CODA state', () => {
+      scaffoldCoda(tempDir);
+      const statePath = join(tempDir, '.coda', 'state.json');
+      expect(existsSync(statePath)).toBe(true);
+      const state = JSON.parse(readFileSync(statePath, 'utf-8'));
+      expect(state).toEqual(createDefaultState());
     });
   });
 

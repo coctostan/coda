@@ -112,6 +112,22 @@ describe('getModulePromptForHook', () => {
     expect(prompt.length).toBeGreaterThan(0);
     expect(prompt).toContain('Task: 5');
   });
+
+
+  test('appends explicit findings submission instructions to active module prompts', () => {
+    const prompt = getModulePromptForHook('post-build', 'test-issue', 'build', {
+      promptsDir,
+      changedFiles: ['src/main.ts'],
+    });
+    expect(prompt.length).toBeGreaterThan(0);
+    expect(prompt).toContain('MUST call');
+    expect(prompt).toContain('coda_report_findings');
+    expect(prompt).toContain('hook_point');
+    expect(prompt).toContain('- hook_point: "post-build" (use this exact value)');
+    expect(prompt).toContain('findings_json');
+    expect(prompt).toContain('"critical" | "high" | "medium" | "low" | "info"');
+    expect(prompt).toContain('[{"check":"module_review","severity":"info","finding":"No issues found","assumption":"N/A"}]');
+  });
 });
 
 describe('loadModuleConfig', () => {

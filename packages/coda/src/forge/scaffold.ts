@@ -7,6 +7,7 @@
  * because it creates the structure that core data layer reads.
  */
 
+import { createDefaultState, persistState } from '@coda/core';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { ForgeBackdrop, CodaConfig } from './types';
@@ -64,6 +65,7 @@ export function getDefaultConfig(): CodaConfig {
  * Creates:
  * - `.coda/`
  * - `.coda/coda.json` (with defaults)
+ * - `.coda/state.json` (with default CODA state)
  * - `.coda/reference/`
  * - `.coda/issues/`
  * - `.coda/milestones/`
@@ -85,6 +87,9 @@ export function scaffoldCoda(projectRoot: string): string {
     JSON.stringify(config, null, 2),
     'utf-8'
   );
+
+  const defaultState = createDefaultState();
+  persistState(defaultState, join(codaRoot, 'state.json'));
 
   return codaRoot;
 }

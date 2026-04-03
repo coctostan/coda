@@ -492,10 +492,10 @@ describe('Pi Commands', () => {
 });
 
 describe('Pi Tools', () => {
-  test('registerTools registers 8 tools', () => {
+  test('registerTools registers 9 tools', () => {
     const { pi, tools } = createMockPi();
     registerTools(pi, '/tmp/test/.coda');
-    expect(tools.length).toBe(8);
+    expect(tools.length).toBe(9);
   });
 
   test('registered tools include all coda_* tool names', () => {

@@ -99,6 +99,18 @@ export function buildTaskContext(
     contextParts.push(`## Previous Tasks\n${prevSummaries}`);
   }
 
+  if (task?.frontmatter.kind !== 'correction') {
+    contextParts.push([
+      '## Task Completion Protocol',
+      'After completing this task:',
+      '1. Mark the task complete with coda_update (set status: "complete")',
+      '2. Add a Summary section to the task with coda_edit_body',
+      '3. Call coda_status to check for the next pending task',
+      '4. If there are more pending tasks, read the next task with coda_read and begin it immediately',
+      '5. If all tasks are complete, call coda_advance to move to the verify phase',
+    ].join('\n'));
+  }
+
   if (postTaskModulePrompt) {
     contextParts.push(postTaskModulePrompt);
   }

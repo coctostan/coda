@@ -165,9 +165,20 @@ export function getModulePromptForHook(
 function buildFindingsSubmissionInstruction(hookPoint: string): string {
   return [
     '## Findings Submission',
-    'After completing this module analysis, call `coda_report_findings` to persist the required findings for runtime gating and verify/unify context.',
-    `Use \`hook_point: "${hookPoint}"\` and pass the same JSON array as \`findings_json\`.`,
-    'Report findings even when no issues are found by submitting the required single info finding.',
+    'After completing this module analysis, you MUST call the `coda_report_findings` tool to submit your findings.',
+    '',
+    'Parameters:',
+    `- hook_point: "${hookPoint}" (use this exact value)`,
+    '- findings_json: A JSON array of finding objects, each with:',
+    '  - check: string (what you checked)',
+    '  - severity: "critical" | "high" | "medium" | "low" | "info"',
+    '  - finding: string (what you found)',
+    '  - assumption: string (optional — what must be true for this finding to matter)',
+    '',
+    'If you found no issues, submit a single info finding:',
+    '[{"check":"module_review","severity":"info","finding":"No issues found","assumption":"N/A"}]',
+    '',
+    'This step is REQUIRED — the build→verify gate depends on persisted findings.',
   ].join('\n');
 }
 

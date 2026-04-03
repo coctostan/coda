@@ -52,6 +52,16 @@ describe('Workflow Build Loop', () => {
       expect(ctx.context).toContain('First done');
     });
 
+    test('includes task completion protocol for regular tasks', () => {
+      const ctx = buildTaskContext(codaRoot, 'my-feature', 2, [1]);
+      expect(ctx.context).toContain('## Task Completion Protocol');
+      expect(ctx.context).toContain('1. Mark the task complete with coda_update (set status: "complete")');
+      expect(ctx.context).toContain('2. Add a Summary section to the task with coda_edit_body');
+      expect(ctx.context).toContain('3. Call coda_status to check for the next pending task');
+      expect(ctx.context).toContain('4. If there are more pending tasks, read the next task with coda_read and begin it immediately');
+      expect(ctx.context).toContain('5. If all tasks are complete, call coda_advance to move to the verify phase');
+    });
+
     test('includes post-task module analysis for the most recently completed task', () => {
       const ctx = buildTaskContext(codaRoot, 'my-feature', 2, [1]);
       expect(ctx.context).toContain('Module Analysis: post-task');
@@ -69,6 +79,17 @@ describe('Workflow Build Loop', () => {
     test('systemPrompt references the task', () => {
       const ctx = buildTaskContext(codaRoot, 'my-feature', 2, [1]);
       expect(ctx.systemPrompt).toContain('task');
+    });
+
+    test('does not include task completion protocol for correction tasks', () => {
+      writeRecord(join(codaRoot, 'issues', 'my-feature', 'tasks', '04-fix-ac-2.md'), {
+        id: 4, issue: 'my-feature', title: 'Fix AC-2', status: 'pending',
+        kind: 'correction', fix_for_ac: 'AC-2', covers_ac: ['AC-2'], depends_on: [],
+        files_to_modify: ['src/store.ts'], truths: ['AC-2 passes after the fix'], artifacts: [], key_links: [],
+      }, 'Narrowly fix the verification failure.\n');
+
+      const ctx = buildTaskContext(codaRoot, 'my-feature', 4, [1]);
+      expect(ctx.context).not.toContain('## Task Completion Protocol');
     });
 
     test('includes verification failure context and source task summaries for correction tasks', () => {
