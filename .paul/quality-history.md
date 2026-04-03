@@ -20,3 +20,4 @@
 | 2026-04-03 | 30-module-prompts | 433 pass / 0 fail | N/A | clean | N/A | ↑ improving (+35) |
 | 2026-04-03 | 31-e2e-validation | 433 pass / 0 fail | N/A | clean | N/A | → stable (observational) |
 | 2026-04-03 | 32-module-cleanup | 430 pass / 0 fail | N/A | clean | N/A | → stable (−3 barrel tests removed, cleanup) |
+| 2026-04-03 | 33-vcs-integration | 447 pass / 0 fail | N/A | clean | N/A | ↑ improving (+17 new VCS/activate/auto-commit tests) |
