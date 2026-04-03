@@ -642,7 +642,7 @@ describe('Pi Extension Entry Point', () => {
     codaExtension(pi);
 
     expect(commands.length).toBe(1);
-    expect(tools.length).toBe(8);
+    expect(tools.length).toBe(9);
     expect(tools.some((tool) => tool.name === 'coda_report_findings')).toBe(true);
     expect(hooks.size).toBe(4);
   });

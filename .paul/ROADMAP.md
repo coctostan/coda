@@ -6,18 +6,18 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.5 Module Completion** (v0.5.0)
 Status: 🚧 In Progress
-Phases: 0 of 3 complete
+Phases: 3 of 3 complete
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 29 | E2E Fixes | TBD | Not started | - |
-| 30 | Module Prompts — Architecture + Quality + Knowledge | TBD | Not started | - |
-| 31 | E2E Validation | TBD | Not started | - |
+| 29 | E2E Fixes | 1/1 | ✅ Complete | 2026-04-03 |
+| 30 | Module Prompts — Architecture + Quality + Knowledge | 1/1 | ✅ Complete | 2026-04-03 |
+| 31 | E2E Validation | 1/1 | ✅ Complete | 2026-04-03 |
 
 ### Phase 29: E2E Fixes
 Focus: Fix 4 issues from v0.4 real-project E2E — F4: state.json creation, F2: coda_config tool, F6: build auto-advance instruction, F8: findings submission UX
 Spec: docs/v0.3/00a-e2e-fixes.md
-Plans: TBD (defined during /paul:plan)
+Plans: 29-01 (F4 + F2 + F6 + F8)
 
 ### Phase 30: Module Prompts — Architecture + Quality + Knowledge
 Focus: Ship 3 remaining modules (7 prompt files, 3 registry definitions, structural tests) — no infrastructure changes

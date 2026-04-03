@@ -5,12 +5,12 @@ import type { RegistryConfig } from '../registry';
 describe('createRegistry', () => {
   const promptsDir = '/prompts';
 
-  test('both v0.3 modules load when config enables them', () => {
+  test('all v0.3.1 modules load when config enables them', () => {
     const config: RegistryConfig = {};
     const registry = createRegistry(config, promptsDir);
     const modules = registry.getEnabledModules();
 
-    expect(modules).toHaveLength(2);
+    expect(modules).toHaveLength(5);
 
     const security = modules.find((m) => m.name === 'security');
     expect(security).toBeDefined();
@@ -27,6 +27,24 @@ describe('createRegistry', () => {
     expect(tdd!.enabled).toBe(true);
     expect(tdd!.blockThreshold).toBe('high');
     expect(tdd!.hooks).toHaveLength(3);
+
+    const architecture = modules.find((m) => m.name === 'architecture');
+    expect(architecture).toBeDefined();
+    expect(architecture!.domain).toBe('Architecture Patterns');
+    expect(architecture!.blockThreshold).toBe('high');
+    expect(architecture!.hooks).toHaveLength(2);
+
+    const quality = modules.find((m) => m.name === 'quality');
+    expect(quality).toBeDefined();
+    expect(quality!.domain).toBe('Quality Assurance');
+    expect(quality!.blockThreshold).toBe('high');
+    expect(quality!.hooks).toHaveLength(3);
+
+    const knowledge = modules.find((m) => m.name === 'knowledge');
+    expect(knowledge).toBeDefined();
+    expect(knowledge!.domain).toBe('Knowledge Capture');
+    expect(knowledge!.blockThreshold).toBe('none');
+    expect(knowledge!.hooks).toHaveLength(2);
   });
 
   test('disabled module excluded from getEnabledModules', () => {
@@ -38,7 +56,7 @@ describe('createRegistry', () => {
     const registry = createRegistry(config, promptsDir);
     const modules = registry.getEnabledModules();
 
-    expect(modules).toHaveLength(1);
+    expect(modules).toHaveLength(4);
     expect(modules[0]!.name).toBe('tdd');
     expect(registry.getModule('security')).toBeNull();
   });
@@ -46,25 +64,30 @@ describe('createRegistry', () => {
   test('getModulesForHook returns correct modules sorted by priority', () => {
     const registry = createRegistry({}, promptsDir);
 
-    // post-build: security (130) then tdd (200)
+    // post-build: quality (100), architecture (125), security (130), tdd (200), knowledge (300)
     const postBuild = registry.getModulesForHook('post-build');
-    expect(postBuild).toHaveLength(2);
-    expect(postBuild[0]!.name).toBe('security');
-    expect(postBuild[1]!.name).toBe('tdd');
+    expect(postBuild).toHaveLength(5);
+    expect(postBuild[0]!.name).toBe('quality');
+    expect(postBuild[1]!.name).toBe('architecture');
+    expect(postBuild[2]!.name).toBe('security');
+    expect(postBuild[3]!.name).toBe('tdd');
+    expect(postBuild[4]!.name).toBe('knowledge');
   });
 
   test('getModulesForHook returns single module for hook-specific points', () => {
     const registry = createRegistry({}, promptsDir);
 
-    // pre-build: only tdd
+    // pre-build: tdd (100), quality (100)
     const preBuild = registry.getModulesForHook('pre-build');
-    expect(preBuild).toHaveLength(1);
+    expect(preBuild).toHaveLength(2);
     expect(preBuild[0]!.name).toBe('tdd');
+    expect(preBuild[1]!.name).toBe('quality');
 
-    // pre-plan: only security
+    // pre-plan: architecture (75), security (80)
     const prePlan = registry.getModulesForHook('pre-plan');
-    expect(prePlan).toHaveLength(1);
-    expect(prePlan[0]!.name).toBe('security');
+    expect(prePlan).toHaveLength(2);
+    expect(prePlan[0]!.name).toBe('architecture');
+    expect(prePlan[1]!.name).toBe('security');
   });
 
   test('getModulesForHook returns empty for unused hook points', () => {
@@ -72,7 +95,6 @@ describe('createRegistry', () => {
 
     expect(registry.getModulesForHook('pre-specify')).toHaveLength(0);
     expect(registry.getModulesForHook('init-scan')).toHaveLength(0);
-    expect(registry.getModulesForHook('post-unify')).toHaveLength(0);
   });
 
   test('config blockThreshold overrides default', () => {
@@ -90,9 +112,11 @@ describe('createRegistry', () => {
 
   test('missing module config uses defaults', () => {
     const registry = createRegistry({}, promptsDir);
-
     expect(registry.getModule('security')!.blockThreshold).toBe('critical');
     expect(registry.getModule('tdd')!.blockThreshold).toBe('high');
+    expect(registry.getModule('architecture')!.blockThreshold).toBe('high');
+    expect(registry.getModule('quality')!.blockThreshold).toBe('high');
+    expect(registry.getModule('knowledge')!.blockThreshold).toBe('none');
   });
 
   test('resolvePromptPath returns correct path', () => {
@@ -121,17 +145,23 @@ describe('createRegistry', () => {
 });
 
 describe('MODULE_DEFINITIONS', () => {
-  test('contains exactly security and tdd', () => {
+  test('contains all 5 modules', () => {
     const names = Object.keys(MODULE_DEFINITIONS);
-    expect(names).toHaveLength(2);
+    expect(names).toHaveLength(5);
     expect(names).toContain('security');
     expect(names).toContain('tdd');
+    expect(names).toContain('architecture');
+    expect(names).toContain('quality');
+    expect(names).toContain('knowledge');
   });
 });
 
 describe('DEFAULT_THRESHOLDS', () => {
-  test('security defaults to critical, tdd defaults to high', () => {
+  test('all modules have correct default thresholds', () => {
     expect(DEFAULT_THRESHOLDS['security']).toBe('critical');
     expect(DEFAULT_THRESHOLDS['tdd']).toBe('high');
+    expect(DEFAULT_THRESHOLDS['architecture']).toBe('high');
+    expect(DEFAULT_THRESHOLDS['quality']).toBe('high');
+    expect(DEFAULT_THRESHOLDS['knowledge']).toBe('none');
   });
 });

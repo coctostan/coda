@@ -11,6 +11,7 @@ import { Type } from '@sinclair/typebox';
 import type { ExtensionAPI } from '@mariozechner/pi-coding-agent';
 import {
   codaAdvance,
+  codaConfig,
   codaCreate,
   codaEditBody,
   codaRead,
@@ -68,6 +69,12 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
   });
 
   const statusSchema = Type.Object({});
+
+  const configSchema = Type.Object({
+    action: Type.Union([Type.Literal('get'), Type.Literal('set')]),
+    key: Type.Optional(Type.String()),
+    value: Type.Optional(Type.Unknown()),
+  });
 
   const runTestsSchema = Type.Object({
     mode: Type.Union([Type.Literal('tdd'), Type.Literal('suite')]),
@@ -136,6 +143,17 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string): void {
     parameters: reportFindingsSchema,
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       return executeWithCodaErrorHandling(() => codaReportFindings(params, codaRoot, statePath));
+    },
+  });
+
+  pi.registerTool({
+    name: 'coda_config',
+    label: 'CODA Config',
+    description:
+      "Read or update CODA project configuration (coda.json). Use action 'get' to read config, 'set' with key and value to update a specific setting.",
+    parameters: configSchema,
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      return executeWithCodaErrorHandling(() => codaConfig(params, codaRoot));
     },
   });
 

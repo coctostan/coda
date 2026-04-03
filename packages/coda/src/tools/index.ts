@@ -44,6 +44,7 @@ export { codaKill } from './coda-kill';
 export { codaStatus } from './coda-status';
 export { codaRunTests } from './coda-run-tests';
 export { codaReportFindings } from './coda-report-findings';
+export { codaConfig } from './coda-config';
 export { validateRecordPath } from './path-validation';
 export { sortByNumericSuffix } from './sort-utils';
 
