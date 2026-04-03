@@ -6,14 +6,14 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.6 VCS & Workflow Gaps** (v0.6.0)
 Status: 🚧 In Progress
-Phases: 3 of 4 complete
+Phases: 4 of 4 complete
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 32 | Module Cleanup | 1/1 | ✅ Complete | 2026-04-03 |
 | 33 | VCS Integration + /coda activate | 1/1 | ✅ Complete | 2026-04-03 |
 | 34 | coda_query + Findings Summarization | 1/1 | ✅ Complete | 2026-04-03 |
-| 35 | E2E Validation | TBD | Not started | - |
+| 35 | E2E Validation | 1/1 | ✅ Complete | 2026-04-03 |
 
 ### Phase 32: Module Cleanup
 Focus: Remove old todd.md, walt.md, and legacy TS module files replaced by registry system
