@@ -6,14 +6,14 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.7 Brownfield & Context** (v0.7.0)
 Status: 🚧 In Progress
-Phases: 2 of 11 complete
+Phases: 3 of 11 complete
 Spec: docs/v0.4/00-overview.md
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 36 | Topic-based Section Retrieval | 1/1 | ✅ Complete | 2026-04-03 |
 | 37 | Dependency-based Carry-forward | 1/1 | ✅ Complete | 2026-04-03 |
-| 38 | Adaptive Ceremony Rules | TBD | Not started | - |
+| 38 | Adaptive Ceremony Rules | 1/1 | ✅ Complete | 2026-04-03 |
 | 39 | Context Budget Management | TBD | Not started | - |
 | 40 | Module Init-scan Hooks | TBD | Not started | - |
 | 41 | Brownfield SCAN | TBD | Not started | - |

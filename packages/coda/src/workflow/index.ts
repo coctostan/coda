@@ -75,3 +75,7 @@ export type { ModuleFindingsData } from './module-integration';
 // VCS integration (v0.6)
 export { createBranch, commitTask, getCurrentBranch } from './vcs';
 export type { CreateBranchResult, CommitTaskResult } from './vcs';
+
+// Ceremony rules (v0.7)
+export type { CeremonyRules } from './ceremony';
+export { CEREMONY_DEFAULTS, getCeremonyRules } from './ceremony';
