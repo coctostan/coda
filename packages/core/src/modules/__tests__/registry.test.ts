@@ -18,7 +18,7 @@ describe('createRegistry', () => {
     expect(security!.version).toBe('1.0.0');
     expect(security!.enabled).toBe(true);
     expect(security!.blockThreshold).toBe('critical');
-    expect(security!.hooks).toHaveLength(2);
+    expect(security!.hooks).toHaveLength(3);
 
     const tdd = modules.find((m) => m.name === 'tdd');
     expect(tdd).toBeDefined();
@@ -26,25 +26,25 @@ describe('createRegistry', () => {
     expect(tdd!.version).toBe('1.0.0');
     expect(tdd!.enabled).toBe(true);
     expect(tdd!.blockThreshold).toBe('high');
-    expect(tdd!.hooks).toHaveLength(3);
+    expect(tdd!.hooks).toHaveLength(4);
 
     const architecture = modules.find((m) => m.name === 'architecture');
     expect(architecture).toBeDefined();
     expect(architecture!.domain).toBe('Architecture Patterns');
     expect(architecture!.blockThreshold).toBe('high');
-    expect(architecture!.hooks).toHaveLength(2);
+    expect(architecture!.hooks).toHaveLength(3);
 
     const quality = modules.find((m) => m.name === 'quality');
     expect(quality).toBeDefined();
     expect(quality!.domain).toBe('Quality Assurance');
     expect(quality!.blockThreshold).toBe('high');
-    expect(quality!.hooks).toHaveLength(3);
+    expect(quality!.hooks).toHaveLength(4);
 
     const knowledge = modules.find((m) => m.name === 'knowledge');
     expect(knowledge).toBeDefined();
     expect(knowledge!.domain).toBe('Knowledge Capture');
     expect(knowledge!.blockThreshold).toBe('none');
-    expect(knowledge!.hooks).toHaveLength(2);
+    expect(knowledge!.hooks).toHaveLength(3);
   });
 
   test('disabled module excluded from getEnabledModules', () => {
@@ -92,9 +92,27 @@ describe('createRegistry', () => {
 
   test('getModulesForHook returns empty for unused hook points', () => {
     const registry = createRegistry({}, promptsDir);
-
     expect(registry.getModulesForHook('pre-specify')).toHaveLength(0);
-    expect(registry.getModulesForHook('init-scan')).toHaveLength(0);
+  });
+
+  test('getModulesForHook returns all 5 modules for init-scan sorted by priority', () => {
+    const registry = createRegistry({}, promptsDir);
+
+    const initScan = registry.getModulesForHook('init-scan');
+    expect(initScan).toHaveLength(5);
+    // architecture (50) < security (100) <= tdd (100) <= quality (100) < knowledge (200)
+    expect(initScan[0]!.name).toBe('architecture');
+    expect(initScan[initScan.length - 1]!.name).toBe('knowledge');
+  });
+
+  test('init-scan promptFiles follow {module}/init-scan.md convention', () => {
+    const registry = createRegistry({}, promptsDir);
+    const initScan = registry.getModulesForHook('init-scan');
+
+    for (const mod of initScan) {
+      const path = registry.resolvePromptPath(mod, 'init-scan');
+      expect(path).toBe(`/prompts/${mod.name}/init-scan.md`);
+    }
   });
 
   test('config blockThreshold overrides default', () => {

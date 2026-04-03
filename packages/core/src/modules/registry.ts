@@ -57,6 +57,7 @@ export const MODULE_DEFINITIONS: Record<
     domain: 'Security Patterns',
     version: '1.0.0',
     hooks: [
+      { hookPoint: 'init-scan', priority: 100, promptFile: 'security/init-scan.md' },
       { hookPoint: 'pre-plan', priority: 80, promptFile: 'security/pre-plan.md' },
       { hookPoint: 'post-build', priority: 130, promptFile: 'security/post-build.md' },
     ],
@@ -66,6 +67,7 @@ export const MODULE_DEFINITIONS: Record<
     domain: 'Test-Driven Development',
     version: '1.0.0',
     hooks: [
+      { hookPoint: 'init-scan', priority: 100, promptFile: 'tdd/init-scan.md' },
       { hookPoint: 'pre-build', priority: 100, promptFile: 'tdd/pre-build.md' },
       { hookPoint: 'post-task', priority: 100, promptFile: 'tdd/post-task.md' },
       { hookPoint: 'post-build', priority: 200, promptFile: 'tdd/post-build.md' },
@@ -76,6 +78,7 @@ export const MODULE_DEFINITIONS: Record<
     domain: 'Architecture Patterns',
     version: '1.0.0',
     hooks: [
+      { hookPoint: 'init-scan', priority: 50, promptFile: 'architecture/init-scan.md' },
       { hookPoint: 'pre-plan', priority: 75, promptFile: 'architecture/pre-plan.md' },
       { hookPoint: 'post-build', priority: 125, promptFile: 'architecture/post-build.md' },
     ],
@@ -85,6 +88,7 @@ export const MODULE_DEFINITIONS: Record<
     domain: 'Quality Assurance',
     version: '1.0.0',
     hooks: [
+      { hookPoint: 'init-scan', priority: 100, promptFile: 'quality/init-scan.md' },
       { hookPoint: 'pre-build', priority: 100, promptFile: 'quality/pre-build.md' },
       { hookPoint: 'post-build', priority: 100, promptFile: 'quality/post-build.md' },
       { hookPoint: 'post-unify', priority: 100, promptFile: 'quality/post-unify.md' },
@@ -95,6 +99,7 @@ export const MODULE_DEFINITIONS: Record<
     domain: 'Knowledge Capture',
     version: '1.0.0',
     hooks: [
+      { hookPoint: 'init-scan', priority: 200, promptFile: 'knowledge/init-scan.md' },
       { hookPoint: 'post-build', priority: 300, promptFile: 'knowledge/post-build.md' },
       { hookPoint: 'post-unify', priority: 200, promptFile: 'knowledge/post-unify.md' },
     ],
