@@ -8,6 +8,41 @@ Completed milestone log for this project.
 | v0.2 Autonomous Loops | 2026-04-01 | 4 days | 9 phases, 10 plans, 255 tests |
 | v0.3 Module System | 2026-03-29 | ~2 days | 8 phases, 8 plans, 33 files |
 | v0.4 Live Validation | 2026-03-29 | ~3 hours | 3 phases, 3 plans, 21 files |
+| v0.5 Module Completion | 2026-04-03 | ~1.5 hours | 3 phases, 3 plans, 433 tests |
+
+---
+
+## ✅ v0.5 Module Completion
+
+**Completed:** 2026-04-03
+**Version:** v0.5.0
+**Duration:** ~1.5 hours
+
+### Stats
+
+| Metric | Value |
+|--------|-------|
+| Phases | 3 |
+| Plans | 3 |
+| Tests | 433 passing (179 core + 254 coda) |
+| Modules | 5 (security, tdd, architecture, quality, knowledge) |
+| Prompt files | 12 across 5 modules |
+| TypeScript | `tsc --noEmit` clean |
+| External deps in core | 0 |
+
+### Key Accomplishments
+
+- Fixed 4 E2E findings from v0.4 stress test: `scaffoldCoda()` now creates `state.json` (F4), new `coda_config` tool for get/set on `coda.json` (F2), build loop auto-advance instruction (F6), improved `coda_report_findings` UX (F8).
+- Added 3 new modules (architecture, quality, knowledge) with 7 prompt files and 3 registry definitions — module system scaled from 2 to 5 modules with zero infrastructure changes.
+- Data-driven prompt test framework auto-generated 35 structural tests from MODULE_DEFINITIONS with zero test code changes.
+- Full E2E validation: all 5 modules fire at correct hook boundaries, 10/12 hooks verified, 10 findings produced in live CMUX stress test.
+- Module advisory proven more effective than blocking — security pre-plan warning caused agent to self-correct without needing the block gate.
+- Tests grew from 386 to 433 (+47 new tests).
+
+### Key Decisions
+
+- No new architectural decisions — v0.5 was an execution/validation milestone that proved the v0.3 module architecture scales cleanly.
+- Parallel pals-implementer delegation validated for independent tasks with zero file overlap.
 
 ---
 

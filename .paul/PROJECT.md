@@ -1,27 +1,27 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.4 Live Validation complete: 10 operational fixes + deep code review (10 findings fixed) + E2E real-project stress test (8/8 lifecycle phases PASS) — 386 tests, tsc clean
-
+- v0.5 Module Completion complete: 4 E2E fixes (F4/F2/F6/F8), 3 new modules (architecture/quality/knowledge), full E2E validation — 433 tests, 5 modules, 12 prompts, tsc clean
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
 ## Current State
 | Attribute | Value |
 |-----------|-------|
-| Version | 0.4.0 |
-| Status | Milestone v0.4 complete |
-| Last Updated | 2026-04-02 |
+| Version | 0.5.0 |
+| Status | Milestone v0.5 complete |
+| Last Updated | 2026-04-03 |
 
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
 - `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, and v0.2 submode/loop primitives
-- `@coda/coda` ships tools, modules, FORGE, workflow engine, and Pi integration
+- `@coda/coda` ships tools (9 coda_* tools), modules, FORGE, workflow engine, and Pi integration
+- 5 modules active: security, tdd, architecture, quality, knowledge — 12 prompt files across 5 hook points
 - Autonomous review/revise and verify/correct loops run deterministically from the supported `coda_advance` trigger path
 - Human review gate blocks BUILD until human approval is recorded
 - Exhaustion handling pauses automation and routes operators through `/coda back` and `/coda kill`
-- 386 tests passing (144 core + 242 coda), TypeScript strict, no `any` types in source, zero external deps in core
-- v0.4 Live Validation complete: 10 operational fixes, deep code review (10/11 fixed), E2E real-project stress test (8/8 PASS)
+- 433 tests passing (179 core + 254 coda), TypeScript strict, no `any` types in source, zero external deps in core
+- v0.5 Module Completion complete: 4 E2E fixes, 3 new modules, E2E validation with all 5 modules firing
 
 ## Scope Snapshot
 ### Validated
@@ -52,17 +52,19 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Operational fixes — path traversal, shell injection, forge wiring, findings persistence, module dispatch, create_if_missing, project root, error handling, numeric sorting, write gate (Phase 26 — v0.4)
 - [x] Deep code review — 2 critical + 5 high + 3 medium findings fixed: slug validation, sticky findings, write gate fail-closed, tool_call error handling, config validation (Phase 27 — v0.4)
 - [x] E2E real-project stress test — CMUX-scripted Pi session, GPT-5.4 built TODO CLI through full lifecycle, 8/8 phases PASS, module system fires at runtime (Phase 28 — v0.4)
+- [x] scaffoldCoda state.json creation — `scaffoldCoda()` now creates `state.json` via `createDefaultState()` + `persistState()` (Phase 29 — v0.5, F4)
+- [x] coda_config tool — new `coda_config` tool for get/set on `coda.json` with dot-path support, validation, error handling (Phase 29 — v0.5, F2)
+- [x] Build loop auto-advance — Task Completion Protocol block added for non-correction tasks (Phase 29 — v0.5, F6)
+- [x] Findings submission UX — improved `coda_report_findings` instruction with explicit JSON format, severity enum, examples (Phase 29 — v0.5, F8)
+- [x] Module expansion — architecture, quality, knowledge modules added (7 prompt files, 3 registry definitions), 5 modules total with 12 prompts (Phase 30 — v0.5)
+- [x] E2E validation — all 5 modules fire at correct hook points, 10/12 hooks verified, 10 findings produced in live test (Phase 31 — v0.5)
 ### Active
-- [ ] `scaffoldCoda()` doesn't create `state.json` — coda_advance fails on fresh projects (F4, Critical)
-- [ ] `coda.json` not updatable via coda_* tools — write gate blocks bash, no config tool exists (F2, High)
-- [ ] Build loop doesn't auto-advance between tasks — needs orchestrator nudging (F6, Medium)
-- [ ] `coda_report_findings` UX rough — call not obvious to agent (F8, Medium)
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 - [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- (none — v0.4 complete)
+- (none — v0.5 complete)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -80,14 +82,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.4 progress | 3 phases complete | 3 of 3 complete ✅ |
-| Test suite | Green | 386 passing, 0 failing |
+| Milestone v0.5 progress | 3 phases complete | 3 of 3 complete ✅ |
+| Test suite | Green | 433 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
-| Operational fixes | 10 LIVE issues resolved | 10/10 ✅ |
-| Code review | Critical/high findings fixed | 10/11 fixed (1 low deferred) ✅ |
-| E2E stress test | Full lifecycle PASS | 8/8 phases PASS ✅ |
-| Module runtime | Fires during live session | Security findings produced at runtime ✅ |
-| TDD gate | Enforces test-first | Agent wrote tests first ✅ |
+| Modules | 5 modules active | security, tdd, architecture, quality, knowledge ✅ |
+| Prompt files | 12 across 5 modules | 12/12 ✅ |
+| E2E fixes | F4/F2/F6/F8 resolved | 4/4 ✅ |
+| E2E validation | All modules fire live | 10/12 hooks verified ✅ |
+| Module advisory | Effective prevention | Agent self-corrected on security warning ✅ |
 
 ## Key Decisions
 | Decision | Rationale | Date | Status |
@@ -117,4 +119,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-02 after v0.4 Live Validation milestone completion*
+*Last updated: 2026-04-03 after v0.5 Module Completion milestone completion*
