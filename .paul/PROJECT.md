@@ -1,15 +1,15 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.5 Module Completion complete: 4 E2E fixes (F4/F2/F6/F8), 3 new modules (architecture/quality/knowledge), full E2E validation — 433 tests, 5 modules, 12 prompts, tsc clean
+- v0.6 VCS & Workflow Gaps complete: VCS integration (branch/commit), /coda activate, coda_query tool, module cleanup — 460 tests, 10 tools, 5 modules, tsc clean
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
 ## Current State
 | Attribute | Value |
 |-----------|-------|
-| Version | 0.5.0 |
-| Status | Milestone v0.5 complete |
+| Version | 0.6.0 |
+| Status | Milestone v0.6 complete |
 | Last Updated | 2026-04-03 |
 
 **Current system summary:**
@@ -58,13 +58,19 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Findings submission UX — improved `coda_report_findings` instruction with explicit JSON format, severity enum, examples (Phase 29 — v0.5, F8)
 - [x] Module expansion — architecture, quality, knowledge modules added (7 prompt files, 3 registry definitions), 5 modules total with 12 prompts (Phase 30 — v0.5)
 - [x] E2E validation — all 5 modules fire at correct hook points, 10/12 hooks verified, 10 findings produced in live test (Phase 31 — v0.5)
+- [x] Module cleanup — removed legacy todd.md/walt.md flat prompts and backward-compat modules barrel (Phase 32 — v0.6)
+- [x] VCS integration — `createBranch`, `commitTask`, `getCurrentBranch` in centralized vcs.ts, feat/ vs fix/ branch naming (Phase 33 — v0.6)
+- [x] `/coda activate` command — sets focus_issue + phase from issue record, creates feature branch via VCS (Phase 33 — v0.6)
+- [x] Auto-commit on BUILD task completion — coda_update handler triggers commitTask when task status → "complete" during BUILD (Phase 33 — v0.6)
+- [x] `coda_query` tool — list/filter records by type (issue, task, plan, record, reference, decision) with status/topic/issue filters (Phase 34 — v0.6)
+- [x] E2E validation — 460 tests, 0 fail, all v0.6 features verified (Phase 35 — v0.6)
 ### Active
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 - [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- (none — v0.5 complete)
+- (none — v0.6 complete)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -82,14 +88,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.5 progress | 3 phases complete | 3 of 3 complete ✅ |
-| Test suite | Green | 433 passing, 0 failing |
+| Milestone v0.6 progress | 4 phases complete | 4 of 4 complete ✅ |
+| Test suite | Green | 460 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
+| Pi tools | 10 registered | 10/10 ✅ |
 | Modules | 5 modules active | security, tdd, architecture, quality, knowledge ✅ |
-| Prompt files | 12 across 5 modules | 12/12 ✅ |
-| E2E fixes | F4/F2/F6/F8 resolved | 4/4 ✅ |
-| E2E validation | All modules fire live | 10/12 hooks verified ✅ |
-| Module advisory | Effective prevention | Agent self-corrected on security warning ✅ |
+| VCS integration | Branch + commit | createBranch, commitTask, getCurrentBranch ✅ |
+| /coda activate | Sets focus + branch | 4 test scenarios PASS ✅ |
+| coda_query | 6 types + filters | 13 tests PASS ✅ |
 
 ## Key Decisions
 | Decision | Rationale | Date | Status |
@@ -119,4 +125,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-03 after v0.5 Module Completion milestone completion*
+*Last updated: 2026-04-03 after v0.6 VCS & Workflow Gaps milestone completion*

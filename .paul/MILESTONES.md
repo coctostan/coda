@@ -9,6 +9,42 @@ Completed milestone log for this project.
 | v0.3 Module System | 2026-03-29 | ~2 days | 8 phases, 8 plans, 33 files |
 | v0.4 Live Validation | 2026-03-29 | ~3 hours | 3 phases, 3 plans, 21 files |
 | v0.5 Module Completion | 2026-04-03 | ~1.5 hours | 3 phases, 3 plans, 433 tests |
+| v0.6 VCS & Workflow Gaps | 2026-04-03 | ~1.5 hours | 4 phases, 4 plans, 460 tests |
+
+---
+
+## ✅ v0.6 VCS & Workflow Gaps
+
+**Completed:** 2026-04-03
+**Version:** v0.6.0
+**Duration:** ~1.5 hours
+
+### Stats
+
+| Metric | Value |
+|--------|-------|
+| Phases | 4 |
+| Plans | 4 |
+| Tests | 460 passing (179 core + 281 coda) |
+| Pi tools | 10 (was 9) |
+| Modules | 5 (12 prompt files) |
+| TypeScript | `tsc --noEmit` clean |
+
+### Key Accomplishments
+
+- Removed legacy module artifacts: old todd.md/walt.md flat prompts and backward-compat modules barrel.
+- Built centralized VCS integration (`vcs.ts`): `createBranch` (feat/ vs fix/ by issue type), `commitTask` (per-BUILD-task auto-commit), `getCurrentBranch`. All operations best-effort — VCS failures never break CODA tools.
+- Added `/coda activate <slug>` command: sets `focus_issue` + `phase` from issue record, creates feature branch via VCS.
+- Wired auto-commit into `coda_update` handler: task marked "complete" during BUILD phase triggers `commitTask`.
+- Added `coda_query` tool (10th Pi tool): list/filter records by type (issue, task, plan, record, reference, decision) with status/topic/issue filters. Returns frontmatter only for compact responses.
+- Confirmed findings summarization already implemented — `loadModuleFindingsSummary` wired into verify + unify since v0.3.
+- Tests grew from 433 to 460 (+27 new tests: 13 VCS, 4 activate, 13 query).
+
+### Key Decisions
+
+- VCS lives in L6 (workflow), wired into L7 (Pi) — respects layered architecture perfectly.
+- All git operations use `execSync` — synchronous, simple, best-effort.
+- `registerTools` signature expanded with backward-compatible `projectRoot` default.
 
 ---
 
