@@ -11,7 +11,7 @@ Phases: 1 of 3 complete
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 29 | E2E Fixes | 1/1 | ✅ Complete | 2026-04-03 |
-| 30 | Module Prompts — Architecture + Quality + Knowledge | TBD | Not started | - |
+| 30 | Module Prompts — Architecture + Quality + Knowledge | 0/1 | Planning | - |
 | 31 | E2E Validation | TBD | Not started | - |
 
 ### Phase 29: E2E Fixes
