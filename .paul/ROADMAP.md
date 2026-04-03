@@ -6,11 +6,11 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.5 Module Completion** (v0.5.0)
 Status: 🚧 In Progress
-Phases: 0 of 3 complete
+Phases: 1 of 3 complete
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 29 | E2E Fixes | 0/1 | Planning | - |
+| 29 | E2E Fixes | 1/1 | ✅ Complete | 2026-04-03 |
 | 30 | Module Prompts — Architecture + Quality + Knowledge | TBD | Not started | - |
 | 31 | E2E Validation | TBD | Not started | - |
 
