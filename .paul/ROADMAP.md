@@ -12,7 +12,7 @@ Phases: 2 of 4 complete
 |-------|------|-------|--------|-----------|
 | 32 | Module Cleanup | 1/1 | ✅ Complete | 2026-04-03 |
 | 33 | VCS Integration + /coda activate | 1/1 | ✅ Complete | 2026-04-03 |
-| 34 | coda_query + Findings Summarization | TBD | Not started | - |
+| 34 | coda_query + Findings Summarization | 1/1 | Planning | - |
 | 35 | E2E Validation | TBD | Not started | - |
 
 ### Phase 32: Module Cleanup

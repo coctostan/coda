@@ -15,6 +15,7 @@ import {
   codaConfig,
   codaCreate,
   codaEditBody,
+  codaQuery,
   codaRead,
   codaReportFindings,
   codaRunTests,
@@ -87,6 +88,22 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: s
   const reportFindingsSchema = Type.Object({
     hook_point: Type.String(),
     findings_json: Type.String(),
+  });
+
+  const querySchema = Type.Object({
+    type: Type.Union([
+      Type.Literal('issue'),
+      Type.Literal('task'),
+      Type.Literal('plan'),
+      Type.Literal('record'),
+      Type.Literal('reference'),
+      Type.Literal('decision'),
+    ]),
+    filter: Type.Optional(Type.Object({
+      issue: Type.Optional(Type.String()),
+      topic: Type.Optional(Type.String()),
+      status: Type.Optional(Type.String()),
+    })),
   });
 
   pi.registerTool({
@@ -182,6 +199,16 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: s
         const config = loadCodaConfig(codaRoot);
         return codaRunTests(params, statePath, config);
       });
+    },
+  });
+
+  pi.registerTool({
+    name: 'coda_query',
+    label: 'Query Records',
+    description: 'List and filter .coda/ records by type. Returns frontmatter only for compact results. Types: issue, task, plan, record, reference, decision.',
+    parameters: querySchema,
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      return executeWithCodaErrorHandling(() => codaQuery(params, codaRoot));
     },
   });
 }
