@@ -12,7 +12,7 @@ Phases: 2 of 3 complete
 |-------|------|-------|--------|-----------|
 | 29 | E2E Fixes | 1/1 | ✅ Complete | 2026-04-03 |
 | 30 | Module Prompts — Architecture + Quality + Knowledge | 1/1 | ✅ Complete | 2026-04-03 |
-| 31 | E2E Validation | TBD | Not started | - |
+| 31 | E2E Validation | 0/1 | Planning | - |
 
 ### Phase 29: E2E Fixes
 Focus: Fix 4 issues from v0.4 real-project E2E — F4: state.json creation, F2: coda_config tool, F6: build auto-advance instruction, F8: findings submission UX
