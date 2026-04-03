@@ -4,28 +4,86 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-**v0.6 VCS & Workflow Gaps** (v0.6.0)
-Status: ✅ Complete
-Completed: 2026-04-03
+**v0.7 Brownfield & Context** (v0.7.0)
+Status: 🚧 In Progress
+Phases: 1 of 11 complete
+Spec: docs/v0.4/00-overview.md
 
-## Next Milestone
-Run /paul:discuss-milestone or /paul:milestone to define.
-### Phase 32: Module Cleanup
-Focus: Remove old todd.md, walt.md, and legacy TS module files replaced by registry system
+| Phase | Name | Plans | Status | Completed |
+|-------|------|-------|--------|-----------|
+| 36 | Topic-based Section Retrieval | 1/1 | ✅ Complete | 2026-04-03 |
+| 37 | Dependency-based Carry-forward | TBD | Not started | - |
+| 38 | Adaptive Ceremony Rules | TBD | Not started | - |
+| 39 | Context Budget Management | TBD | Not started | - |
+| 40 | Module Init-scan Hooks | TBD | Not started | - |
+| 41 | Brownfield SCAN | TBD | Not started | - |
+| 42 | Brownfield SYNTHESIZE | TBD | Not started | - |
+| 43 | Brownfield GAP ANALYSIS | TBD | Not started | - |
+| 44 | Brownfield VALIDATE + ORIENT | TBD | Not started | - |
+| 45 | Wire Brownfield into /coda forge | TBD | Not started | - |
+| 46 | E2E Brownfield on coda-test-todo | TBD | Not started | - |
+
+### Phase 36: Topic-based Section Retrieval
+Focus: Topic-based section retrieval in data layer — inject only matching sections from large ref docs
+Spec: docs/v0.4/01-topic-retrieval.md
 Plans: TBD (defined during /paul:plan)
 
-### Phase 33: VCS Integration + /coda activate
-Focus: `vcs.ts` with createBranch/commitTask/getCurrentBranch, `/coda activate` command, wire into BUILD task completion
-Spec: docs/v0.3.1/00-overview.md
+### Phase 37: Dependency-based Carry-forward
+Focus: Dependency-based carry-forward in context builder — BUILD tasks get context from dependency tasks
+Spec: docs/v0.4/02-carry-forward.md
 Plans: TBD (defined during /paul:plan)
 
-### Phase 34: coda_query + Findings Summarization
-Focus: `coda_query` tool (list/filter issues, tasks, plans, decisions, references), cross-phase findings context in context-builder
-Spec: docs/v0.3.1/00-overview.md
+### Phase 38: Adaptive Ceremony Rules
+Focus: Adaptive ceremony rules per issue type — features vs bugfixes vs chores get different phase depths
+Spec: docs/v0.4/03-ceremony.md
 Plans: TBD (defined during /paul:plan)
 
-### Phase 35: E2E Validation
-Focus: Regression test run + VCS smoke test in real lifecycle
+### Phase 39: Context Budget Management
+Focus: Per-phase context limits, module finding summarization, advisory budgets
+Spec: docs/v0.4/04-context-budgets.md
+Depends: Phases 36, 37
+Plans: TBD (defined during /paul:plan)
+
+### Phase 40: Module Init-scan Hooks
+Focus: Module init-scan hook point + dispatch — extends module system for brownfield scanning
+Spec: docs/v0.4/05-brownfield-forge.md
+Depends: v0.3 module system
+Plans: TBD (defined during /paul:plan)
+
+### Phase 41: Brownfield SCAN
+Focus: Module-driven evidence gathering during brownfield FORGE
+Spec: docs/v0.4/05-brownfield-forge.md
+Depends: Phase 40
+Plans: TBD (defined during /paul:plan)
+
+### Phase 42: Brownfield SYNTHESIZE
+Focus: Build reference docs from evidence gathered during SCAN
+Spec: docs/v0.4/05-brownfield-forge.md
+Depends: Phase 41
+Plans: TBD (defined during /paul:plan)
+
+### Phase 43: Brownfield GAP ANALYSIS
+Focus: Module-driven gap assessment with dependency-aware ordering
+Spec: docs/v0.4/05-brownfield-forge.md
+Depends: Phase 42
+Plans: TBD (defined during /paul:plan)
+
+### Phase 44: Brownfield VALIDATE + ORIENT
+Focus: Human review gate + future direction for brownfield onboarding
+Spec: docs/v0.4/05-brownfield-forge.md
+Depends: Phase 43
+Plans: TBD (defined during /paul:plan)
+
+### Phase 45: Wire Brownfield into /coda forge
+Focus: Detect backdrop, route to greenfield or brownfield in forge command
+Spec: docs/v0.4/05-brownfield-forge.md
+Depends: Phases 41–44
+Plans: TBD (defined during /paul:plan)
+
+### Phase 46: E2E Brownfield on coda-test-todo
+Focus: Full brownfield forge run on coda-test-todo project — validates entire flow
+Spec: docs/v0.4/E2E-TEST-SCRIPT-v0.4.md
+Depends: All previous phases
 Plans: TBD (defined during /paul:plan)
 ## Completed Milestones
 <details>
@@ -126,4 +184,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-03 — v0.6 VCS & Workflow Gaps milestone completed*
+*Roadmap updated: 2026-04-03 — v0.7 Brownfield & Context milestone created*

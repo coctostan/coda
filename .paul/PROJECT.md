@@ -1,15 +1,15 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.6 VCS & Workflow Gaps complete: VCS integration (branch/commit), /coda activate, coda_query tool, module cleanup — 460 tests, 10 tools, 5 modules, tsc clean
+- v0.7 Brownfield & Context in progress: topic-based section retrieval shipped — 472 tests, 10 tools, 5 modules, tsc clean
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
 ## Current State
 | Attribute | Value |
 |-----------|-------|
-| Version | 0.6.0 |
-| Status | Milestone v0.6 complete |
+| Version | 0.7.0 |
+| Status | Milestone v0.7 in progress |
 | Last Updated | 2026-04-03 |
 
 **Current system summary:**
@@ -64,13 +64,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Auto-commit on BUILD task completion — coda_update handler triggers commitTask when task status → "complete" during BUILD (Phase 33 — v0.6)
 - [x] `coda_query` tool — list/filter records by type (issue, task, plan, record, reference, decision) with status/topic/issue filters (Phase 34 — v0.6)
 - [x] E2E validation — 460 tests, 0 fail, all v0.6 features verified (Phase 35 — v0.6)
+- [x] Topic-based section retrieval — getSectionsByTopics + getSectionHeadings in core data layer, 12 new tests (Phase 36 — v0.7)
 ### Active
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 - [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- (none — v0.6 complete)
+- Topic-based section retrieval integration into context-builder (Phase 39)
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -88,14 +89,12 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.6 progress | 4 phases complete | 4 of 4 complete ✅ |
-| Test suite | Green | 460 passing, 0 failing |
+| Milestone v0.7 progress | 11 phases | 1 of 11 complete |
+| Test suite | Green | 472 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Pi tools | 10 registered | 10/10 ✅ |
 | Modules | 5 modules active | security, tdd, architecture, quality, knowledge ✅ |
-| VCS integration | Branch + commit | createBranch, commitTask, getCurrentBranch ✅ |
-| /coda activate | Sets focus + branch | 4 test scenarios PASS ✅ |
-| coda_query | 6 types + filters | 13 tests PASS ✅ |
+| Topic retrieval | getSectionsByTopics + getSectionHeadings | Phase 36 PASS ✅ |
 
 ## Key Decisions
 | Decision | Rationale | Date | Status |
@@ -125,4 +124,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-03 after v0.6 VCS & Workflow Gaps milestone completion*
+*Last updated: 2026-04-03 after Phase 36 (Topic-based Section Retrieval)*

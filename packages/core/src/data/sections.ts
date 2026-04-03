@@ -103,3 +103,95 @@ export function replaceSection(body: string, heading: string, content: string): 
 
   return [...before, ...replacement, ...after].join('\n');
 }
+
+/**
+ * Parse all `## Heading` sections from a markdown body and return those
+ * matching any of the given topics via case-insensitive substring.
+ *
+ * Matching rules:
+ * - Case-insensitive substring: topic "auth" matches "## Authentication"
+ * - Multiple topics use OR logic: sections matching ANY topic are included
+ * - The "## Overview" section is always included regardless of topics (exact heading match)
+ * - Empty topics array returns all sections (no filtering)
+ *
+ * @param body - The markdown body string (without frontmatter)
+ * @param topics - Array of topic strings to match against section headings
+ * @returns Array of matching sections with heading name and trimmed content
+ */
+export function getSectionsByTopics(
+  body: string,
+  topics: string[]
+): Array<{ heading: string; content: string }> {
+  const lines = body.split('\n');
+  const sections: Array<{ heading: string; content: string }> = [];
+
+  // Parse all sections
+  let currentHeading: string | null = null;
+  let currentLines: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line !== undefined && line.trim().startsWith('## ')) {
+      // Save previous section if any
+      if (currentHeading !== null) {
+        sections.push({
+          heading: currentHeading,
+          content: currentLines.join('\n').trim(),
+        });
+      }
+      currentHeading = line.trim().slice(3); // Remove '## ' prefix
+      currentLines = [];
+    } else if (currentHeading !== null) {
+      currentLines.push(line ?? '');
+    }
+  }
+
+  // Push final section
+  if (currentHeading !== null) {
+    sections.push({
+      heading: currentHeading,
+      content: currentLines.join('\n').trim(),
+    });
+  }
+
+  // If no topics, return all sections
+  if (topics.length === 0) {
+    return sections;
+  }
+
+  // Filter by topics (case-insensitive substring) + always include "Overview"
+  const lowerTopics = topics.map((t) => t.toLowerCase());
+
+  return sections.filter((section) => {
+    const lowerHeading = section.heading.toLowerCase();
+
+    // Always include "Overview" (exact heading match, case-insensitive)
+    if (lowerHeading === 'overview') {
+      return true;
+    }
+
+    // Include if any topic is a substring of the heading
+    return lowerTopics.some((topic) => lowerHeading.includes(topic));
+  });
+}
+
+/**
+ * Get a compact list of all `## Heading` names from a markdown body.
+ * Useful for letting the agent know what sections exist without loading content.
+ *
+ * @param body - The markdown body string (without frontmatter)
+ * @returns Array of heading names in document order (without `## ` prefix)
+ */
+export function getSectionHeadings(body: string): string[] {
+  const headings: string[] = [];
+  const lines = body.split('\n');
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line !== undefined && line.trim().startsWith('## ')) {
+      headings.push(line.trim().slice(3));
+    }
+  }
+
+  return headings;
+}
