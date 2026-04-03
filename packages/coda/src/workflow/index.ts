@@ -45,6 +45,7 @@ export {
   loadVerificationFailure,
   loadVerificationFailures,
   getSourceTaskSummaries,
+  getCarryForwardSummaries,
 } from './context-builder';
 
 // Phase runner

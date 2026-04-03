@@ -11,13 +11,13 @@ Version: v0.7.0
 ## Current Position
 
 Milestone: v0.7 Brownfield & Context
-Phase: 37 of 46 (Dependency-based Carry-forward)
+Phase: 38 of 46 (Adaptive Ceremony Rules)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-04-03T04:35:00Z — Phase 36 complete, transitioned to Phase 37
+Last activity: 2026-04-03T04:55:00Z — Phase 37 complete, transitioned to Phase 38
 
 Progress:
-- v0.7 Brownfield & Context: [█░░░░░░░░░] 9%
+- v0.7 Brownfield & Context: [██░░░░░░░░] 18%
 
 ## Loop Position
 
@@ -42,9 +42,9 @@ Branch: main
 Remote: https://github.com/coctostan/coda.git
 
 ## Session Continuity
-Last session: 2026-04-03T04:35:00Z
-Stopped at: Phase 36 complete, ready to plan Phase 37
-Next action: /paul:plan for Phase 37
+Last session: 2026-04-03T04:55:00Z
+Stopped at: Phase 37 complete, ready to plan Phase 38
+Next action: /paul:plan for Phase 38
 Resume file: .paul/ROADMAP.md
 
 ---

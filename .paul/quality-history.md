@@ -24,3 +24,4 @@
 | 2026-04-03 | 34-coda-query | 460 pass / 0 fail | N/A | clean | N/A | ↑ improving (+13 new query tests, 10 tools) |
 | 2026-04-03 | 35-e2e-validation | 460 pass / 0 fail | N/A | clean | N/A | → stable (observational — all v0.6 features validated) |
 | 2026-04-03 | 36-topic-section-retrieval | 472 pass / 0 fail | N/A | clean | N/A | ↑ improving (+12 new topic/heading tests) |
+| 2026-04-03 | 37-dependency-carry-forward | 478 pass / 0 fail | N/A | clean | N/A | ↑ improving (+6 new carry-forward tests) |

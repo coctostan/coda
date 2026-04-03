@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.7 Brownfield & Context in progress: topic-based section retrieval shipped — 472 tests, 10 tools, 5 modules, tsc clean
+- v0.7 Brownfield & Context in progress: topic retrieval + carry-forward shipped — 478 tests, 10 tools, 5 modules, tsc clean
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
@@ -65,6 +65,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] `coda_query` tool — list/filter records by type (issue, task, plan, record, reference, decision) with status/topic/issue filters (Phase 34 — v0.6)
 - [x] E2E validation — 460 tests, 0 fail, all v0.6 features verified (Phase 35 — v0.6)
 - [x] Topic-based section retrieval — getSectionsByTopics + getSectionHeadings in core data layer, 12 new tests (Phase 36 — v0.7)
+- [x] Dependency-based carry-forward — getCarryForwardSummaries with 3 selection paths (dependency/correction/recency), 6 new tests (Phase 37 — v0.7)
 ### Active
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
@@ -89,8 +90,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.7 progress | 11 phases | 1 of 11 complete |
-| Test suite | Green | 472 passing, 0 failing |
+| Milestone v0.7 progress | 11 phases | 2 of 11 complete |
+| Test suite | Green | 478 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Pi tools | 10 registered | 10/10 ✅ |
 | Modules | 5 modules active | security, tdd, architecture, quality, knowledge ✅ |
