@@ -31,3 +31,4 @@
 | 2026-04-03 | 41-brownfield-scan | 546 pass / 0 fail | N/A | clean | N/A | ↑ improving (+12 new brownfield scan tests) |
 | 2026-04-03 | 42-brownfield-synthesize | 551 pass / 0 fail | N/A | clean | N/A | ↑ improving (+5 new synthesize tests) |
 | 2026-04-03 | 43-brownfield-gap-analysis | 558 pass / 0 fail | N/A | clean | N/A | ↑ improving (+7 new gap analysis tests) |
+| 2026-04-03 | 44-brownfield-validate-orient | 567 pass / 0 fail | N/A | clean | N/A | ↑ improving (+9 new validate/orient tests) |

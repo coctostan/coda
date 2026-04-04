@@ -14,6 +14,12 @@ import {
   assembleGapAnalysisContext,
   writeGapAnalysis,
   readGapAnalysis,
+  VALIDATE_QUESTIONS,
+  assembleValidateContext,
+  ORIENT_QUESTIONS,
+  assembleOrientContext,
+  writeMilestonePlan,
+  readMilestonePlan,
 } from '../brownfield';
 import { writeEvidence } from '../evidence';
 import type { EvidenceFrontmatter } from '../evidence';
@@ -262,6 +268,99 @@ describe('Brownfield GAP ANALYSIS', () => {
 
   test('readGapAnalysis returns null when no file', () => {
     const result = readGapAnalysis(codaRoot);
+    expect(result).toBeNull();
+  });
+});
+
+describe('Brownfield VALIDATE', () => {
+  let tempDir: string;
+  let codaRoot: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'coda-validate-'));
+    codaRoot = join(tempDir, '.coda');
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  test('VALIDATE_QUESTIONS has 4 review topics', () => {
+    expect(VALIDATE_QUESTIONS).toHaveLength(4);
+    expect(VALIDATE_QUESTIONS.some((q) => q.includes('Capabilities'))).toBe(true);
+    expect(VALIDATE_QUESTIONS.some((q) => q.includes('Gap priorities'))).toBe(true);
+    expect(VALIDATE_QUESTIONS.some((q) => q.includes('Security posture'))).toBe(true);
+    expect(VALIDATE_QUESTIONS.some((q) => q.includes('Growth constraints'))).toBe(true);
+  });
+
+  test('assembleValidateContext returns gap analysis when it exists', () => {
+    writeGapAnalysis(codaRoot, '## Summary\nGaps found.\n');
+    const ctx = assembleValidateContext(codaRoot);
+    expect(ctx.gapAnalysis).not.toBeNull();
+    expect(ctx.gapAnalysis!.body).toContain('Gaps found');
+    expect(ctx.questions).toBe(VALIDATE_QUESTIONS);
+  });
+
+  test('assembleValidateContext returns null gapAnalysis when none exists', () => {
+    const ctx = assembleValidateContext(codaRoot);
+    expect(ctx.gapAnalysis).toBeNull();
+  });
+
+  test('assembleValidateContext includes evidence module names', () => {
+    writeEvidence(codaRoot, 'security', {
+      module: 'security', scanned_at: '2026-04-03T10:00:00Z',
+      files_read: [], commands_run: [],
+    }, '## Security\n');
+
+    const ctx = assembleValidateContext(codaRoot);
+    expect(ctx.evidenceSummary).toContain('security');
+  });
+});
+
+describe('Brownfield ORIENT', () => {
+  let tempDir: string;
+  let codaRoot: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'coda-orient-'));
+    codaRoot = join(tempDir, '.coda');
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  test('ORIENT_QUESTIONS has 4 direction topics', () => {
+    expect(ORIENT_QUESTIONS).toHaveLength(4);
+    expect(ORIENT_QUESTIONS.some((q) => q.includes('take this'))).toBe(true);
+    expect(ORIENT_QUESTIONS.some((q) => q.includes('pain point'))).toBe(true);
+    expect(ORIENT_QUESTIONS.some((q) => q.includes('NOT change'))).toBe(true);
+    expect(ORIENT_QUESTIONS.some((q) => q.includes('roadmap'))).toBe(true);
+  });
+
+  test('assembleOrientContext returns questions and evidence', () => {
+    const ctx = assembleOrientContext(codaRoot);
+    expect(ctx.questions).toBe(ORIENT_QUESTIONS);
+    expect(ctx.evidenceSummary).toEqual([]);
+    expect(ctx.gapAnalysis).toBeNull();
+  });
+
+  test('writeMilestonePlan creates file at correct path', () => {
+    const path = writeMilestonePlan(codaRoot, '## Milestones\n1. Add CI\n2. Fix auth\n');
+    expect(path).toContain('MILESTONE-PLAN.md');
+    expect(existsSync(path)).toBe(true);
+  });
+
+  test('readMilestonePlan returns parsed content after write', () => {
+    writeMilestonePlan(codaRoot, '## Milestones\nFirst milestone: CI pipeline.\n');
+    const result = readMilestonePlan(codaRoot);
+    expect(result).not.toBeNull();
+    expect(result!.frontmatter['title']).toBe('Milestone Plan');
+    expect(result!.body).toContain('CI pipeline');
+  });
+
+  test('readMilestonePlan returns null when no file', () => {
+    const result = readMilestonePlan(codaRoot);
     expect(result).toBeNull();
   });
 });

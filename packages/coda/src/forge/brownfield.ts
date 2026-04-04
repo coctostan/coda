@@ -326,3 +326,133 @@ export function readGapAnalysis(
     return null;
   }
 }
+
+// ─── VALIDATE ─────────────────────────────────────────────
+
+/**
+ * Structured review questions for human validation of brownfield analysis.
+ * The agent presents these to the human and incorporates corrections.
+ */
+export const VALIDATE_QUESTIONS: readonly string[] = [
+  'Capabilities: "I found N capabilities in the system reference. Missing any? Wrong ones?"',
+  'Gap priorities: "Here are the critical gaps ranked by dependency. Agree with the order?"',
+  'Security posture: "Here is the security assessment. Any compliance requirements I should know about?"',
+  'Growth constraints: "Flexibility assessment. Any planned changes that make something urgent?"',
+] as const;
+
+/**
+ * Context for the VALIDATE phase of brownfield FORGE.
+ */
+export interface ValidateContext {
+  /** Gap analysis content, or null if not yet produced. */
+  gapAnalysis: { body: string } | null;
+  /** Module names from evidence (for quick reference). */
+  evidenceSummary: string[];
+  /** Structured review questions. */
+  questions: readonly string[];
+}
+
+/**
+ * Assemble the validation context for brownfield FORGE.
+ *
+ * Reads the gap analysis and evidence, then packages with review questions.
+ * The agent presents these to the human for structured feedback.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @returns ValidateContext for the agent to drive the review conversation
+ */
+export function assembleValidateContext(codaRoot: string): ValidateContext {
+  const gap = readGapAnalysis(codaRoot);
+  const evidenceRecords = readAllEvidence(codaRoot);
+  const evidenceSummary = evidenceRecords.map((r) => r.frontmatter.module);
+
+  return {
+    gapAnalysis: gap ? { body: gap.body } : null,
+    evidenceSummary,
+    questions: VALIDATE_QUESTIONS,
+  };
+}
+
+// ─── ORIENT ───────────────────────────────────────────────
+
+/**
+ * Future direction questions for the ORIENT phase.
+ * Asked only after VALIDATE confirms the current-state documentation.
+ */
+export const ORIENT_QUESTIONS: readonly string[] = [
+  'Where do you want to take this project?',
+  'What is the biggest pain point or opportunity?',
+  'What should we NOT change? (stability boundaries)',
+  'What are the roadmap priorities?',
+] as const;
+
+/**
+ * Context for the ORIENT phase of brownfield FORGE.
+ */
+export interface OrientContext {
+  /** Gap analysis content, or null if not yet produced. */
+  gapAnalysis: { body: string } | null;
+  /** Module names from evidence. */
+  evidenceSummary: string[];
+  /** Direction questions. */
+  questions: readonly string[];
+}
+
+/**
+ * Assemble the orientation context for brownfield FORGE.
+ *
+ * Similar to validate context but with direction questions instead of review.
+ * The agent uses this to capture the human's vision and priorities.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @returns OrientContext for the agent to drive the direction conversation
+ */
+export function assembleOrientContext(codaRoot: string): OrientContext {
+  const gap = readGapAnalysis(codaRoot);
+  const evidenceRecords = readAllEvidence(codaRoot);
+  const evidenceSummary = evidenceRecords.map((r) => r.frontmatter.module);
+
+  return {
+    gapAnalysis: gap ? { body: gap.body } : null,
+    evidenceSummary,
+    questions: ORIENT_QUESTIONS,
+  };
+}
+
+/**
+ * Write the milestone plan artifact to `.coda/forge/initial/MILESTONE-PLAN.md`.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param body - Markdown body with the milestone plan content
+ * @returns Absolute path to the written file
+ */
+export function writeMilestonePlan(codaRoot: string, body: string): string {
+  const dir = join(codaRoot, 'forge', 'initial');
+  mkdirSync(dir, { recursive: true });
+
+  const filePath = join(dir, 'MILESTONE-PLAN.md');
+  writeRecord(filePath, {
+    title: 'Milestone Plan',
+    generated_at: new Date().toISOString(),
+  }, body);
+  return filePath;
+}
+
+/**
+ * Read the milestone plan artifact.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @returns Parsed record with frontmatter and body, or null if not found
+ */
+export function readMilestonePlan(
+  codaRoot: string
+): { frontmatter: Record<string, unknown>; body: string } | null {
+  const filePath = join(codaRoot, 'forge', 'initial', 'MILESTONE-PLAN.md');
+  if (!existsSync(filePath)) return null;
+
+  try {
+    return readRecord<Record<string, unknown>>(filePath);
+  } catch {
+    return null;
+  }
+}
