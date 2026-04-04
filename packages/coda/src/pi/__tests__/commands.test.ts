@@ -378,6 +378,53 @@ describe('Pi Commands', () => {
     }
   });
 
+  test('forge detects brownfield and scaffolds with scan context', async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), 'coda-forge-brownfield-'));
+    const codaRoot = join(projectRoot, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      // Create code indicators for brownfield detection
+      writeFileSync(join(projectRoot, 'package.json'), '{}');
+      mkdirSync(join(projectRoot, 'src'));
+
+      registerCommands(pi, codaRoot, projectRoot);
+      await commands[0]?.options.handler('forge', ctx as never);
+
+      // .coda/ should be scaffolded
+      expect(existsSync(join(codaRoot, 'coda.json'))).toBe(true);
+      // Notification should mention brownfield
+      const msg = notifications[notifications.length - 1]?.message ?? '';
+      expect(msg).toContain('Brownfield');
+      expect(msg).toContain('package.json');
+      expect(msg).toContain('src/');
+    } finally {
+      rmSync(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  test('forge brownfield message includes next step guidance', async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), 'coda-forge-brownfield-'));
+    const codaRoot = join(projectRoot, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      writeFileSync(join(projectRoot, 'package.json'), '{}');
+
+      registerCommands(pi, codaRoot, projectRoot);
+      await commands[0]?.options.handler('forge', ctx as never);
+
+      const msg = notifications[notifications.length - 1]?.message ?? '';
+      expect(msg).toContain('Brownfield SCAN');
+      expect(msg).toContain('coda_create');
+      expect(msg).toContain('evidence');
+    } finally {
+      rmSync(projectRoot, { recursive: true, force: true });
+    }
+  });
+
   test('advance auto-approves pending human review before moving to build', async () => {
     const tempDir = setupPendingHumanReviewCodaRoot();
     const codaRoot = join(tempDir, '.coda');

@@ -6,7 +6,7 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 ## Current Milestone
 **v0.7 Brownfield & Context** (v0.7.0)
 Status: 🚧 In Progress
-Phases: 9 of 11 complete
+Phases: 10 of 11 complete
 Spec: docs/v0.4/00-overview.md
 
 | Phase | Name | Plans | Status | Completed |
@@ -20,7 +20,7 @@ Spec: docs/v0.4/00-overview.md
 | 42 | Brownfield SYNTHESIZE | 1/1 | ✅ Complete | 2026-04-03 |
 | 43 | Brownfield GAP ANALYSIS | 1/1 | ✅ Complete | 2026-04-03 |
 | 44 | Brownfield VALIDATE + ORIENT | 1/1 | ✅ Complete | 2026-04-03 |
-| 45 | Wire Brownfield into /coda forge | TBD | Not started | - |
+| 45 | Wire Brownfield into /coda forge | 1/1 | ✅ Complete | 2026-04-03 |
 | 46 | E2E Brownfield on coda-test-todo | TBD | Not started | - |
 
 ### Phase 36: Topic-based Section Retrieval

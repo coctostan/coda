@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.7 Brownfield & Context in progress: all 5 brownfield phases shipped (SCAN→SYNTHESIZE→GAP→VALIDATE→ORIENT) — 567 tests, tsc clean
+- v0.7 Brownfield & Context in progress: brownfield wired into /coda forge, 1 phase remaining (E2E) — 569 tests, tsc clean
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
@@ -73,6 +73,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Brownfield SYNTHESIZE — assembleSynthesizeContext, SYNTHESIZE_REF_DOCS (4 ref docs), evidence-to-ref-doc mapping (Phase 42 — v0.7)
 - [x] Brownfield GAP ANALYSIS — GapDomain with dependency ordering, GAP-ANALYSIS.md artifact I/O (Phase 43 — v0.7)
 - [x] Brownfield VALIDATE + ORIENT — structured review + direction questions, MILESTONE-PLAN.md I/O (Phase 44 — v0.7)
+- [x] Wire brownfield into /coda forge — detectBackdrop routing, brownfield scan context in command (Phase 45 — v0.7)
 ### Active
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
@@ -97,8 +98,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.7 progress | 11 phases | 9 of 11 complete |
-| Test suite | Green | 567 passing, 0 failing |
+| Milestone v0.7 progress | 11 phases | 10 of 11 complete |
+| Test suite | Green | 569 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Pi tools | 10 registered | 10/10 ✅ |
 | Modules | 5 modules active | security, tdd, architecture, quality, knowledge ✅ |
