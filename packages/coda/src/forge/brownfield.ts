@@ -7,9 +7,9 @@
  * returned ScanContext to read files, run commands, and produce evidence.
  */
 
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { createRegistry } from '@coda/core';
+import { createRegistry, readRecord, writeRecord } from '@coda/core';
 import type { RegistryConfig } from '@coda/core';
 import { createDispatcher } from '@coda/core';
 import { readAllEvidence } from './evidence';
@@ -205,4 +205,124 @@ export function assembleSynthesizeContext(codaRoot: string): SynthesizeContext {
     refDocs: SYNTHESIZE_REF_DOCS,
     evidenceCount: evidence.length,
   };
+}
+
+// ─── GAP ANALYSIS ──────────────────────────────────────────
+
+/**
+ * A domain to assess during gap analysis, with dependency ordering.
+ */
+export interface GapDomain {
+  /** Domain name (e.g., 'quality'). */
+  name: string;
+  /** What to assess in this domain. */
+  description: string;
+  /** Domains that should be fixed first (dependency ordering). */
+  dependsOn: string[];
+}
+
+/**
+ * Domains to assess during brownfield gap analysis.
+ * Ordered by dependency — domains with no dependencies come first,
+ * enabling recommendations like "Add CI before increasing test coverage."
+ */
+export const GAP_DOMAINS: readonly GapDomain[] = [
+  {
+    name: 'quality',
+    description: 'CI pipeline, test framework, linting, type checking',
+    dependsOn: [],
+  },
+  {
+    name: 'security',
+    description: 'Auth patterns, input validation, secrets, dependency vulnerabilities',
+    dependsOn: ['quality'],
+  },
+  {
+    name: 'architecture',
+    description: 'Layer boundaries, module structure, god files, circular dependencies',
+    dependsOn: [],
+  },
+  {
+    name: 'data',
+    description: 'Schema health, migration safety, query patterns',
+    dependsOn: ['architecture'],
+  },
+  {
+    name: 'documentation',
+    description: 'README, API docs, inline docs, decision records',
+    dependsOn: [],
+  },
+] as const;
+
+/**
+ * The assembled gap analysis context for brownfield FORGE.
+ */
+export interface GapAnalysisContext {
+  /** Evidence content from SCAN, mapped to module name and body. */
+  evidence: Array<{ module: string; body: string }>;
+  /** Domains to assess with dependency ordering. */
+  domains: readonly GapDomain[];
+  /** How many evidence files were found. */
+  evidenceCount: number;
+}
+
+/**
+ * Assemble the gap analysis context for brownfield FORGE.
+ *
+ * Reads all evidence from SCAN and packages it with the domain specs.
+ * The agent uses this to produce a dependency-ordered gap assessment.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @returns GapAnalysisContext for the agent to act on
+ */
+export function assembleGapAnalysisContext(codaRoot: string): GapAnalysisContext {
+  const evidenceRecords = readAllEvidence(codaRoot);
+  const evidence = evidenceRecords.map((r) => ({
+    module: r.frontmatter.module,
+    body: r.body,
+  }));
+
+  return {
+    evidence,
+    domains: GAP_DOMAINS,
+    evidenceCount: evidence.length,
+  };
+}
+
+/**
+ * Write the gap analysis artifact to `.coda/forge/initial/GAP-ANALYSIS.md`.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param body - Markdown body with the gap analysis content
+ * @returns Absolute path to the written file
+ */
+export function writeGapAnalysis(codaRoot: string, body: string): string {
+  const dir = join(codaRoot, 'forge', 'initial');
+  mkdirSync(dir, { recursive: true });
+
+  const filePath = join(dir, 'GAP-ANALYSIS.md');
+  writeRecord(filePath, {
+    title: 'Gap Analysis',
+    generated_at: new Date().toISOString(),
+  }, body);
+  return filePath;
+}
+
+/**
+ * Read the gap analysis artifact.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @returns Parsed record with frontmatter and body, or null if not found
+ */
+export function readGapAnalysis(
+  codaRoot: string
+): { frontmatter: Record<string, unknown>; body: string } | null {
+  const filePath = join(codaRoot, 'forge', 'initial', 'GAP-ANALYSIS.md');
+  if (!existsSync(filePath)) return null;
+
+  try {
+    return readRecord<Record<string, unknown>>(filePath);
+  } catch {
+    return null;
+  }
 }

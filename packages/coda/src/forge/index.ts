@@ -27,7 +27,7 @@ export type { EvidenceFrontmatter, EvidenceRecord } from './evidence';
 export { EVIDENCE_DIR, writeEvidence, readEvidence, readAllEvidence } from './evidence';
 
 // Brownfield SCAN (v0.7)
-export type { ScanContext, RefDocSpec, SynthesizeContext } from './brownfield';
+export type { ScanContext, RefDocSpec, SynthesizeContext, GapDomain, GapAnalysisContext } from './brownfield';
 export {
   UNIVERSAL_SCAN_TARGETS,
   UNIVERSAL_COMMANDS,
@@ -36,4 +36,8 @@ export {
   assembleScanContext,
   SYNTHESIZE_REF_DOCS,
   assembleSynthesizeContext,
+  GAP_DOMAINS,
+  assembleGapAnalysisContext,
+  writeGapAnalysis,
+  readGapAnalysis,
 } from './brownfield';

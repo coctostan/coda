@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
 import { tmpdir } from 'os';
 import {
@@ -10,6 +10,10 @@ import {
   UNIVERSAL_COMMANDS,
   assembleSynthesizeContext,
   SYNTHESIZE_REF_DOCS,
+  GAP_DOMAINS,
+  assembleGapAnalysisContext,
+  writeGapAnalysis,
+  readGapAnalysis,
 } from '../brownfield';
 import { writeEvidence } from '../evidence';
 import type { EvidenceFrontmatter } from '../evidence';
@@ -184,5 +188,80 @@ describe('Brownfield SYNTHESIZE', () => {
     for (const doc of SYNTHESIZE_REF_DOCS) {
       expect(doc.sourceEvidence.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('Brownfield GAP ANALYSIS', () => {
+  let tempDir: string;
+  let codaRoot: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'coda-gap-'));
+    codaRoot = join(tempDir, '.coda');
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  function makeFm(module: string): EvidenceFrontmatter {
+    return {
+      module,
+      scanned_at: '2026-04-03T10:00:00Z',
+      files_read: ['src/index.ts'],
+      commands_run: ['ls'],
+    };
+  }
+
+  test('GAP_DOMAINS has dependency ordering', () => {
+    const quality = GAP_DOMAINS.find((d) => d.name === 'quality');
+    const security = GAP_DOMAINS.find((d) => d.name === 'security');
+    expect(quality!.dependsOn).toEqual([]);
+    expect(security!.dependsOn).toContain('quality');
+  });
+
+  test('GAP_DOMAINS has all expected domains', () => {
+    const names = GAP_DOMAINS.map((d) => d.name);
+    expect(names).toContain('quality');
+    expect(names).toContain('security');
+    expect(names).toContain('architecture');
+    expect(names).toContain('data');
+    expect(names).toContain('documentation');
+    expect(GAP_DOMAINS).toHaveLength(5);
+  });
+
+  test('assembleGapAnalysisContext returns evidence + domains', () => {
+    writeEvidence(codaRoot, 'security', makeFm('security'), '## Security gaps\n');
+
+    const ctx = assembleGapAnalysisContext(codaRoot);
+    expect(ctx.evidenceCount).toBe(1);
+    expect(ctx.evidence[0]!.module).toBe('security');
+    expect(ctx.domains).toBe(GAP_DOMAINS);
+  });
+
+  test('assembleGapAnalysisContext with no evidence', () => {
+    const ctx = assembleGapAnalysisContext(codaRoot);
+    expect(ctx.evidenceCount).toBe(0);
+    expect(ctx.evidence).toEqual([]);
+    expect(ctx.domains).toBe(GAP_DOMAINS);
+  });
+
+  test('writeGapAnalysis creates file at correct path', () => {
+    const path = writeGapAnalysis(codaRoot, '## Summary Dashboard\nAll clear.\n');
+    expect(path).toContain('GAP-ANALYSIS.md');
+    expect(existsSync(path)).toBe(true);
+  });
+
+  test('readGapAnalysis returns parsed content', () => {
+    writeGapAnalysis(codaRoot, '## Summary Dashboard\nCritical gaps found.\n');
+    const result = readGapAnalysis(codaRoot);
+    expect(result).not.toBeNull();
+    expect(result!.frontmatter['title']).toBe('Gap Analysis');
+    expect(result!.body).toContain('Critical gaps found');
+  });
+
+  test('readGapAnalysis returns null when no file', () => {
+    const result = readGapAnalysis(codaRoot);
+    expect(result).toBeNull();
   });
 });
