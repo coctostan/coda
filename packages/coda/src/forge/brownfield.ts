@@ -12,6 +12,7 @@ import { join } from 'path';
 import { createRegistry } from '@coda/core';
 import type { RegistryConfig } from '@coda/core';
 import { createDispatcher } from '@coda/core';
+import { readAllEvidence } from './evidence';
 
 /**
  * Universal files to check for during brownfield scanning.
@@ -120,5 +121,88 @@ export function assembleScanContext(
     sourceDir,
     universalCommands,
     modulePrompts,
+  };
+}
+
+// ─── SYNTHESIZE ────────────────────────────────────────────
+
+/**
+ * Specification for a reference document to produce during SYNTHESIZE.
+ */
+export interface RefDocSpec {
+  /** Filename (e.g., 'ref-system.md'). */
+  name: string;
+  /** Human-readable title. */
+  title: string;
+  /** What this ref doc covers. */
+  description: string;
+  /** Which evidence modules contribute to this doc. */
+  sourceEvidence: string[];
+}
+
+/**
+ * Reference documents to produce during brownfield SYNTHESIZE.
+ * Each entry specifies what the doc covers and which evidence modules feed into it.
+ */
+export const SYNTHESIZE_REF_DOCS: readonly RefDocSpec[] = [
+  {
+    name: 'ref-system.md',
+    title: 'System Reference',
+    description: 'Capabilities assembled from evidence. Structured by capability, not by module.',
+    sourceEvidence: ['universal', 'architecture', 'security', 'tdd', 'quality'],
+  },
+  {
+    name: 'ref-architecture.md',
+    title: 'Architecture Reference',
+    description: 'Patterns, layers, data flow, module boundaries.',
+    sourceEvidence: ['architecture', 'quality'],
+  },
+  {
+    name: 'ref-conventions.md',
+    title: 'Conventions Reference',
+    description: 'Testing patterns, code style, security practices.',
+    sourceEvidence: ['quality', 'security', 'tdd'],
+  },
+  {
+    name: 'ref-prd.md',
+    title: 'Product Requirements',
+    description: 'Why the project exists, who uses it, what it does.',
+    sourceEvidence: ['universal', 'knowledge'],
+  },
+] as const;
+
+/**
+ * The assembled synthesis context returned for brownfield SYNTHESIZE.
+ */
+export interface SynthesizeContext {
+  /** Evidence content from SCAN, mapped to module name and body. */
+  evidence: Array<{ module: string; body: string }>;
+  /** Which reference documents to produce. */
+  refDocs: readonly RefDocSpec[];
+  /** How many evidence files were found. */
+  evidenceCount: number;
+}
+
+/**
+ * Assemble the synthesis context for brownfield FORGE.
+ *
+ * Reads all evidence files produced during SCAN and packages them
+ * with the ref doc specifications. The agent uses this context to
+ * produce the reference documents via `coda_create` / `coda_edit_body`.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @returns SynthesizeContext for the agent to act on
+ */
+export function assembleSynthesizeContext(codaRoot: string): SynthesizeContext {
+  const evidenceRecords = readAllEvidence(codaRoot);
+  const evidence = evidenceRecords.map((r) => ({
+    module: r.frontmatter.module,
+    body: r.body,
+  }));
+
+  return {
+    evidence,
+    refDocs: SYNTHESIZE_REF_DOCS,
+    evidenceCount: evidence.length,
   };
 }

@@ -8,7 +8,11 @@ import {
   assembleScanContext,
   UNIVERSAL_SCAN_TARGETS,
   UNIVERSAL_COMMANDS,
+  assembleSynthesizeContext,
+  SYNTHESIZE_REF_DOCS,
 } from '../brownfield';
+import { writeEvidence } from '../evidence';
+import type { EvidenceFrontmatter } from '../evidence';
 
 // Resolve the real prompts directory from the repo root
 const promptsDir = resolve(__dirname, '../../../../../modules/prompts');
@@ -119,5 +123,66 @@ describe('Brownfield SCAN', () => {
       const findCmd = ctx.universalCommands.find((c) => c.startsWith('find'));
       expect(findCmd).toBeUndefined();
     });
+  });
+});
+
+describe('Brownfield SYNTHESIZE', () => {
+  let tempDir: string;
+  let codaRoot: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'coda-synth-'));
+    codaRoot = join(tempDir, '.coda');
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  function makeFm(module: string): EvidenceFrontmatter {
+    return {
+      module,
+      scanned_at: '2026-04-03T10:00:00Z',
+      files_read: ['src/index.ts'],
+      commands_run: ['ls'],
+    };
+  }
+
+  test('evidence loaded from SCAN files', () => {
+    writeEvidence(codaRoot, 'security', makeFm('security'), '## Security\nAuth found.\n');
+    writeEvidence(codaRoot, 'architecture', makeFm('architecture'), '## Architecture\nMVC pattern.\n');
+
+    const ctx = assembleSynthesizeContext(codaRoot);
+    expect(ctx.evidenceCount).toBe(2);
+    expect(ctx.evidence).toHaveLength(2);
+    expect(ctx.evidence[0]!.module).toBe('architecture'); // sorted by filename
+    expect(ctx.evidence[1]!.module).toBe('security');
+    expect(ctx.evidence[1]!.body).toContain('Auth found');
+  });
+
+  test('empty evidence returns zero count', () => {
+    const ctx = assembleSynthesizeContext(codaRoot);
+    expect(ctx.evidenceCount).toBe(0);
+    expect(ctx.evidence).toEqual([]);
+  });
+
+  test('refDocs matches SYNTHESIZE_REF_DOCS', () => {
+    const ctx = assembleSynthesizeContext(codaRoot);
+    expect(ctx.refDocs).toBe(SYNTHESIZE_REF_DOCS);
+  });
+
+  test('SYNTHESIZE_REF_DOCS has all 4 ref docs', () => {
+    const names = SYNTHESIZE_REF_DOCS.map((r) => r.name);
+    expect(names).toContain('ref-system.md');
+    expect(names).toContain('ref-architecture.md');
+    expect(names).toContain('ref-conventions.md');
+    expect(names).toContain('ref-prd.md');
+    expect(SYNTHESIZE_REF_DOCS).toHaveLength(4);
+  });
+
+  test('every ref doc has non-empty sourceEvidence', () => {
+    for (const doc of SYNTHESIZE_REF_DOCS) {
+      expect(doc.sourceEvidence.length).toBeGreaterThan(0);
+    }
   });
 });
