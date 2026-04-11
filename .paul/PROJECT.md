@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.7 Brownfield & Context in progress: brownfield wired into /coda forge, 1 phase remaining (E2E) — 569 tests, tsc clean
+- v0.7 Brownfield & Context complete: brownfield FORGE, context features, 573 tests, 10 tools, 5 modules + init-scan, tsc clean
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
@@ -9,7 +9,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Attribute | Value |
 |-----------|-------|
 | Version | 0.7.0 |
-| Status | Milestone v0.7 in progress |
+| Status | Milestone v0.7 complete |
 | Last Updated | 2026-04-03 |
 
 **Current system summary:**
@@ -74,6 +74,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Brownfield GAP ANALYSIS — GapDomain with dependency ordering, GAP-ANALYSIS.md artifact I/O (Phase 43 — v0.7)
 - [x] Brownfield VALIDATE + ORIENT — structured review + direction questions, MILESTONE-PLAN.md I/O (Phase 44 — v0.7)
 - [x] Wire brownfield into /coda forge — detectBackdrop routing, brownfield scan context in command (Phase 45 — v0.7)
+- [x] E2E brownfield validation — 4 E2E tests covering full pipeline + context features + hooks + persistence (Phase 46 — v0.7)
 ### Active
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
@@ -98,8 +99,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.7 progress | 11 phases | 10 of 11 complete |
-| Test suite | Green | 569 passing, 0 failing |
+| Milestone v0.7 progress | 11 phases complete | 11 of 11 complete ✅ |
+| Test suite | Green | 573 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Pi tools | 10 registered | 10/10 ✅ |
 | Modules | 5 modules active | security, tdd, architecture, quality, knowledge ✅ |
@@ -133,4 +134,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-03 after Phase 36 (Topic-based Section Retrieval)*
+*Last updated: 2026-04-03 after v0.7 Brownfield & Context milestone completion*
