@@ -12,7 +12,7 @@ Started: 2026-04-14
 | 47 | UNIFY Runner Core | 1/1 | ✅ Complete | 2026-04-14 |
 | 48 | UNIFY Review Gate | 1/1 | ✅ Complete | 2026-04-14 |
 | 49 | Module Overlay Infrastructure | 1/1 | ✅ Complete | 2026-04-14 |
-| 50 | Gate Automation | 0/TBD | ⚪ Not started | — |
+| 50 | Gate Automation | 1/1 | ✅ Complete | 2026-04-15 |
 | 51 | E2E Validation | 0/TBD | ⚪ Not started | — |
 
 ### Phase 47: UNIFY Runner Core
@@ -36,7 +36,7 @@ Plans: 1/1 complete
 Focus: Add gate automation configuration (`human`, `auto`, `auto-unless-block`) for lifecycle transitions
 Spec: docs/module-gaps-and-onboarding.md
 Depends: Phases 47–49
-Plans: TBD (defined during /paul:plan)
+Plans: 1/1 complete
 
 ### Phase 51: E2E Validation
 Focus: Validate the full v0.8 compounding engine end-to-end across UNIFY, review gate, overlays, and gate automation
@@ -163,4 +163,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-14 — v0.8 The Compounding Engine in progress; Phases 47–48 complete*
+*Roadmap updated: 2026-04-15 — v0.8 The Compounding Engine in progress; Phases 47–50 complete*
