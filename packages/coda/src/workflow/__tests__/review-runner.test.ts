@@ -167,6 +167,13 @@ describe('Review Runner', () => {
   });
 
   test('approves the plan immediately when human review is not required', () => {
+    writeFileSync(join(codaRoot, 'coda.json'), JSON.stringify({
+      gates: {
+        plan_review: 'auto',
+        build_review: 'auto-unless-block',
+        unify_review: 'human',
+      },
+    }, null, 2));
     const result = runReviewRunner(codaRoot, 'my-feature', createReviewState(), {
       reviewResult: { approved: true },
     });
@@ -182,6 +189,13 @@ describe('Review Runner', () => {
   });
 
   test('persists pending human review when autonomous review approves a required plan', () => {
+    writeFileSync(join(codaRoot, 'coda.json'), JSON.stringify({
+      gates: {
+        plan_review: 'human',
+        build_review: 'auto-unless-block',
+        unify_review: 'human',
+      },
+    }, null, 2));
     const issue = readRecord<IssueRecord>(join(codaRoot, 'issues', 'my-feature.md'));
     writeRecord(join(codaRoot, 'issues', 'my-feature.md'), {
       ...issue.frontmatter,

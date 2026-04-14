@@ -12,6 +12,9 @@ import { join } from 'path';
 import { isLoopExhausted } from '../../../core/src/state/machine';
 import type { LoopIterationConfig } from '../../../core/src/state/types';
 import type { StatusResult } from './types';
+import type { CodaConfig } from '../forge/types';
+import { getDefaultConfig } from '../forge';
+import { resolveGateMode } from '../workflow/gate-automation';
 import { sortByNumericSuffix } from './sort-utils';
 import { findCompletionRecordPath } from './coda-advance';
 
@@ -53,6 +56,7 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
       tdd_gate: 'locked',
       human_review_required: null,
       human_review_status: null,
+      gate_mode: null,
       next_action: 'No state found — run coda forge to initialize',
     };
   }
@@ -81,6 +85,7 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
     tdd_gate: state.tdd_gate,
     human_review_required: reviewState?.required ?? null,
     human_review_status: reviewState?.status ?? null,
+    gate_mode: state.phase === 'review' ? reviewState?.gateMode ?? null : null,
     unify_review_status: unifyReviewStatus,
     next_action: getNextAction(state, reviewState, exhausted, unifyReviewStatus),
   };
@@ -88,7 +93,7 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
 
 function getNextAction(
   state: CodaState,
-  reviewState: { required: boolean; status: PlanRecord['human_review_status'] | null } | null,
+  reviewState: { required: boolean; status: PlanRecord['human_review_status'] | null; gateMode: string | null } | null,
   exhausted: boolean,
   unifyReviewStatus?: CompletionRecord['unify_review_status'] | null
 ): string {
@@ -135,7 +140,7 @@ function getNextAction(
 function loadHumanReviewState(
   codaRoot: string,
   issueSlug: string
-): { required: boolean; status: PlanRecord['human_review_status'] | null } | null {
+): { required: boolean; status: PlanRecord['human_review_status'] | null; gateMode: string | null } | null {
   const issuePath = join(codaRoot, 'issues', `${issueSlug}.md`);
   const issueDir = join(codaRoot, 'issues', issueSlug);
 
@@ -154,6 +159,7 @@ function loadHumanReviewState(
     return {
       required: issue.frontmatter.human_review,
       status: null,
+      gateMode: resolvePlanReviewGateMode(codaRoot, issue.frontmatter.issue_type),
     };
   }
 
@@ -161,7 +167,25 @@ function loadHumanReviewState(
   return {
     required: issue.frontmatter.human_review,
     status: plan.frontmatter.human_review_status,
+    gateMode: resolvePlanReviewGateMode(codaRoot, issue.frontmatter.issue_type),
   };
+}
+
+function resolvePlanReviewGateMode(codaRoot: string, issueType?: string): string | null {
+  return resolveGateMode('plan_review', issueType ?? 'feature', loadCodaConfig(codaRoot) ?? getDefaultConfig());
+}
+
+function loadCodaConfig(codaRoot: string): CodaConfig | null {
+  const configPath = join(codaRoot, 'coda.json');
+  if (!existsSync(configPath)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(readFileSync(configPath, 'utf-8')) as CodaConfig;
+  } catch {
+    return null;
+  }
 }
 
 function loadActiveTask(
