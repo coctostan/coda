@@ -441,3 +441,105 @@ describe('codaAdvance', () => {
     expect(result.reason).toContain('Module findings require attention');
   });
 });
+
+describe('codaAdvance unify→done gate with completion record fields', () => {
+  function setupUnifyReadyIssue(): void {
+    codaCreate(
+      {
+        type: 'issue',
+        fields: {
+          title: 'Test Issue',
+          issue_type: 'feature',
+          status: 'active',
+          phase: 'unify',
+          priority: 3,
+          topics: [],
+          acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'met' }],
+          open_questions: [],
+          deferred_items: [],
+          human_review: false,
+        },
+      },
+      codaRoot
+    );
+
+    writeRecord<PlanRecord>(join(codaRoot, 'issues', 'test-issue', 'plan-v1.md'), {
+      title: 'Implementation Plan',
+      issue: 'test-issue',
+      status: 'approved',
+      iteration: 1,
+      task_count: 0,
+      human_review_status: 'not-required',
+    }, '## Approach\nShip the work.\n');
+
+    persistState({
+      ...createDefaultState(),
+      focus_issue: 'test-issue',
+      phase: 'unify',
+    }, statePath);
+  }
+
+  function writeCompletionRecord(fields: {
+    system_spec_updated: boolean;
+    reference_docs_reviewed: boolean;
+    milestone_updated: boolean;
+  }): void {
+    const recordsDir = join(codaRoot, 'records');
+    const { mkdirSync } = require('fs');
+    mkdirSync(recordsDir, { recursive: true });
+    writeRecord<Record<string, unknown>>(join(recordsDir, 'test-issue-completion.md'), {
+      title: 'Completion Record',
+      issue: 'test-issue',
+      completed_at: '2026-04-14',
+      topics: [],
+      ...fields,
+    }, '## Summary\nDone.\n');
+  }
+
+  test('gatherGateData reads completion record frontmatter fields', () => {
+    setupUnifyReadyIssue();
+    writeCompletionRecord({
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+    });
+
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(true);
+    expect(result.new_phase).toBe('done');
+  });
+
+  test('missing completion record defaults the 3 fields appropriately', () => {
+    setupUnifyReadyIssue();
+    // No completion record created
+
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(false);
+    expect(result.reason).toContain('Completion record');
+  });
+
+  test('completion record with all 3 fields true passes the unify→done gate', () => {
+    setupUnifyReadyIssue();
+    writeCompletionRecord({
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+    });
+
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(true);
+  });
+
+  test('completion record with system_spec_updated false fails the gate', () => {
+    setupUnifyReadyIssue();
+    writeCompletionRecord({
+      system_spec_updated: false,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+    });
+
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(false);
+    expect(result.reason).toContain('Spec delta');
+  });
+});

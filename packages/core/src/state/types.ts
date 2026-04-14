@@ -97,6 +97,12 @@ export interface GateCheckData {
   humanReviewStatus?: string;
   /** Count of module findings exceeding block threshold. 0 or undefined means no blocks. */
   moduleBlockFindings?: number;
+  /** Whether the system spec (ref-system.md) was updated or confirmed no change needed. */
+  systemSpecUpdated?: boolean;
+  /** Whether reference docs were reviewed for updates. */
+  referenceDocsReviewed?: boolean;
+  /** Whether milestone progress was updated (or confirmed no milestone). */
+  milestoneUpdated?: boolean;
 }
 
 /** Result of a phase transition attempt. */

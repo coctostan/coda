@@ -221,7 +221,8 @@ describe('Workflow Phase Runner', () => {
       tdd_gate: 'locked', last_test_exit_code: null,
       task_tool_calls: 0, enabled: true,
     });
-    expect(ctx.systemPrompt).toContain('clos');
+    expect(ctx.systemPrompt).toContain('ACTION 1:');
+    expect(ctx.systemPrompt).toContain('ACTION 5:');
     expect(ctx.context).toContain('My Feature');
     expect(ctx.context).toContain('Step by step');
     expect(ctx.context).toContain('manages tasks');

@@ -16,6 +16,9 @@ const PASSING_DATA: GateCheckData = {
   allPlannedTasksComplete: true,
   allAcsMet: true,
   completionRecordExists: true,
+  systemSpecUpdated: true,
+  referenceDocsReviewed: true,
+  milestoneUpdated: true,
 };
 
 describe('createDefaultState', () => {

@@ -51,6 +51,9 @@ export {
 // Phase runner
 export { getPhaseContext } from './phase-runner';
 
+// UNIFY runner
+export { assembleUnifyContext, loadTopicMatchedRefDocs } from './unify-runner';
+
 // Build loop
 export { buildTaskContext, getBuildSequence } from './build-loop';
 

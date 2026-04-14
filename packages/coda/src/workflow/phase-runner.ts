@@ -19,6 +19,7 @@ import {
 } from './context-builder';
 import { buildTaskContext } from './build-loop';
 import { getModulePromptForHook } from './module-integration';
+import { assembleUnifyContext } from './unify-runner';
 
 /**
  * Get the context object for a given lifecycle phase.
@@ -138,23 +139,11 @@ export function getPhaseContext(
     }
 
     case 'unify': {
-      const plan = loadPlan(codaRoot, issueSlug);
-      const completedTasks = state?.completed_tasks ?? [];
-      const summaries = getPreviousTaskSummaries(
-        codaRoot, issueSlug, completedTasks, completedTasks.length
+      return withMetadata(
+        assembleUnifyContext(codaRoot, issueSlug, state),
+        phase,
+        state
       );
-      const refs = loadRefDocs(codaRoot);
-      const findingsSummary = loadModuleFindingsSummary(codaRoot, issueSlug);
-      return withMetadata({
-        systemPrompt: 'You are closing the loop. Write the completion record and update reference docs.',
-        context: [
-          issueContext,
-          plan ? `## Plan\n${plan.body}` : '',
-          summaries ? `## Task Summaries\n${summaries}` : '',
-          refs.system ? `## System Reference\n${refs.system}` : '',
-          findingsSummary ? `## Module Findings\n${findingsSummary}` : '',
-        ].filter(Boolean).join('\n\n'),
-      }, phase, state);
     }
 
     case 'done': {

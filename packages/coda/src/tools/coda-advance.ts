@@ -16,6 +16,7 @@ import {
 } from '@coda/core';
 import type {
   CodaState,
+  CompletionRecord,
   FindingSeverity,
   GateCheckData,
   HookPoint,
@@ -116,7 +117,21 @@ function gatherGateData(codaRoot: string, issueSlug: string): GateCheckData {
   if (existsSync(recordsDir)) {
     const completionFiles = readdirSync(recordsDir)
       .filter((file) => file.endsWith('.md'));
-    data.completionRecordExists = completionFiles.some((file) => file.includes(issueSlug));
+    const matchingFile = completionFiles.find((file) => file.includes(issueSlug));
+    data.completionRecordExists = Boolean(matchingFile);
+
+    if (matchingFile) {
+      try {
+        const record = readRecord<CompletionRecord>(join(recordsDir, matchingFile));
+        data.systemSpecUpdated = record.frontmatter.system_spec_updated === true;
+        data.referenceDocsReviewed = record.frontmatter.reference_docs_reviewed === true;
+        data.milestoneUpdated = record.frontmatter.milestone_updated === true;
+      } catch {
+        data.systemSpecUpdated = false;
+        data.referenceDocsReviewed = false;
+        data.milestoneUpdated = false;
+      }
+    }
   } else {
     data.completionRecordExists = false;
   }
