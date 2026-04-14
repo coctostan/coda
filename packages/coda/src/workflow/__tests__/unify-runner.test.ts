@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs';
+import { mkdtempSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { writeRecord } from '@coda/core';
@@ -74,7 +74,7 @@ function setupTask(): void {
 }
 
 /** Set up reference docs with topics. */
-function setupRefDocs(topics: string[] = ['state', 'gates']): void {
+function setupRefDocs(_topics: string[] = ['state', 'gates']): void {
   const refDir = join(codaRoot, 'reference');
   mkdirSync(refDir, { recursive: true });
 

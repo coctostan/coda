@@ -6,7 +6,7 @@
  * and module findings, then returns a PhaseContext with instructions for all
  * 5 UNIFY actions as specified in coda-spec-v7.
  */
-import type { CodaState, IssueRecord, CompletionRecord } from '@coda/core';
+import type { CodaState } from '@coda/core';
 import { readRecord, getSectionsByTopics } from '@coda/core';
 import type { PhaseContext } from './types';
 import {
