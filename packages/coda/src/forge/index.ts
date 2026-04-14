@@ -2,8 +2,8 @@
  * @module forge
  * L5 FORGE Design Layer — Project initialization flows.
  *
- * v0.1: Greenfield flow only — scaffolds `.coda/`, generates
- * reference docs, and creates the first milestone.
+ * v0.1: Greenfield flow — scaffolds `.coda/`, generates reference docs, creates first milestone.
+ * v0.7: Brownfield support — evidence management, backdrop detection.
  */
 
 // Types
@@ -21,3 +21,29 @@ export { detectBackdrop, scaffoldCoda, getDefaultConfig } from './scaffold';
 
 // Greenfield flow
 export { generateRefDocs, createFirstMilestone, forgeGreenfield } from './greenfield';
+
+// Evidence management (v0.7)
+export type { EvidenceFrontmatter, EvidenceRecord } from './evidence';
+export { EVIDENCE_DIR, writeEvidence, readEvidence, readAllEvidence } from './evidence';
+
+// Brownfield SCAN (v0.7)
+export type { ScanContext, RefDocSpec, SynthesizeContext, GapDomain, GapAnalysisContext, ValidateContext, OrientContext } from './brownfield';
+export {
+  UNIVERSAL_SCAN_TARGETS,
+  UNIVERSAL_COMMANDS,
+  getUniversalScanTargets,
+  getSourceDirectory,
+  assembleScanContext,
+  SYNTHESIZE_REF_DOCS,
+  assembleSynthesizeContext,
+  GAP_DOMAINS,
+  assembleGapAnalysisContext,
+  writeGapAnalysis,
+  readGapAnalysis,
+  VALIDATE_QUESTIONS,
+  assembleValidateContext,
+  ORIENT_QUESTIONS,
+  assembleOrientContext,
+  writeMilestonePlan,
+  readMilestonePlan,
+} from './brownfield';

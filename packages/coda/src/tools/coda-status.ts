@@ -21,7 +21,7 @@ const NEXT_ACTIONS: Record<string, string> = {
   review: 'Review and approve the plan, then advance to build',
   build: 'Complete tasks, then advance to verify',
   verify: 'Verify all ACs met, then advance to unify',
-  unify: 'Create completion record, then advance to done',
+  unify: 'UNIFY — The Compounding Step (5 mandatory actions): 1. Merge spec delta into ref-system.md, 2. Review and update other reference docs, 3. Capture knowledge for compounding, 4. Update milestone progress, 5. Write completion record. All 5 actions must complete before advancing to DONE. The completion record must have: system_spec_updated, reference_docs_reviewed, milestone_updated all set to true.',
   done: 'Issue complete',
 };
 

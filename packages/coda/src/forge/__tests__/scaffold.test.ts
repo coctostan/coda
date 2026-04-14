@@ -29,6 +29,28 @@ describe('FORGE Scaffold', () => {
       const result = detectBackdrop(tempDir);
       expect(result.type).toBe('existing');
     });
+
+    test('returns brownfield when package.json exists but no .coda/', () => {
+      const { writeFileSync } = require('fs');
+      writeFileSync(join(tempDir, 'package.json'), '{}');
+      const result = detectBackdrop(tempDir);
+      expect(result.type).toBe('brownfield');
+    });
+
+    test('returns brownfield when src/ exists but no .coda/', () => {
+      const { mkdirSync } = require('fs');
+      mkdirSync(join(tempDir, 'src'));
+      const result = detectBackdrop(tempDir);
+      expect(result.type).toBe('brownfield');
+    });
+
+    test('returns existing even when code indicators present', () => {
+      const { mkdirSync, writeFileSync } = require('fs');
+      mkdirSync(join(tempDir, '.coda'));
+      writeFileSync(join(tempDir, 'package.json'), '{}');
+      const result = detectBackdrop(tempDir);
+      expect(result.type).toBe('existing');
+    });
   });
 
   describe('scaffoldCoda', () => {

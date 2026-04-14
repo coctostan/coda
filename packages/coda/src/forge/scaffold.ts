@@ -13,7 +13,11 @@ import { join } from 'path';
 import type { ForgeBackdrop, CodaConfig } from './types';
 
 /**
- * Detect whether the project is greenfield (no `.coda/`) or already initialized.
+ * Detect whether the project is greenfield, brownfield, or already initialized.
+ *
+ * - **existing**: `.coda/` directory already present
+ * - **brownfield**: No `.coda/` but has code indicators (package.json, src/, etc.)
+ * - **greenfield**: No `.coda/` and no code indicators
  *
  * @param projectRoot - Absolute path to the project root
  * @returns A ForgeBackdrop indicating the project state
@@ -22,6 +26,20 @@ export function detectBackdrop(projectRoot: string): ForgeBackdrop {
   const codaDir = join(projectRoot, '.coda');
   if (existsSync(codaDir)) {
     return { type: 'existing' };
+  }
+
+  // Check for code indicators
+  const codeIndicators = [
+    'package.json', 'Cargo.toml', 'go.mod', 'pyproject.toml',
+    'pom.xml', 'Gemfile', 'composer.json',
+  ];
+  const hasCode = codeIndicators.some((f) => existsSync(join(projectRoot, f)));
+
+  const srcDirs = ['src', 'lib', 'app', 'cmd', 'pkg'];
+  const hasSrcDir = srcDirs.some((d) => existsSync(join(projectRoot, d)));
+
+  if (hasCode || hasSrcDir) {
+    return { type: 'brownfield' };
   }
   return { type: 'greenfield' };
 }

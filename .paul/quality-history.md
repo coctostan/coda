@@ -23,3 +23,15 @@
 | 2026-04-03 | 33-vcs-integration | 447 pass / 0 fail | N/A | clean | N/A | ↑ improving (+17 new VCS/activate/auto-commit tests) |
 | 2026-04-03 | 34-coda-query | 460 pass / 0 fail | N/A | clean | N/A | ↑ improving (+13 new query tests, 10 tools) |
 | 2026-04-03 | 35-e2e-validation | 460 pass / 0 fail | N/A | clean | N/A | → stable (observational — all v0.6 features validated) |
+| 2026-04-03 | 36-topic-section-retrieval | 472 pass / 0 fail | N/A | clean | N/A | ↑ improving (+12 new topic/heading tests) |
+| 2026-04-03 | 37-dependency-carry-forward | 478 pass / 0 fail | N/A | clean | N/A | ↑ improving (+6 new carry-forward tests) |
+| 2026-04-03 | 38-adaptive-ceremony | 487 pass / 0 fail | N/A | clean | N/A | ↑ improving (+9 new ceremony tests) |
+| 2026-04-03 | 39-context-budgets | 498 pass / 0 fail | N/A | clean | N/A | ↑ improving (+11 new budget tests) |
+| 2026-04-03 | 40-module-init-scan-hooks | 534 pass / 0 fail | N/A | clean | N/A | ↑ improving (+36 net: 13 new + 5 prompts trigger 25 structural, -2 updated) |
+| 2026-04-03 | 41-brownfield-scan | 546 pass / 0 fail | N/A | clean | N/A | ↑ improving (+12 new brownfield scan tests) |
+| 2026-04-03 | 42-brownfield-synthesize | 551 pass / 0 fail | N/A | clean | N/A | ↑ improving (+5 new synthesize tests) |
+| 2026-04-03 | 43-brownfield-gap-analysis | 558 pass / 0 fail | N/A | clean | N/A | ↑ improving (+7 new gap analysis tests) |
+| 2026-04-03 | 44-brownfield-validate-orient | 567 pass / 0 fail | N/A | clean | N/A | ↑ improving (+9 new validate/orient tests) |
+| 2026-04-03 | 45-wire-brownfield-forge | 569 pass / 0 fail | N/A | clean | N/A | ↑ improving (+2 new command tests) |
+| 2026-04-03 | 46-e2e-brownfield-coda-test-todo | 573 pass / 0 fail | N/A | clean | N/A | ↑ improving (+4 E2E tests, milestone complete) |
+| 2026-04-14 | 47-unify-runner-core | 589 pass / 0 fail | clean | clean | N/A | ↑ improving (+16 tests, UNIFY runner + gate expansion) |

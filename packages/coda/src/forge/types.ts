@@ -8,6 +8,7 @@ import type { ModuleConfig } from '@coda/core';
 /** Result of backdrop detection — determines which FORGE flow to use. */
 export type ForgeBackdrop =
   | { type: 'greenfield' }
+  | { type: 'brownfield' }
   | { type: 'existing' };
 
 /** Answers collected from the conversational interview. */

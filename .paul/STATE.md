@@ -1,29 +1,24 @@
 # Project State
-
 ## Project Reference
-
 See: .paul/PROJECT.md (updated 2026-04-03)
-Version: v0.6.0
-
+Version: v0.8.0
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Awaiting next milestone
-
+**Current focus:** v0.8 The Compounding Engine
 ## Current Position
-Milestone: Awaiting next milestone
-Phase: None active
-Plan: None
-Status: Milestone v0.6 VCS & Workflow Gaps complete — ready for next
-Last activity: 2026-04-03T03:45:00Z — Milestone completed
+Milestone: v0.8 The Compounding Engine
+Phase: 48 of 51 (UNIFY Review Gate)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-04-14T12:35:00Z — Phase 47 unified, ready to plan Phase 48
 Progress:
-- v0.6 VCS & Workflow Gaps: [██████████] 100% ✓
-
+- v0.8 The Compounding Engine: [░░░░░░░░░░] 0%
+- Phase 47: [██████████] 100% ✓
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Milestone complete - ready for next]
+  ✓        ✓        ✓     [Loop complete - ready for next PLAN]
 ```
-
 ## Accumulated Context
 ### Decisions
 | Decision | Phase | Impact |
@@ -34,14 +29,20 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Old todd/walt deleted at workflow integration | v0.3 D4 | Clean migration |
 | moduleBlockFindings in GateCheckData | v0.3 D5 | Gate system authority |
 | coda_report_findings tool for findings persistence | v0.4 D6 | Agent submits findings explicitly |
-Branch: main
+| Overview always-include uses exact heading match (case-insensitive) | v0.7 P36 | Topic retrieval behavior |
+| context-budgets.ts separate from context-builder.ts | v0.7 P39 | Keeps context-builder under 500 lines |
+| Synthetic HookContext for forge: issueSlug='forge-onboarding', phase='forge' | v0.7 P41 | Dispatcher doesn't validate against state |
+| Gate-mediated UNIFY approval (not inline) | v0.8 D1 | UNIFY stays autonomous; human approval via separate review step |
+| Diff presentation via conversation channel | v0.8 D2 | No special TUI widget needed |
+| Overlay write via coda_edit_body (no new tool for v0.8) | v0.8 D3 | coda_feedback deferred to v0.9 |
+| Gate automation replaces human_review_default | v0.8 D4 | Unified gate config with backward compat |
+Branch: feature/47-unify-runner-core
 Remote: https://github.com/coctostan/coda.git
-
-## Session Continuity
-Last session: 2026-04-03T03:45:00Z
-Stopped at: Milestone v0.6 VCS & Workflow Gaps complete
-Next action: /paul:discuss-milestone or /paul:milestone
-Resume file: .paul/MILESTONES.md
+Last session: 2026-04-14T12:35:00Z
+Stopped at: Phase 47 complete, ready to plan Phase 48
+Next action: /paul:plan
+Resume file: .paul/phases/47-unify-runner-core/47-01-SUMMARY.md
+PR: https://github.com/coctostan/coda/pull/18 (state: open)
 
 ---
 *STATE.md — Updated after every significant action*

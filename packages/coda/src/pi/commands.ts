@@ -5,11 +5,11 @@
  * Registers the `/coda` slash command and dispatches supported subcommands.
  */
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-coding-agent';
 import { createDefaultState, loadState, persistState } from '@coda/core';
 import type { Phase } from '@coda/core';
-import { scaffoldCoda } from '../forge';
+import { scaffoldCoda, detectBackdrop, assembleScanContext } from '../forge';
 import { codaAdvance, codaBack, codaCreate, codaKill, codaRead, codaStatus } from '../tools';
 import type { AdvanceInput, StatusResult } from '../tools';
 import { createBranch, getBuildSequence } from '../workflow';
@@ -66,12 +66,33 @@ async function handleCodaCommand(
     }
 
     case 'forge': {
-      if (existsSync(codaRoot)) {
+      const backdrop = detectBackdrop(projectRoot);
+
+      if (backdrop.type === 'existing') {
         ctx.ui.notify('CODA is already initialized in this project. Use `/coda status` to see current state.');
         return;
       }
 
+      // Scaffold .coda/ for both greenfield and brownfield
       scaffoldCoda(projectRoot);
+      if (backdrop.type === 'brownfield') {
+        const promptsDir = resolve(__dirname, '..', '..', '..', '..', 'modules', 'prompts');
+        const scanCtx = assembleScanContext(projectRoot, promptsDir);
+        const targetList = scanCtx.universalTargets.length > 0
+          ? scanCtx.universalTargets.join(', ')
+          : 'none detected';
+        ctx.ui.notify(
+          `✓ Brownfield project detected. \`.coda/\` directory created.\n\n` +
+          `**Detected:** ${targetList}` +
+          (scanCtx.sourceDir ? ` | Source: ${scanCtx.sourceDir}/` : '') +
+          `\n\n**Next: Brownfield SCAN**\n` +
+          `Read the detected files and run scan commands to gather evidence.\n` +
+          `Use \`coda_create\` to write evidence files to \`.coda/forge/initial/onboarding/\`.`
+        );
+        return;
+      }
+
+      // Greenfield (unchanged)
       ctx.ui.notify(
         '✓ Project scaffolded. `.coda/` directory created with default configuration.\n\nNext: Create an issue to describe what you want to build:\n  Use the `coda_create` tool to create an issue in `.coda/issues/`'
       );

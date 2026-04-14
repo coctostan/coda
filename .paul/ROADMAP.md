@@ -4,30 +4,66 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-**v0.6 VCS & Workflow Gaps** (v0.6.0)
-Status: ✅ Complete
-Completed: 2026-04-03
+**v0.8 The Compounding Engine** (v0.8.0)
+Status: 🔵 In Progress
+Started: 2026-04-14
+| Phase | Name | Plans | Status | Completed |
+|-------|------|-------|--------|-----------|
+| 47 | UNIFY Runner Core | 1/1 | ✅ Complete | 2026-04-14 |
+| 48 | UNIFY Review Gate | 0/TBD | 🟡 Ready to plan | — |
+| 49 | Module Overlay Infrastructure | 0/TBD | ⚪ Not started | — |
+| 50 | Gate Automation | 0/TBD | ⚪ Not started | — |
+| 51 | E2E Validation | 0/TBD | ⚪ Not started | — |
 
-## Next Milestone
-Run /paul:discuss-milestone or /paul:milestone to define.
-### Phase 32: Module Cleanup
-Focus: Remove old todd.md, walt.md, and legacy TS module files replaced by registry system
+### Phase 47: UNIFY Runner Core
+Focus: Make UNIFY a first-class workflow phase with structured context, 5 mandatory actions, and expanded `unify→done` gating
+Spec: docs/coda-spec-v7.md (UNIFY section)
+Plans: 1/1 complete
+
+### Phase 48: UNIFY Review Gate
+Focus: Add the human review/approval mechanism that validates autonomous UNIFY output before finalization
+Spec: docs/coda-spec-v7.md (UNIFY review / approval follow-up)
+Depends: Phase 47
 Plans: TBD (defined during /paul:plan)
 
-### Phase 33: VCS Integration + /coda activate
-Focus: `vcs.ts` with createBranch/commitTask/getCurrentBranch, `/coda activate` command, wire into BUILD task completion
-Spec: docs/v0.3.1/00-overview.md
+### Phase 49: Module Overlay Infrastructure
+Focus: Add module overlay infrastructure for plan/apply customization without modifying base prompts
+Spec: docs/module-gaps-and-onboarding.md
+Depends: Phase 48
 Plans: TBD (defined during /paul:plan)
 
-### Phase 34: coda_query + Findings Summarization
-Focus: `coda_query` tool (list/filter issues, tasks, plans, decisions, references), cross-phase findings context in context-builder
-Spec: docs/v0.3.1/00-overview.md
+### Phase 50: Gate Automation
+Focus: Add gate automation configuration (`human`, `auto`, `auto-unless-block`) for lifecycle transitions
+Spec: docs/module-gaps-and-onboarding.md
+Depends: Phases 47–49
 Plans: TBD (defined during /paul:plan)
 
-### Phase 35: E2E Validation
-Focus: Regression test run + VCS smoke test in real lifecycle
+### Phase 51: E2E Validation
+Focus: Validate the full v0.8 compounding engine end-to-end across UNIFY, review gate, overlays, and gate automation
+Spec: docs/module-gaps-and-onboarding.md
+Depends: All previous v0.8 phases
 Plans: TBD (defined during /paul:plan)
 ## Completed Milestones
+<details>
+<summary>v0.7 Brownfield & Context — 2026-04-03 (11 phases, 11 plans)</summary>
+
+| Phase | Name | Plans | Completed |
+|-------|------|-------|-----------|
+| 36 | Topic-based Section Retrieval | 1/1 | 2026-04-03 |
+| 37 | Dependency-based Carry-forward | 1/1 | 2026-04-03 |
+| 38 | Adaptive Ceremony Rules | 1/1 | 2026-04-03 |
+| 39 | Context Budget Management | 1/1 | 2026-04-03 |
+| 40 | Module Init-scan Hooks | 1/1 | 2026-04-03 |
+| 41 | Brownfield SCAN | 1/1 | 2026-04-03 |
+| 42 | Brownfield SYNTHESIZE | 1/1 | 2026-04-03 |
+| 43 | Brownfield GAP ANALYSIS | 1/1 | 2026-04-03 |
+| 44 | Brownfield VALIDATE + ORIENT | 1/1 | 2026-04-03 |
+| 45 | Wire Brownfield into /coda forge | 1/1 | 2026-04-03 |
+| 46 | E2E Brownfield on coda-test-todo | 1/1 | 2026-04-03 |
+
+New: Topic retrieval, carry-forward, ceremony, budgets, brownfield FORGE (SCAN→SYNTHESIZE→GAP→VALIDATE→ORIENT), /coda forge brownfield routing
+
+</details>
 <details>
 <summary>v0.6 VCS & Workflow Gaps — 2026-04-03 (4 phases, 4 plans)</summary>
 
@@ -123,7 +159,8 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - v0.4 archive: `.paul/milestones/v0.4.0-ROADMAP.md`
 - v0.5 archive: `.paul/milestones/v0.5.0-ROADMAP.md`
 - v0.6 archive: `.paul/milestones/v0.6.0-ROADMAP.md`
+- v0.7 archive: `.paul/milestones/v0.7.0-ROADMAP.md`
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-03 — v0.6 VCS & Workflow Gaps milestone completed*
+*Roadmap updated: 2026-04-14 — v0.8 The Compounding Engine in progress; Phase 47 complete*

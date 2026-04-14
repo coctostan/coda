@@ -88,15 +88,52 @@ describe('GATES', () => {
     expect(result.reason).toContain('acceptance criteria');
   });
 
-  test('unify→done passes when completion record exists', () => {
-    const result = checkGate('unify', 'done', { completionRecordExists: true });
+  test('unify→done passes when all 4 fields are true', () => {
+    const result = checkGate('unify', 'done', {
+      completionRecordExists: true,
+      systemSpecUpdated: true,
+      referenceDocsReviewed: true,
+      milestoneUpdated: true,
+    });
     expect(result.passed).toBe(true);
   });
-
   test('unify→done fails when completion record missing', () => {
     const result = checkGate('unify', 'done', { completionRecordExists: false });
     expect(result.passed).toBe(false);
     expect(result.reason).toContain('Completion record');
+  });
+
+  test('unify→done fails when completionRecordExists true but systemSpecUpdated false', () => {
+    const result = checkGate('unify', 'done', {
+      completionRecordExists: true,
+      systemSpecUpdated: false,
+      referenceDocsReviewed: true,
+      milestoneUpdated: true,
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('Spec delta');
+  });
+
+  test('unify→done fails when systemSpecUpdated true but referenceDocsReviewed false', () => {
+    const result = checkGate('unify', 'done', {
+      completionRecordExists: true,
+      systemSpecUpdated: true,
+      referenceDocsReviewed: false,
+      milestoneUpdated: true,
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('Reference docs');
+  });
+
+  test('unify→done fails when referenceDocsReviewed true but milestoneUpdated false', () => {
+    const result = checkGate('unify', 'done', {
+      completionRecordExists: true,
+      systemSpecUpdated: true,
+      referenceDocsReviewed: true,
+      milestoneUpdated: false,
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('Milestone');
   });
 });
 

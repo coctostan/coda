@@ -1,0 +1,211 @@
+/**
+ * @module workflow/unify-runner
+ * UNIFY phase context assembly — structured instructions for the 5 mandatory actions.
+ *
+ * Assembles rich context from the issue, plan, task summaries, reference docs,
+ * and module findings, then returns a PhaseContext with instructions for all
+ * 5 UNIFY actions as specified in coda-spec-v7.
+ */
+import type { CodaState } from '@coda/core';
+import { readRecord, getSectionsByTopics } from '@coda/core';
+import type { PhaseContext } from './types';
+import {
+  loadIssue,
+  loadPlan,
+  getPreviousTaskSummaries,
+  loadModuleFindingsSummary,
+} from './context-builder';
+import { join } from 'path';
+import { existsSync, readdirSync } from 'fs';
+
+/**
+ * Load topic-matched reference doc sections for UNIFY context.
+ *
+ * Lists all .md files in `{codaRoot}/reference/`, reads each to check
+ * topic overlap with the issue's topics, and returns concatenated matching
+ * sections. Falls back to full ref-system.md if no topics match.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param topics - Array of topic strings from the issue
+ * @returns Concatenated matched reference doc sections
+ */
+export function loadTopicMatchedRefDocs(codaRoot: string, topics: string[]): string {
+  const refDir = join(codaRoot, 'reference');
+  if (!existsSync(refDir)) return '';
+
+  let refFiles: string[];
+  try {
+    refFiles = readdirSync(refDir).filter((f) => f.endsWith('.md'));
+  } catch {
+    return '';
+  }
+
+  if (refFiles.length === 0) return '';
+
+  // If no topics, return full ref-system.md only
+  if (topics.length === 0) {
+    const systemPath = join(refDir, 'ref-system.md');
+    if (!existsSync(systemPath)) return '';
+    try {
+      const record = readRecord<Record<string, unknown>>(systemPath);
+      return `### ref-system.md\n${record.body}`;
+    } catch {
+      return '';
+    }
+  }
+
+  const parts: string[] = [];
+
+  for (const file of refFiles) {
+    const filePath = join(refDir, file);
+    try {
+      const record = readRecord<Record<string, unknown>>(filePath);
+      const docTopics = (record.frontmatter['topics'] as string[] | undefined) ?? [];
+
+      // Check if doc topics overlap with issue topics (case-insensitive)
+      const lowerIssueTopics = topics.map((t) => t.toLowerCase());
+      const hasOverlap = docTopics.some((dt) =>
+        lowerIssueTopics.some((it) => dt.toLowerCase().includes(it) || it.includes(dt.toLowerCase()))
+      );
+
+      if (hasOverlap) {
+        const matchedSections = getSectionsByTopics(record.body, topics);
+        if (matchedSections.length > 0) {
+          const sectionText = matchedSections
+            .map((s) => `#### ${s.heading}\n${s.content}`)
+            .join('\n\n');
+          parts.push(`### ${file}\n${sectionText}`);
+        }
+      }
+    } catch {
+      // Skip files that can't be parsed
+    }
+  }
+
+  // If no topic matches, fall back to full ref-system.md
+  if (parts.length === 0) {
+    const systemPath = join(refDir, 'ref-system.md');
+    if (!existsSync(systemPath)) return '';
+    try {
+      const record = readRecord<Record<string, unknown>>(systemPath);
+      return `### ref-system.md\n${record.body}`;
+    } catch {
+      return '';
+    }
+  }
+
+  return parts.join('\n\n');
+}
+
+/**
+ * Assemble the full UNIFY phase context with structured instructions for all 5 mandatory actions.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param issueSlug - The issue slug
+ * @param state - Optional CodaState for metadata
+ * @returns PhaseContext with systemPrompt covering all 5 UNIFY actions and assembled context
+ */
+export function assembleUnifyContext(
+  codaRoot: string,
+  issueSlug: string,
+  state?: CodaState
+): PhaseContext {
+  // Load issue
+  const issue = loadIssue(codaRoot, issueSlug);
+  const issueContext = issue
+    ? `## Issue: ${issue.frontmatter.title}\n${issue.body}`
+    : '## Issue\nNo issue found.';
+
+  const issueTopics = issue?.frontmatter.topics ?? [];
+  const specDelta = issue?.frontmatter['spec_delta'] as string | undefined;
+  const hasMilestone = Boolean(issue?.frontmatter['milestone']);
+
+  // Load plan overview
+  const plan = loadPlan(codaRoot, issueSlug);
+  const planContext = plan ? `## Plan\n${plan.body}` : '';
+
+  // Load ALL completed task summaries
+  const completedTasks = state?.completed_tasks ?? [];
+  const summaries = getPreviousTaskSummaries(
+    codaRoot, issueSlug, completedTasks, completedTasks.length
+  );
+
+  // Load topic-matched reference docs
+  const refDocSections = loadTopicMatchedRefDocs(codaRoot, issueTopics);
+
+  // Load module findings summary
+  const findingsSummary = loadModuleFindingsSummary(codaRoot, issueSlug);
+
+  // Build the system prompt with all 5 mandatory UNIFY actions
+  const systemPrompt = buildUnifySystemPrompt(specDelta, hasMilestone);
+
+  const context = [
+    issueContext,
+    planContext,
+    summaries ? `## Task Summaries\n${summaries}` : '',
+    refDocSections ? `## Reference Docs (topic-matched)\n${refDocSections}` : '',
+    findingsSummary ? `## Module Findings\n${findingsSummary}` : '',
+  ].filter(Boolean).join('\n\n');
+
+  return {
+    systemPrompt,
+    context,
+    metadata: {
+      phase: 'unify',
+      submode: state?.submode ?? null,
+      loopIteration: state?.loop_iteration ?? 0,
+      currentTask: state?.current_task ?? null,
+      taskKind: null,
+      taskTitle: null,
+    },
+  };
+}
+
+/**
+ * Build the UNIFY system prompt with instructions for all 5 mandatory actions.
+ */
+function buildUnifySystemPrompt(specDelta: string | undefined, hasMilestone: boolean): string {
+  return `You are completing the UNIFY phase — CODA's compounding engine. Every completed issue should make future issues easier.
+
+You MUST perform all 5 mandatory actions in order:
+
+ACTION 1: Merge Spec Delta into ref-system.md
+- Read the spec delta from the issue (if present in frontmatter or body)
+- Compare the planned delta against what was actually built (check task summaries)
+- Produce the FINAL delta — adjusted for any deviations from the original plan
+- Use coda_edit_body to apply ADDED/MODIFIED/REMOVED changes to reference/ref-system
+- If no spec delta exists on the issue, confirm explicitly: no spec change needed
+- Remember whether you made changes (you will report this in the completion record)
+${specDelta ? `\nSpec delta found on issue:\n${specDelta}\n` : ''}
+ACTION 2: Review and Update Other Reference Docs
+- Check which reference docs share topics with this issue
+- For each matching doc: does this issue change anything about the documented content?
+- If yes: use coda_edit_body to update the relevant sections
+- If no updates needed: confirm explicitly
+
+ACTION 3: Capture Knowledge for Compounding
+- Ask: "Would the system catch this automatically next time?"
+- New conventions → update ref-conventions (if it exists) via coda_edit_body
+- New patterns → create or update reference docs
+- New decisions → create decision records via coda_create type 'decision'
+- Lessons learned → update relevant ref doc sections
+
+ACTION 4: Update Milestone Progress
+${hasMilestone
+    ? '- This issue has a milestone field — check if a milestone record exists\n- If a milestone record exists: update its success criteria status'
+    : '- This issue has no milestone field — this action is satisfied automatically'}
+
+ACTION 5: Write Completion Record (LAST — after all other actions)
+- Use coda_create with type 'record' to create the completion record
+- Include frontmatter: title, issue slug, completed_at (ISO date), topics (from issue),
+  system_spec_updated: true (if you merged changes OR confirmed no change),
+  reference_docs_reviewed: true (after completing Action 2),
+  milestone_updated: true (after completing Action 4 — even if no milestone exists)
+- Include body sections: Summary, Verification Evidence (per-AC), Deviations,
+  Decisions, Patterns, Module Findings
+
+IMPORTANT: The completion record frontmatter fields (system_spec_updated,
+reference_docs_reviewed, milestone_updated) MUST all be true before you can
+advance to DONE. The gate will check these fields. Since you write the record
+LAST, all fields should reflect the actual outcomes of Actions 1-4.`;
+}

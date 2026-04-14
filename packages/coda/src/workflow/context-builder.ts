@@ -5,7 +5,7 @@
  * All functions use @coda/core data layer for record I/O.
  * Missing files return null/empty gracefully — no throws.
  */
-import { readRecord, listRecords } from '@coda/core';
+import { readRecord, listRecords, getSection } from '@coda/core';
 import type { IssueRecord, PlanRecord, TaskRecord } from '@coda/core';
 import type { VerificationFailureArtifact, VerificationFailedCheck } from './types';
 import { join } from 'path';
@@ -191,6 +191,64 @@ export function getPreviousTaskSummaries(
   return getSourceTaskSummaries(codaRoot, issueSlug, completedTasks.slice(-maxTasks));
 }
 
+/**
+ * Get carry-forward summaries for a BUILD task using dependency-aware selection.
+ *
+ * Selection priority:
+ * 1. **Correction tasks:** If the task is a correction with `fix_for_ac`, returns
+ *    summaries from tasks that covered that AC plus the verification failure artifact.
+ * 2. **Dependency-based:** If the task has `depends_on` entries, returns summaries
+ *    from those specific tasks (missing/incomplete dependencies are silently skipped).
+ * 3. **Recency fallback:** If no dependencies declared, returns the last N completed
+ *    task summaries (same as `getPreviousTaskSummaries`).
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param issueSlug - The issue slug
+ * @param currentTask - The current task record being built
+ * @param allTasks - All task records for the issue
+ * @param maxSummaries - Maximum summaries for recency fallback (default: 3)
+ * @returns Assembled carry-forward context string, or empty string if none
+ */
+export function getCarryForwardSummaries(
+  codaRoot: string,
+  issueSlug: string,
+  currentTask: { frontmatter: TaskRecord; body: string },
+  allTasks: Array<{ frontmatter: TaskRecord; body: string }>,
+  maxSummaries: number = 3
+): string {
+  const completedTasks = allTasks.filter((t) => t.frontmatter.status === 'complete');
+
+  // Path 1: Correction task — source tasks that covered the AC + failure artifact
+  if (currentTask.frontmatter.kind === 'correction' && currentTask.frontmatter.fix_for_ac) {
+    const acId = currentTask.frontmatter.fix_for_ac;
+    const sourceTaskIds = completedTasks
+      .filter((t) => t.frontmatter.covers_ac.includes(acId))
+      .map((t) => t.frontmatter.id);
+
+    const sourceSummaries = getSourceTaskSummaries(codaRoot, issueSlug, sourceTaskIds);
+    const failure = loadVerificationFailure(codaRoot, issueSlug, acId);
+    const failurePart = failure
+      ? `### Verification Failure: ${failure.acId}\n` +
+        failure.failedChecks.map((c) => `- ${c.type}: ${c.detail}`).join('\n')
+      : '';
+
+    return [sourceSummaries, failurePart].filter(Boolean).join('\n\n');
+  }
+
+  // Path 2: Dependency-based — load summaries from depends_on tasks
+  if (currentTask.frontmatter.depends_on.length > 0) {
+    const depIds = new Set(currentTask.frontmatter.depends_on);
+    const completedDepIds = completedTasks
+      .filter((t) => depIds.has(t.frontmatter.id))
+      .map((t) => t.frontmatter.id);
+
+    return getSourceTaskSummaries(codaRoot, issueSlug, completedDepIds);
+  }
+
+  // Path 3: Recency fallback — last N completed tasks
+  const completedIds = completedTasks.map((t) => t.frontmatter.id);
+  return getPreviousTaskSummaries(codaRoot, issueSlug, completedIds, maxSummaries);
+}
 /**
  * Load one verification failure artifact by AC id.
  *

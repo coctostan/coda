@@ -45,10 +45,14 @@ export {
   loadVerificationFailure,
   loadVerificationFailures,
   getSourceTaskSummaries,
+  getCarryForwardSummaries,
 } from './context-builder';
 
 // Phase runner
 export { getPhaseContext } from './phase-runner';
+
+// UNIFY runner
+export { assembleUnifyContext, loadTopicMatchedRefDocs } from './unify-runner';
 
 // Build loop
 export { buildTaskContext, getBuildSequence } from './build-loop';
@@ -74,3 +78,11 @@ export type { ModuleFindingsData } from './module-integration';
 // VCS integration (v0.6)
 export { createBranch, commitTask, getCurrentBranch } from './vcs';
 export type { CreateBranchResult, CommitTaskResult } from './vcs';
+
+// Ceremony rules (v0.7)
+export type { CeremonyRules } from './ceremony';
+export { CEREMONY_DEFAULTS, getCeremonyRules } from './ceremony';
+
+// Context budgets (v0.7)
+export type { ContextSection, BudgetResult } from './context-budgets';
+export { PHASE_BUDGETS, estimateTokens, assembleWithinBudget } from './context-budgets';

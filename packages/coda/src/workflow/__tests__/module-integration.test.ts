@@ -35,8 +35,8 @@ describe('createModuleSystem', () => {
   test('dispatcher returns empty string for hook with no modules', () => {
     const dispatcher = createModuleSystem({}, promptsDir);
     const context = buildHookContext('test-issue', 'build');
-    // init-scan and pre-specify have no modules
-    const prompt = dispatcher.assemblePrompts('init-scan', context);
+    // pre-specify has no modules
+    const prompt = dispatcher.assemblePrompts('pre-specify', context);
     expect(prompt).toBe('');
   });
 
@@ -97,7 +97,7 @@ describe('getModulePromptForHook', () => {
   });
 
   test('returns empty string for hookPoint with no modules', () => {
-    const prompt = getModulePromptForHook('init-scan', 'test-issue', 'build', {
+    const prompt = getModulePromptForHook('pre-specify', 'test-issue', 'build', {
       promptsDir,
     });
     expect(prompt).toBe('');

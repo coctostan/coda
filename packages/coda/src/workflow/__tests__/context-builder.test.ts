@@ -15,6 +15,7 @@ import {
   loadVerificationFailures,
   getSourceTaskSummaries,
   loadModuleFindingsSummary,
+  getCarryForwardSummaries,
 } from '../context-builder';
 
 describe('Workflow Context Builder', () => {
@@ -306,5 +307,190 @@ describe('Workflow Context Builder', () => {
       expect(summary).toContain('1 critical');
       expect(summary).toContain('(BLOCKED)');
     });
+  });
+});
+
+describe('getCarryForwardSummaries', () => {
+  let tempDir: string;
+  let codaRoot: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'coda-carry-'));
+    codaRoot = join(tempDir, '.coda');
+    mkdirSync(codaRoot, { recursive: true });
+    mkdirSync(join(codaRoot, 'issues'), { recursive: true });
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  function writeTask(
+    taskDir: string,
+    id: number,
+    opts: { status?: string; kind?: string; depends_on?: number[]; covers_ac?: string[]; fix_for_ac?: string } = {}
+  ) {
+    const padded = String(id).padStart(2, '0');
+    writeRecord(join(taskDir, `${padded}-task-${id}.md`), {
+      id,
+      issue: 'test-issue',
+      title: `Task ${id}`,
+      status: opts.status ?? 'complete',
+      kind: opts.kind ?? 'planned',
+      covers_ac: opts.covers_ac ?? [],
+      depends_on: opts.depends_on ?? [],
+      files_to_modify: [],
+      truths: [],
+      artifacts: [],
+      key_links: [],
+      ...(opts.fix_for_ac ? { fix_for_ac: opts.fix_for_ac } : {}),
+    }, `## Summary\nDone with task ${id}.\n`);
+  }
+
+  test('dependency-based: depends_on [1, 3] gets tasks 1 and 3 only', () => {
+    const taskDir = join(codaRoot, 'issues', 'test-issue', 'tasks');
+    mkdirSync(taskDir, { recursive: true });
+    writeTask(taskDir, 1);
+    writeTask(taskDir, 2);
+    writeTask(taskDir, 3);
+    writeTask(taskDir, 4);
+
+    const allTasks = loadTasks(codaRoot, 'test-issue');
+    const currentTask = {
+      frontmatter: {
+        id: 5, issue: 'test-issue', title: 'Task 5',
+        status: 'active' as const, kind: 'planned' as const,
+        covers_ac: [], depends_on: [1, 3],
+        files_to_modify: [], truths: [], artifacts: [], key_links: [],
+      },
+      body: 'Current task body',
+    };
+
+    const result = getCarryForwardSummaries(codaRoot, 'test-issue', currentTask, allTasks);
+    expect(result).toContain('Task 1');
+    expect(result).toContain('Task 3');
+    expect(result).not.toContain('Task 2');
+    expect(result).not.toContain('Task 4');
+  });
+
+  test('recency fallback: empty depends_on gets last N completed tasks', () => {
+    const taskDir = join(codaRoot, 'issues', 'test-issue', 'tasks');
+    mkdirSync(taskDir, { recursive: true });
+    for (let i = 1; i <= 5; i++) writeTask(taskDir, i);
+
+    const allTasks = loadTasks(codaRoot, 'test-issue');
+    const currentTask = {
+      frontmatter: {
+        id: 6, issue: 'test-issue', title: 'Task 6',
+        status: 'active' as const, kind: 'planned' as const,
+        covers_ac: [], depends_on: [],
+        files_to_modify: [], truths: [], artifacts: [], key_links: [],
+      },
+      body: '',
+    };
+
+    const result = getCarryForwardSummaries(codaRoot, 'test-issue', currentTask, allTasks, 2);
+    expect(result).toContain('Task 4');
+    expect(result).toContain('Task 5');
+    expect(result).not.toContain('Task 1');
+    expect(result).not.toContain('Task 2');
+    expect(result).not.toContain('Task 3');
+  });
+
+  test('correction task: gets source tasks covering AC + failure artifact', () => {
+    const taskDir = join(codaRoot, 'issues', 'test-issue', 'tasks');
+    mkdirSync(taskDir, { recursive: true });
+    writeTask(taskDir, 1, { covers_ac: ['AC-2'] });
+    writeTask(taskDir, 2, { covers_ac: ['AC-1'] });
+
+    const failureDir = join(codaRoot, 'issues', 'test-issue', 'verification-failures');
+    mkdirSync(failureDir, { recursive: true });
+    writeFileSync(join(failureDir, 'AC-2.yaml'), [
+      'ac_id: AC-2',
+      'status: not-met',
+      'failed_checks:',
+      '  - type: artifact_missing',
+      '    detail: src/store.ts does not export saveTodo',
+      'source_tasks: [1]',
+    ].join('\n'), 'utf-8');
+
+    const allTasks = loadTasks(codaRoot, 'test-issue');
+    const correctionTask = {
+      frontmatter: {
+        id: 3, issue: 'test-issue', title: 'Fix AC-2',
+        status: 'active' as const, kind: 'correction' as const,
+        fix_for_ac: 'AC-2',
+        covers_ac: [], depends_on: [],
+        files_to_modify: [], truths: [], artifacts: [], key_links: [],
+      },
+      body: '',
+    };
+
+    const result = getCarryForwardSummaries(codaRoot, 'test-issue', correctionTask, allTasks);
+    expect(result).toContain('Task 1');
+    expect(result).not.toContain('Task 2');
+    expect(result).toContain('AC-2');
+    expect(result).toContain('artifact_missing');
+  });
+
+  test('missing dependency: depends_on [1, 99] returns only task 1', () => {
+    const taskDir = join(codaRoot, 'issues', 'test-issue', 'tasks');
+    mkdirSync(taskDir, { recursive: true });
+    writeTask(taskDir, 1);
+
+    const allTasks = loadTasks(codaRoot, 'test-issue');
+    const currentTask = {
+      frontmatter: {
+        id: 2, issue: 'test-issue', title: 'Task 2',
+        status: 'active' as const, kind: 'planned' as const,
+        covers_ac: [], depends_on: [1, 99],
+        files_to_modify: [], truths: [], artifacts: [], key_links: [],
+      },
+      body: '',
+    };
+
+    const result = getCarryForwardSummaries(codaRoot, 'test-issue', currentTask, allTasks);
+    expect(result).toContain('Task 1');
+    expect(result).not.toContain('Task 99');
+  });
+
+  test('no completed tasks: returns empty string', () => {
+    const taskDir = join(codaRoot, 'issues', 'test-issue', 'tasks');
+    mkdirSync(taskDir, { recursive: true });
+    writeTask(taskDir, 1, { status: 'pending' });
+
+    const allTasks = loadTasks(codaRoot, 'test-issue');
+    const currentTask = {
+      frontmatter: {
+        id: 2, issue: 'test-issue', title: 'Task 2',
+        status: 'active' as const, kind: 'planned' as const,
+        covers_ac: [], depends_on: [],
+        files_to_modify: [], truths: [], artifacts: [], key_links: [],
+      },
+      body: '',
+    };
+
+    const result = getCarryForwardSummaries(codaRoot, 'test-issue', currentTask, allTasks);
+    expect(result).toBe('');
+  });
+
+  test('all depends_on missing: returns empty string', () => {
+    const taskDir = join(codaRoot, 'issues', 'test-issue', 'tasks');
+    mkdirSync(taskDir, { recursive: true });
+    writeTask(taskDir, 1);
+
+    const allTasks = loadTasks(codaRoot, 'test-issue');
+    const currentTask = {
+      frontmatter: {
+        id: 2, issue: 'test-issue', title: 'Task 2',
+        status: 'active' as const, kind: 'planned' as const,
+        covers_ac: [], depends_on: [98, 99],
+        files_to_modify: [], truths: [], artifacts: [], key_links: [],
+      },
+      body: '',
+    };
+
+    const result = getCarryForwardSummaries(codaRoot, 'test-issue', currentTask, allTasks);
+    expect(result).toBe('');
   });
 });

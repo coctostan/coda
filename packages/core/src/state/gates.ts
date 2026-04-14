@@ -69,10 +69,21 @@ export const GATES: Record<string, Gate> = {
   },
   'unify→done': {
     name: 'unify→done',
-    check: (d: GateCheckData) => ({
-      passed: d.completionRecordExists === true,
-      reason: 'Completion record must exist',
-    }),
+    check: (d: GateCheckData) => {
+      if (d.completionRecordExists !== true) {
+        return { passed: false, reason: 'Completion record must exist' };
+      }
+      if (d.systemSpecUpdated !== true) {
+        return { passed: false, reason: 'Spec delta must be merged into ref-system.md (or explicitly confirmed no change)' };
+      }
+      if (d.referenceDocsReviewed !== true) {
+        return { passed: false, reason: 'Reference docs must be reviewed for updates' };
+      }
+      if (d.milestoneUpdated !== true) {
+        return { passed: false, reason: 'Milestone progress must be updated (or confirmed no milestone)' };
+      }
+      return { passed: true };
+    },
   },
 };
 
