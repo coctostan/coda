@@ -483,6 +483,7 @@ describe('codaAdvance unify→done gate with completion record fields', () => {
     system_spec_updated: boolean;
     reference_docs_reviewed: boolean;
     milestone_updated: boolean;
+    unify_review_status?: 'pending' | 'approved' | 'changes-requested';
   }): void {
     const recordsDir = join(codaRoot, 'records');
     const { mkdirSync } = require('fs');
@@ -496,14 +497,14 @@ describe('codaAdvance unify→done gate with completion record fields', () => {
     }, '## Summary\nDone.\n');
   }
 
-  test('gatherGateData reads completion record frontmatter fields', () => {
+  test('gatherGateData reads completion record frontmatter fields including unifyReviewStatus', () => {
     setupUnifyReadyIssue();
     writeCompletionRecord({
       system_spec_updated: true,
       reference_docs_reviewed: true,
       milestone_updated: true,
+      unify_review_status: 'approved',
     });
-
     const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
     expect(result.success).toBe(true);
     expect(result.new_phase).toBe('done');
@@ -518,7 +519,47 @@ describe('codaAdvance unify→done gate with completion record fields', () => {
     expect(result.reason).toContain('Completion record');
   });
 
-  test('completion record with all 3 fields true passes the unify→done gate', () => {
+  test('completion record with all fields true (including approved review) passes the unify→done gate', () => {
+    setupUnifyReadyIssue();
+    writeCompletionRecord({
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'approved',
+    });
+
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(true);
+  });
+  test('completion record with system_spec_updated false fails the gate', () => {
+    setupUnifyReadyIssue();
+    writeCompletionRecord({
+      system_spec_updated: false,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'approved',
+    });
+
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(false);
+    expect(result.reason).toContain('Spec delta');
+  });
+
+  test('completion record with unify_review_status pending blocks the unify→done gate', () => {
+    setupUnifyReadyIssue();
+    writeCompletionRecord({
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'pending',
+    });
+
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(false);
+    expect(result.reason).toContain('UNIFY review pending');
+  });
+
+  test('completion record without unify_review_status blocks the unify→done gate', () => {
     setupUnifyReadyIssue();
     writeCompletionRecord({
       system_spec_updated: true,
@@ -527,19 +568,73 @@ describe('codaAdvance unify→done gate with completion record fields', () => {
     });
 
     const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.reason).toContain('UNIFY review pending');
   });
 
-  test('completion record with system_spec_updated false fails the gate', () => {
+  test('approving UNIFY review updates completion record and allows advance to done', () => {
     setupUnifyReadyIssue();
     writeCompletionRecord({
-      system_spec_updated: false,
+      system_spec_updated: true,
       reference_docs_reviewed: true,
       milestone_updated: true,
+      unify_review_status: 'pending',
     });
 
-    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    const result = codaAdvance({
+      target_phase: 'done',
+      unify_review_decision: 'approved',
+    }, codaRoot, statePath);
+
+    expect(result.success).toBe(true);
+    expect(result.new_phase).toBe('done');
+
+    // Verify the completion record was updated
+    const record = readRecord<Record<string, unknown>>(join(codaRoot, 'records', 'test-issue-completion.md'));
+    expect(record.frontmatter['unify_review_status']).toBe('approved');
+  });
+
+  test('requesting UNIFY review changes captures feedback and stays in unify', () => {
+    setupUnifyReadyIssue();
+    writeCompletionRecord({
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'pending',
+    });
+
+    const feedback = 'The completion record is missing pattern documentation for the new gate.';
+    const result = codaAdvance({
+      target_phase: 'done',
+      unify_review_decision: 'changes-requested',
+      unify_review_feedback: feedback,
+    }, codaRoot, statePath);
+
+    expect(result.success).toBe(true);
+    expect(result.previous_phase).toBe('unify');
+    expect(result.new_phase).toBe('unify');
+
+    // Verify the completion record was updated
+    const record = readRecord<Record<string, unknown>>(join(codaRoot, 'records', 'test-issue-completion.md'));
+    expect(record.frontmatter['unify_review_status']).toBe('changes-requested');
+    expect(record.body).toContain('## UNIFY Review');
+    expect(record.body).toContain(feedback);
+  });
+
+  test('requesting UNIFY review changes without feedback fails', () => {
+    setupUnifyReadyIssue();
+    writeCompletionRecord({
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'pending',
+    });
+
+    const result = codaAdvance({
+      target_phase: 'done',
+      unify_review_decision: 'changes-requested',
+    }, codaRoot, statePath);
     expect(result.success).toBe(false);
-    expect(result.reason).toContain('Spec delta');
+    expect(result.reason).toContain('feedback is required');
   });
 });

@@ -16,6 +16,8 @@ const VALID_CONFIG_KEYS = [
   'tdd_gate',
   'human_review_default',
   'modules',
+  'gates',
+  'gate_overrides',
 ] as const satisfies readonly (keyof CodaConfig)[];
 
 const VALID_CONFIG_KEYS_TEXT = VALID_CONFIG_KEYS.join(', ');
@@ -113,6 +115,10 @@ export function codaConfig(input: ConfigInput, codaRoot: string): ConfigResult {
       };
     }
 
+    const gateModeError = validateGateModeValue(keyPath, input.value);
+    if (gateModeError) {
+      return gateModeError;
+    }
     const setResult = setValueAtPath(loaded.config, keyPath, input.value);
     if (setResult) {
       return setResult;
@@ -226,4 +232,56 @@ function setValueAtPath(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+const VALID_GATE_MODES = ['human', 'auto', 'auto-unless-block'] as const;
+
+/**
+ * Validate gate mode values when setting gates or gate_overrides.
+ * Returns a ConfigErrorResult if the value is invalid, undefined otherwise.
+ */
+function validateGateModeValue(
+  keyPath: string,
+  value: unknown
+): ConfigErrorResult | undefined {
+  const topKey = getTopLevelKey(keyPath);
+  if (topKey !== 'gates' && topKey !== 'gate_overrides') {
+    return undefined;
+  }
+
+  // Setting a single gate mode (e.g., gates.plan_review = 'auto')
+  if (typeof value === 'string') {
+    if (!VALID_GATE_MODES.includes(value as typeof VALID_GATE_MODES[number])) {
+      return {
+        success: false,
+        error: `Invalid gate mode: "${value}". Valid modes: ${VALID_GATE_MODES.join(', ')}`,
+      };
+    }
+    return undefined;
+  }
+
+  // Setting an object (e.g., gates = { plan_review: 'auto' })
+  if (isRecord(value)) {
+    for (const [k, v] of Object.entries(value)) {
+      if (typeof v === 'string' && !VALID_GATE_MODES.includes(v as typeof VALID_GATE_MODES[number])) {
+        return {
+          success: false,
+          error: `Invalid gate mode for "${k}": "${v}". Valid modes: ${VALID_GATE_MODES.join(', ')}`,
+        };
+      }
+      // For gate_overrides, value can be { issueType: { gateName: mode } }
+      if (topKey === 'gate_overrides' && isRecord(v)) {
+        for (const [gk, gv] of Object.entries(v)) {
+          if (typeof gv === 'string' && !VALID_GATE_MODES.includes(gv as typeof VALID_GATE_MODES[number])) {
+            return {
+              success: false,
+              error: `Invalid gate mode for "${k}.${gk}": "${gv}". Valid modes: ${VALID_GATE_MODES.join(', ')}`,
+            };
+          }
+        }
+      }
+    }
+  }
+
+  return undefined;
 }

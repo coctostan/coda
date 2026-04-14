@@ -19,6 +19,7 @@ const PASSING_DATA: GateCheckData = {
   systemSpecUpdated: true,
   referenceDocsReviewed: true,
   milestoneUpdated: true,
+  unifyReviewStatus: 'approved',
 };
 
 describe('createDefaultState', () => {

@@ -16,6 +16,7 @@ import type { FindingSeverity, HookPoint, HookResult } from './types';
 import { SEVERITY_ORDER } from './types';
 import { validateFindings } from './finding-schema';
 import type { ModuleRegistry } from './registry';
+import { loadMergedPrompt } from './overlay';
 
 /**
  * Contextual data provided to the dispatcher for prompt assembly.
@@ -109,12 +110,15 @@ export function exceedsThreshold(
  *
  * The registry already resolves prompt file paths — the dispatcher
  * reads them directly via registry.resolvePromptPath.
+ * When codaRoot is provided, prompts are merged with project-specific overlays.
  *
  * @param registry - The module registry for looking up active modules
+ * @param codaRoot - Optional path to `.coda/` directory for overlay loading
  * @returns A ModuleDispatcher for prompt assembly and finding parsing
  */
 export function createDispatcher(
-  registry: ModuleRegistry
+  registry: ModuleRegistry,
+  codaRoot?: string
 ): ModuleDispatcher {
   return {
     assemblePrompts(hookPoint: HookPoint, context: HookContext): string {
@@ -139,7 +143,9 @@ export function createDispatcher(
         const promptPath = registry.resolvePromptPath(mod, hookPoint);
         if (promptPath) {
           try {
-            const prompt = readFileSync(promptPath, 'utf-8');
+            const prompt = codaRoot
+              ? loadMergedPrompt(promptPath, codaRoot, mod.name)
+              : readFileSync(promptPath, 'utf-8');
             parts.push(prompt);
             parts.push('');
           } catch {

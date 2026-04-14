@@ -86,7 +86,7 @@ export function createModuleSystem(
   const dir = promptsDir ?? DEFAULT_PROMPTS_DIR;
   const resolvedConfig = config ?? (codaRoot ? loadModuleConfig(codaRoot) : {});
   const registry = createRegistry(resolvedConfig, dir);
-  return createDispatcher(registry);
+  return createDispatcher(registry, codaRoot);
 }
 
 /**
@@ -144,7 +144,7 @@ export function getModulePromptForHook(
   }
 ): string {
   const resolvedConfig = options?.config ?? (options?.codaRoot ? loadModuleConfig(options.codaRoot) : undefined);
-  const dispatcher = createModuleSystem(resolvedConfig, options?.promptsDir);
+  const dispatcher = createModuleSystem(resolvedConfig, options?.promptsDir, options?.codaRoot);
   const context = buildHookContext(issueSlug, phase, {
     submode: options?.submode,
     changedFiles: options?.changedFiles,

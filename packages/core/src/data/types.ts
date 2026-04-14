@@ -99,6 +99,8 @@ export interface CompletionRecord {
   reference_docs_reviewed: boolean;
   system_spec_updated: boolean;
   milestone_updated: boolean;
+  /** UNIFY review status — tracks human approval of UNIFY output before advancing to DONE. */
+  unify_review_status?: 'pending' | 'approved' | 'changes-requested';
 }
 
 /**

@@ -74,6 +74,11 @@ export function getDefaultConfig(): CodaConfig {
       security: { enabled: true, blockThreshold: 'critical' },
       tdd: { enabled: true, blockThreshold: 'high' },
     },
+    gates: {
+      plan_review: 'human',
+      build_review: 'auto-unless-block',
+      unify_review: 'human',
+    },
   };
 }
 

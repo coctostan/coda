@@ -10,8 +10,8 @@ Started: 2026-04-14
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 47 | UNIFY Runner Core | 1/1 | ✅ Complete | 2026-04-14 |
-| 48 | UNIFY Review Gate | 0/TBD | 🟡 Ready to plan | — |
-| 49 | Module Overlay Infrastructure | 0/TBD | ⚪ Not started | — |
+| 48 | UNIFY Review Gate | 1/1 | ✅ Complete | 2026-04-14 |
+| 49 | Module Overlay Infrastructure | 1/1 | ✅ Complete | 2026-04-14 |
 | 50 | Gate Automation | 0/TBD | ⚪ Not started | — |
 | 51 | E2E Validation | 0/TBD | ⚪ Not started | — |
 
@@ -24,13 +24,13 @@ Plans: 1/1 complete
 Focus: Add the human review/approval mechanism that validates autonomous UNIFY output before finalization
 Spec: docs/coda-spec-v7.md (UNIFY review / approval follow-up)
 Depends: Phase 47
-Plans: TBD (defined during /paul:plan)
+Plans: 1/1 complete
 
 ### Phase 49: Module Overlay Infrastructure
 Focus: Add module overlay infrastructure for plan/apply customization without modifying base prompts
 Spec: docs/module-gaps-and-onboarding.md
 Depends: Phase 48
-Plans: TBD (defined during /paul:plan)
+Plans: 1/1 complete
 
 ### Phase 50: Gate Automation
 Focus: Add gate automation configuration (`human`, `auto`, `auto-unless-block`) for lifecycle transitions
@@ -163,4 +163,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-14 — v0.8 The Compounding Engine in progress; Phase 47 complete*
+*Roadmap updated: 2026-04-14 — v0.8 The Compounding Engine in progress; Phases 47–48 complete*

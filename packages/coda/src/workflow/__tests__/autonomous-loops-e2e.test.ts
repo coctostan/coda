@@ -489,3 +489,94 @@ describe('Autonomous loops end-to-end', () => {
     )).toContain('ac_id: AC-1');
   });
 });
+
+describe('UNIFY review gate E2E', () => {
+  test('full UNIFY review cycle: pending blocks, approve passes, changes-requested captures feedback', () => {
+    const { codaRoot, statePath } = createTempCodaProject();
+
+    // Set up an issue in UNIFY phase with met ACs
+    writeIssue(codaRoot, {
+      phase: 'unify',
+      acceptance_criteria: [
+        { id: 'AC-1', text: 'Gate enforces review', status: 'met' },
+      ],
+    });
+    writePlan(codaRoot, { status: 'approved', task_count: 0 });
+    writeState(statePath, { phase: 'unify', submode: null, loop_iteration: 0 });
+
+    // Write a completion record with all fields + unify_review_status: 'pending'
+    mkdirSync(join(codaRoot, 'records'), { recursive: true });
+    writeRecord(join(codaRoot, 'records', 'my-feature-completion.md'), {
+      title: 'Completion Record',
+      issue: 'my-feature',
+      completed_at: '2026-04-14',
+      topics: ['workflow'],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'pending',
+    }, '## Summary\nFeature completed.\n');
+
+    // Step 1: Try to advance — should be blocked by UNIFY review pending
+    const blockedResult = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(blockedResult.success).toBe(false);
+    expect(blockedResult.reason).toContain('UNIFY review pending');
+
+    // Step 2: Status should show pending
+    const pendingStatus = codaStatus(statePath, codaRoot);
+    expect(pendingStatus.unify_review_status).toBe('pending');
+    expect(pendingStatus.next_action).toContain('approve');
+
+    // Step 3: Request changes with feedback
+    const changesResult = codaAdvance({
+      target_phase: 'done',
+      unify_review_decision: 'changes-requested',
+      unify_review_feedback: 'Missing pattern documentation for the new gate.',
+    }, codaRoot, statePath);
+    expect(changesResult.success).toBe(true);
+    expect(changesResult.new_phase).toBe('unify');
+
+    // Verify feedback was captured
+    const changesRecord = readRecord<Record<string, unknown>>(
+      join(codaRoot, 'records', 'my-feature-completion.md')
+    );
+    expect(changesRecord.frontmatter['unify_review_status']).toBe('changes-requested');
+    expect(changesRecord.body).toContain('Missing pattern documentation');
+
+    // Step 4: Status should show changes-requested
+    const changesStatus = codaStatus(statePath, codaRoot);
+    expect(changesStatus.unify_review_status).toBe('changes-requested');
+    expect(changesStatus.next_action).toContain('changes requested');
+
+    // Step 5: Simulate agent addressing feedback and resetting to pending
+    // (In real usage the agent would use coda_update; here we write directly)
+    writeRecord(join(codaRoot, 'records', 'my-feature-completion.md'), {
+      title: 'Completion Record',
+      issue: 'my-feature',
+      completed_at: '2026-04-14',
+      topics: ['workflow'],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'pending',
+    }, '## Summary\nFeature completed.\n\n## Patterns\nNew gate pattern documented.\n');
+
+    // Step 6: Approve the UNIFY review
+    const approveResult = codaAdvance({
+      target_phase: 'done',
+      unify_review_decision: 'approved',
+    }, codaRoot, statePath);
+    expect(approveResult.success).toBe(true);
+    expect(approveResult.new_phase).toBe('done');
+
+    // Verify the completion record was updated to approved
+    const approvedRecord = readRecord<Record<string, unknown>>(
+      join(codaRoot, 'records', 'my-feature-completion.md')
+    );
+    expect(approvedRecord.frontmatter['unify_review_status']).toBe('approved');
+
+    // Verify the issue moved to done
+    const finalStatus = codaStatus(statePath, codaRoot);
+    expect(finalStatus.phase).toBe('done');
+  });
+});

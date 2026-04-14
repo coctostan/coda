@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.8 The Compounding Engine in progress: Phase 47 complete (UNIFY Runner Core), 589 tests, 10 tools, 5 modules + init-scan, tsc clean
+- v0.8 The Compounding Engine in progress: Phase 49 complete (Module Overlay Infrastructure), 626 tests, 10 tools, 5 modules + init-scan + overlays, tsc clean
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
@@ -16,9 +16,11 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, topic-based section retrieval, and dependency-aware carry-forward primitives
 - `@coda/coda` ships 10 `coda_*` tools, modules, FORGE, workflow engine, and Pi integration
 - 5 modules are active across lifecycle hooks, including post-unify quality and knowledge capture
-- Autonomous review/revise and verify/correct loops are implemented, and UNIFY now has a structured workflow runner
+- Autonomous review/revise and verify/correct loops are implemented, UNIFY has a structured workflow runner, and UNIFY output requires human review approval before DONE
 - UNIFY Runner Core shipped in Phase 47: 5-action UNIFY prompt, expanded `unify→done` gate, and completion-record-backed gate data
-- 589 tests passing, TypeScript strict clean, no `any` types in source, zero external deps in core
+- UNIFY Review Gate shipped in Phase 48: human review/approval mechanism for UNIFY output, `unify_review_status` on completion record, revision-aware UNIFY context, shared `findCompletionRecordPath()` helper
+- Module Overlay Infrastructure shipped in Phase 49: two-layer prompt model (default + `.coda/modules/*.local.md` overlay), overlay-aware dispatcher, UNIFY compounding instruction (ACTION 3b), FORGE overlay seeding in SYNTHESIZE context
+- 626 tests passing, TypeScript strict clean, no `any` types in source, zero external deps in core
 
 ## Scope Snapshot
 ### Validated
@@ -72,15 +74,15 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Brownfield VALIDATE + ORIENT — structured review + direction questions, MILESTONE-PLAN.md I/O (Phase 44 — v0.7)
 - [x] Wire brownfield into /coda forge — detectBackdrop routing, brownfield scan context in command (Phase 45 — v0.7)
 - [x] E2E brownfield validation — 4 E2E tests covering full pipeline + context features + hooks + persistence (Phase 46 — v0.7)
-- [x] UNIFY Runner Core — structured 5-action UNIFY context, expanded `unify→done` gate, completion-record-backed gate data (Phase 47 — v0.8)
+- [x] UNIFY Runner Core - structured 5-action UNIFY context, expanded `unify→done` gate, completion-record-backed gate data (Phase 47 - v0.8)
 ### Active
-- [ ] Phase 48 — UNIFY Review Gate: add human validation of autonomous UNIFY output before DONE
+- [x] Phase 48 — UNIFY Review Gate: human review/approval of autonomous UNIFY output before DONE (Phase 48 — v0.8)
+- [x] Phase 49 — Module Overlay Infrastructure: two-layer prompt model, overlay-aware dispatcher, UNIFY compounding, FORGE seeding (Phase 49 — v0.8)
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 - [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- [ ] Phase 49 — Module overlay infrastructure
 - [ ] Phase 50 — Gate automation configuration
 - [ ] Phase 51 — v0.8 end-to-end validation
 
@@ -101,12 +103,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.8 progress | 5 phases complete | 1 of 5 complete ✅ |
-| Test suite | Green | 589 passing, 0 failing |
+| Milestone v0.8 progress | 5 phases complete | 3 of 5 complete ✅ |
+| Test suite | Green | 626 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Pi tools | 10 registered | 10/10 ✅ |
-| Modules | 5 modules active | security, tdd, architecture, quality, knowledge ✅ |
+| Modules | 5 modules active + overlays | security, tdd, architecture, quality, knowledge + overlay infrastructure ✅ |
 | UNIFY runner | 5 mandatory actions wired | Phase 47 PASS ✅ |
+| UNIFY review gate | Human approval before DONE | Phase 48 PASS ✅ |
+| Module overlays | Two-layer prompt model | Phase 49 PASS ✅ |
 ## Key Decisions
 | Decision | Rationale | Date | Status |
 |----------|-----------|------|--------|
@@ -131,6 +135,11 @@ Enabling developers to build durable, maintainable software through disciplined 
 | UNIFY diff presentation stays in the conversation channel | Avoid special TUI work for v0.8 while still surfacing compounding changes clearly | 2026-04-14 | Active |
 | Overlay writes use `coda_edit_body` rather than a new v0.8 tool | Reuse existing mutation path and defer `coda_feedback` to a later milestone | 2026-04-14 | Active |
 | Gate automation replaces `human_review_default` as the long-term approval model | Unify approval behavior under one configurable gate system | 2026-04-14 | Active |
+| Aggregate UNIFY review gate (not per-action approval) | v0.8 uses post-UNIFY aggregate review; per-action interrupt deferred | 2026-04-14 | Active |
+| Completion record carries `unify_review_status` | Disk-based signal for fresh-session revision detection without new submode | 2026-04-14 | Active |
+| Shared `findCompletionRecordPath()` helper | 3 call sites (gate data, advance handler, UNIFY runner) share lookup | 2026-04-14 | Active |
+| Overlay merge is append-only (default + project context) | Keep merge deterministic; overlay body appended after `## Project-Specific Context` header | 2026-04-14 | Active |
+| Overlays seeded by agent via `coda_edit_body`, not programmatic write | Consistent with v0.8 D3; agent drives overlay creation during FORGE/UNIFY | 2026-04-14 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -139,4 +148,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-14 after Phase 47 UNIFY Runner Core completion*
+*Last updated: 2026-04-14 after Phase 49 Module Overlay Infrastructure completion*

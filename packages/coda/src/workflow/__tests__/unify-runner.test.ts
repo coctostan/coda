@@ -4,7 +4,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { writeRecord } from '@coda/core';
 import type { IssueRecord, PlanRecord, TaskRecord } from '@coda/core';
-import { assembleUnifyContext, loadTopicMatchedRefDocs } from '../unify-runner';
+import { assembleUnifyContext, loadTopicMatchedRefDocs, loadUnifyReviewFeedback } from '../unify-runner';
 import { getPhaseContext } from '../phase-runner';
 
 let codaRoot: string;
@@ -229,5 +229,108 @@ describe('getPhaseContext unify integration', () => {
     expect(result.systemPrompt).toContain('ACTION 5:');
     expect(result.systemPrompt).not.toBe('You are closing the loop. Write the completion record and update reference docs.');
     expect(result.metadata.phase).toBe('unify');
+  });
+});
+
+describe('UNIFY review prompt and revision context', () => {
+  test('systemPrompt mentions unify_review_status: pending in ACTION 5', () => {
+    setupIssue();
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('unify_review_status');
+    expect(result.systemPrompt).toContain("'pending'");
+  });
+
+  test('provides revision-aware prompt when completion record has changes-requested', () => {
+    setupIssue();
+    setupPlan();
+
+    // Write a completion record with changes-requested status and feedback
+    const recordsDir = join(codaRoot, 'records');
+    mkdirSync(recordsDir, { recursive: true });
+    writeRecord<Record<string, unknown>>(join(recordsDir, 'test-issue-completion.md'), {
+      title: 'Completion Record',
+      issue: 'test-issue',
+      completed_at: '2026-04-14',
+      topics: ['state', 'gates'],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'changes-requested',
+    }, '## Summary\nDone.\n\n## UNIFY Review\nStatus: changes-requested\n\nFeedback:\nMissing pattern documentation for the new gate.\n');
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('revising your UNIFY output');
+    expect(result.systemPrompt).toContain('Missing pattern documentation');
+    expect(result.systemPrompt).not.toContain('ACTION 1:');
+  });
+
+  test('provides normal 5-action prompt when completion record has pending status', () => {
+    setupIssue();
+    setupPlan();
+
+    const recordsDir = join(codaRoot, 'records');
+    mkdirSync(recordsDir, { recursive: true });
+    writeRecord<Record<string, unknown>>(join(recordsDir, 'test-issue-completion.md'), {
+      title: 'Completion Record',
+      issue: 'test-issue',
+      completed_at: '2026-04-14',
+      topics: [],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'pending',
+    }, '## Summary\nDone.\n');
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('ACTION 1:');
+    expect(result.systemPrompt).not.toContain('revising your UNIFY output');
+  });
+});
+
+describe('loadUnifyReviewFeedback', () => {
+  test('returns feedback when completion record has changes-requested', () => {
+    const recordsDir = join(codaRoot, 'records');
+    mkdirSync(recordsDir, { recursive: true });
+    writeRecord<Record<string, unknown>>(join(recordsDir, 'test-issue-completion.md'), {
+      title: 'Completion Record',
+      issue: 'test-issue',
+      completed_at: '2026-04-14',
+      topics: [],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'changes-requested',
+    }, '## Summary\nDone.\n\n## UNIFY Review\nStatus: changes-requested\n\nFeedback:\nAdd missing patterns.\n');
+
+    const feedback = loadUnifyReviewFeedback(codaRoot, 'test-issue');
+    expect(feedback).toContain('Add missing patterns');
+  });
+
+  test('returns null when completion record has pending status', () => {
+    const recordsDir = join(codaRoot, 'records');
+    mkdirSync(recordsDir, { recursive: true });
+    writeRecord<Record<string, unknown>>(join(recordsDir, 'test-issue-completion.md'), {
+      title: 'Completion Record',
+      issue: 'test-issue',
+      completed_at: '2026-04-14',
+      topics: [],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'pending',
+    }, '## Summary\nDone.\n');
+
+    const feedback = loadUnifyReviewFeedback(codaRoot, 'test-issue');
+    expect(feedback).toBeNull();
+  });
+
+  test('returns null when no completion record exists', () => {
+    const feedback = loadUnifyReviewFeedback(codaRoot, 'test-issue');
+    expect(feedback).toBeNull();
   });
 });

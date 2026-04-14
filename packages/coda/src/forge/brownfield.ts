@@ -181,6 +181,8 @@ export interface SynthesizeContext {
   refDocs: readonly RefDocSpec[];
   /** How many evidence files were found. */
   evidenceCount: number;
+  /** Instructions for seeding module overlays from scan evidence. */
+  overlayInstructions: string;
 }
 
 /**
@@ -204,9 +206,49 @@ export function assembleSynthesizeContext(codaRoot: string): SynthesizeContext {
     evidence,
     refDocs: SYNTHESIZE_REF_DOCS,
     evidenceCount: evidence.length,
+    overlayInstructions: buildOverlayInstructions(evidenceRecords),
   };
 }
 
+/**
+ * Build instructions for seeding module overlays from scan evidence.
+ *
+ * @param evidenceRecords - The evidence records from SCAN
+ * @returns Instruction string for overlay seeding
+ */
+function buildOverlayInstructions(
+  evidenceRecords: Array<{ frontmatter: { module: string }; body: string }>
+): string {
+  const modules = evidenceRecords.map((r) => r.frontmatter.module);
+  if (modules.length === 0) return '';
+
+  return [
+    '## Module Overlay Seeding',
+    '',
+    'After producing the reference documents, seed project-specific module overlays from the scan evidence.',
+    'For each module with relevant findings, create `.coda/modules/{module}.local.md` via coda_edit_body:',
+    '',
+    ...modules.map((m) => `- \`.coda/modules/${m}.local.md\``),
+    '',
+    'Each overlay file should have this format:',
+    '```markdown',
+    '---',
+    'module: {module_name}',
+    `last_updated: ${new Date().toISOString()}`,
+    'updated_by: forge',
+    '---',
+    '',
+    '## Project Values',
+    '- (high-level project principles discovered during scanning)',
+    '',
+    '## Validated Patterns',
+    '- (patterns confirmed from evidence, e.g. "Auth middleware at src/middleware/auth.ts")',
+    '```',
+    '',
+    'Focus on the "Project Values" and "Validated Patterns" sections.',
+    'Leave "Known False Positives" and "Recurring Issues" empty — they accumulate during issues.',
+  ].join('\n');
+}
 // ─── GAP ANALYSIS ──────────────────────────────────────────
 
 /**

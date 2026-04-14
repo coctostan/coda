@@ -6,7 +6,7 @@
  * and module findings, then returns a PhaseContext with instructions for all
  * 5 UNIFY actions as specified in coda-spec-v7.
  */
-import type { CodaState } from '@coda/core';
+import type { CodaState, CompletionRecord } from '@coda/core';
 import { readRecord, getSectionsByTopics } from '@coda/core';
 import type { PhaseContext } from './types';
 import {
@@ -17,6 +17,7 @@ import {
 } from './context-builder';
 import { join } from 'path';
 import { existsSync, readdirSync } from 'fs';
+import { findCompletionRecordPath } from '../tools/coda-advance';
 
 /**
  * Load topic-matched reference doc sections for UNIFY context.
@@ -136,9 +137,14 @@ export function assembleUnifyContext(
   // Load module findings summary
   const findingsSummary = loadModuleFindingsSummary(codaRoot, issueSlug);
 
-  // Build the system prompt with all 5 mandatory UNIFY actions
-  const systemPrompt = buildUnifySystemPrompt(specDelta, hasMilestone);
+  // Check for existing completion record with revision feedback
+  const revisionFeedback = loadUnifyReviewFeedback(codaRoot, issueSlug);
+  const isRevision = revisionFeedback !== null;
 
+  // Build the system prompt — revision-aware when changes have been requested
+  const systemPrompt = isRevision
+    ? buildUnifyRevisionPrompt(revisionFeedback)
+    : buildUnifySystemPrompt(specDelta, hasMilestone);
   const context = [
     issueContext,
     planContext,
@@ -190,6 +196,16 @@ ACTION 3: Capture Knowledge for Compounding
 - New decisions → create decision records via coda_create type 'decision'
 - Lessons learned → update relevant ref doc sections
 
+ACTION 3b: Update Module Overlays for Compounding
+- If this issue revealed project-specific patterns relevant to any module (security, tdd, architecture, quality, knowledge), update the module overlay:
+  - Use coda_edit_body on .coda/modules/{module}.local.md to add entries under the appropriate section:
+    - "## Project Values" — high-level principles established by this work
+    - "## Validated Patterns" — conventions confirmed or established by this issue
+    - "## Known False Positives" — findings dismissed during this issue with context
+    - "## Recurring Issues" — problems flagged repeatedly that remain unresolved
+  - Create the overlay file if it doesn't exist yet (use coda_create type 'reference' or coda_edit_body)
+- If no module-relevant patterns were learned, skip this action
+
 ACTION 4: Update Milestone Progress
 ${hasMilestone
     ? '- This issue has a milestone field — check if a milestone record exists\n- If a milestone record exists: update its success criteria status'
@@ -200,12 +216,60 @@ ACTION 5: Write Completion Record (LAST — after all other actions)
 - Include frontmatter: title, issue slug, completed_at (ISO date), topics (from issue),
   system_spec_updated: true (if you merged changes OR confirmed no change),
   reference_docs_reviewed: true (after completing Action 2),
-  milestone_updated: true (after completing Action 4 — even if no milestone exists)
+  milestone_updated: true (after completing Action 4 — even if no milestone exists),
+  unify_review_status: 'pending' (triggers human review before advancing to DONE)
 - Include body sections: Summary, Verification Evidence (per-AC), Deviations,
   Decisions, Patterns, Module Findings
-
-IMPORTANT: The completion record frontmatter fields (system_spec_updated,
 reference_docs_reviewed, milestone_updated) MUST all be true before you can
-advance to DONE. The gate will check these fields. Since you write the record
-LAST, all fields should reflect the actual outcomes of Actions 1-4.`;
+advance to DONE. The unify_review_status must be set to 'pending' — a human
+will review your UNIFY output and approve or request changes before DONE.
+Since you write the record LAST, all fields should reflect the actual outcomes
+of Actions 1-4.`;
+}
+
+/**
+ * Load UNIFY review feedback from the completion record when changes have been requested.
+ *
+ * @param codaRoot - Path to the `.coda/` directory
+ * @param issueSlug - The issue slug
+ * @returns Feedback string if changes-requested, null otherwise
+ */
+export function loadUnifyReviewFeedback(codaRoot: string, issueSlug: string): string | null {
+  const recordPath = findCompletionRecordPath(codaRoot, issueSlug);
+  if (!recordPath) {
+    return null;
+  }
+
+  try {
+    const record = readRecord<CompletionRecord>(recordPath);
+    if (record.frontmatter.unify_review_status !== 'changes-requested') {
+      return null;
+    }
+
+    // Extract the "UNIFY Review" section from the body
+    const sectionMatch = record.body.match(/## UNIFY Review\n([\s\S]*?)(?=\n## |$)/);
+    return sectionMatch ? sectionMatch[1]!.trim() : 'Changes requested (no specific feedback found).';
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build a revision-aware UNIFY prompt when the human has requested changes.
+ */
+function buildUnifyRevisionPrompt(feedback: string): string {
+  return `You are revising your UNIFY output after human review. The reviewer has requested changes.
+
+HUMAN REVIEW FEEDBACK:
+${feedback}
+
+Address the feedback above. You may:
+- Update reference docs via coda_edit_body if the reviewer flagged missing or incorrect updates
+- Update the completion record body via coda_edit_body to add missing sections or evidence
+- Create new decision records or update patterns as needed
+- Use coda_update on the completion record to reset unify_review_status to 'pending' when done
+
+After addressing all feedback, use coda_update on the completion record to set
+unify_review_status back to 'pending', then call coda_advance to request DONE again.
+The human will re-review your changes.`;
 }

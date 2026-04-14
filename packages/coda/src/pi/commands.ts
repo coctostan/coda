@@ -366,6 +366,33 @@ function buildAdvanceInput(
     };
   }
 
+  // Handle UNIFY review pending — same UX pattern as human review
+  if (status.phase === 'unify' && status.unify_review_status === 'pending') {
+    if (trimmed.length === 0 || trimmed === 'approve' || trimmed === 'approved') {
+      return {
+        target_phase: 'done',
+        unify_review_decision: 'approved',
+      };
+    }
+
+    if (trimmed === 'changes' || trimmed === 'request-changes') {
+      return { error: 'Usage: /coda advance changes <feedback>' };
+    }
+
+    const changeMatch = trimmed.match(/^(changes|request-changes)\s+([\s\S]+)$/);
+    if (changeMatch) {
+      return {
+        target_phase: 'done',
+        unify_review_decision: 'changes-requested',
+        unify_review_feedback: changeMatch[2]!.trim(),
+      };
+    }
+
+    return {
+      error: 'UNIFY review is pending. Use /coda advance to approve or /coda advance changes <feedback> to request changes.',
+    };
+  }
+
   return {
     target_phase: getNextPhase(status.phase ?? 'done'),
   };
