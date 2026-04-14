@@ -6,18 +6,18 @@ Version: v0.8.0
 **Current focus:** v0.8 The Compounding Engine
 ## Current Position
 Milestone: v0.8 The Compounding Engine
-Phase: 50 of 51 (Gate Automation)
-Plan: 50-01 Gate Automation (1/1)
-Status: Complete — PLAN → APPLY → UNIFY done
-Last activity: 2026-04-15 — Phase 50 UNIFY complete
+Phase: 51 of 51 (E2E Validation)
+Plan: 51-01 E2E Validation (1/1)
+Status: Plan written, ready to apply
+Last activity: 2026-04-15 — Phase 51 PLAN complete
 Progress:
 - v0.8 The Compounding Engine: [████████░░] 80%
-- Phase 50: [██████████] 100% ✓
+- Phase 51: [██░░░░░░░░] 20% (planned, not yet applied)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Loop complete — ready for next PLAN]
+  ✓        ○        ○     [PLAN complete — ready for APPLY]
 ```
 ## Accumulated Context
 ### Decisions
@@ -46,14 +46,14 @@ PLAN ──▶ APPLY ──▶ UNIFY
 Branch: phases/48-50-compounding-engine
 Remote: https://github.com/coctostan/coda.git
 Last session: 2026-04-15
-Stopped at: Phase 50 complete, ready for Phase 51 planning
-Next action: /paul:plan for Phase 51 (E2E Validation)
+Stopped at: Phase 51 PLAN complete, ready for APPLY
+Next action: /paul:apply for Phase 51
 Resume file: .paul/HANDOFF-2026-04-14.md
 Resume context:
-- Phase 50 (Gate Automation) fully shipped — PLAN → APPLY → UNIFY complete
+- Phase 51 (E2E Validation) plan written — milestone close phase
+- 3 alignment fixes: /coda new gate-aware, review runner gate-aware, coda-status gate display
+- 5 E2E test groups (11 tests): full lifecycle, overrides, backward compat, /coda new, review runner
 - PR #19 open: phases/48-50-compounding-engine → main
-- 4 of 5 v0.8 phases complete (47–50)
-- Phase 51 (E2E Validation) is the milestone close
 - 644 tests passing, TypeScript strict clean
 
 ---
