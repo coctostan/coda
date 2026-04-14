@@ -1,27 +1,24 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.7 Brownfield & Context complete: brownfield FORGE, context features, 573 tests, 10 tools, 5 modules + init-scan, tsc clean
+- v0.8 The Compounding Engine in progress: Phase 47 complete (UNIFY Runner Core), 589 tests, 10 tools, 5 modules + init-scan, tsc clean
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
 ## Current State
 | Attribute | Value |
 |-----------|-------|
-| Version | 0.7.0 |
-| Status | Milestone v0.7 complete |
-| Last Updated | 2026-04-03 |
-
+| Version | 0.8.0 |
+| Status | Milestone v0.8 in progress |
+| Last Updated | 2026-04-14 |
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
-- `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, and v0.2 submode/loop primitives
-- `@coda/coda` ships tools (9 coda_* tools), modules, FORGE, workflow engine, and Pi integration
-- 5 modules active: security, tdd, architecture, quality, knowledge — 12 prompt files across 5 hook points
-- Autonomous review/revise and verify/correct loops run deterministically from the supported `coda_advance` trigger path
-- Human review gate blocks BUILD until human approval is recorded
-- Exhaustion handling pauses automation and routes operators through `/coda back` and `/coda kill`
-- 433 tests passing (179 core + 254 coda), TypeScript strict, no `any` types in source, zero external deps in core
-- v0.5 Module Completion complete: 4 E2E fixes, 3 new modules, E2E validation with all 5 modules firing
+- `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, topic-based section retrieval, and dependency-aware carry-forward primitives
+- `@coda/coda` ships 10 `coda_*` tools, modules, FORGE, workflow engine, and Pi integration
+- 5 modules are active across lifecycle hooks, including post-unify quality and knowledge capture
+- Autonomous review/revise and verify/correct loops are implemented, and UNIFY now has a structured workflow runner
+- UNIFY Runner Core shipped in Phase 47: 5-action UNIFY prompt, expanded `unify→done` gate, and completion-record-backed gate data
+- 589 tests passing, TypeScript strict clean, no `any` types in source, zero external deps in core
 
 ## Scope Snapshot
 ### Validated
@@ -75,13 +72,18 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Brownfield VALIDATE + ORIENT — structured review + direction questions, MILESTONE-PLAN.md I/O (Phase 44 — v0.7)
 - [x] Wire brownfield into /coda forge — detectBackdrop routing, brownfield scan context in command (Phase 45 — v0.7)
 - [x] E2E brownfield validation — 4 E2E tests covering full pipeline + context features + hooks + persistence (Phase 46 — v0.7)
+- [x] UNIFY Runner Core — structured 5-action UNIFY context, expanded `unify→done` gate, completion-record-backed gate data (Phase 47 — v0.8)
 ### Active
+- [ ] Phase 48 — UNIFY Review Gate: add human validation of autonomous UNIFY output before DONE
 - [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
 - [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
 - [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
 - [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
 ### Planned
-- Topic-based section retrieval integration into context-builder (Phase 39)
+- [ ] Phase 49 — Module overlay infrastructure
+- [ ] Phase 50 — Gate automation configuration
+- [ ] Phase 51 — v0.8 end-to-end validation
+
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
 - Full module prompt/eval ecosystem
@@ -99,13 +101,12 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.7 progress | 11 phases complete | 11 of 11 complete ✅ |
-| Test suite | Green | 573 passing, 0 failing |
+| Milestone v0.8 progress | 5 phases complete | 1 of 5 complete ✅ |
+| Test suite | Green | 589 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Pi tools | 10 registered | 10/10 ✅ |
 | Modules | 5 modules active | security, tdd, architecture, quality, knowledge ✅ |
-| Topic retrieval | getSectionsByTopics + getSectionHeadings | Phase 36 PASS ✅ |
-
+| UNIFY runner | 5 mandatory actions wired | Phase 47 PASS ✅ |
 ## Key Decisions
 | Decision | Rationale | Date | Status |
 |----------|-----------|------|--------|
@@ -126,6 +127,10 @@ Enabling developers to build durable, maintainable software through disciplined 
 | `coda_report_findings` explicit tool for findings persistence | Agent submits findings via tool call; Pi doesn't expose `after_agent_turn` hook | 2026-03-29 | Active |
 | Sticky findings replaced with latest-per-hookPoint semantics | Prevent stale findings from accumulating across phases | 2026-03-29 | Active |
 | Write gate fail-closed on malformed state | If state can't be read, block writes rather than allowing unguarded access | 2026-03-29 | Active |
+| UNIFY remains autonomous; human validation is deferred to a gate-mediated follow-up phase | Keep Phase 47 focused on runner/gate infrastructure while reserving approval mechanics for Phase 48 | 2026-04-14 | Active |
+| UNIFY diff presentation stays in the conversation channel | Avoid special TUI work for v0.8 while still surfacing compounding changes clearly | 2026-04-14 | Active |
+| Overlay writes use `coda_edit_body` rather than a new v0.8 tool | Reuse existing mutation path and defer `coda_feedback` to a later milestone | 2026-04-14 | Active |
+| Gate automation replaces `human_review_default` as the long-term approval model | Unify approval behavior under one configurable gate system | 2026-04-14 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -134,4 +139,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-03 after v0.7 Brownfield & Context milestone completion*
+*Last updated: 2026-04-14 after Phase 47 UNIFY Runner Core completion*

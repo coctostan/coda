@@ -4,85 +4,44 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-**v0.7 Brownfield & Context** (v0.7.0)
-Status: ✅ Complete
-Completed: 2026-04-03
-
+**v0.8 The Compounding Engine** (v0.8.0)
+Status: 🔵 In Progress
+Started: 2026-04-14
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 36 | Topic-based Section Retrieval | 1/1 | ✅ Complete | 2026-04-03 |
-| 37 | Dependency-based Carry-forward | 1/1 | ✅ Complete | 2026-04-03 |
-| 38 | Adaptive Ceremony Rules | 1/1 | ✅ Complete | 2026-04-03 |
-| 39 | Context Budget Management | 1/1 | ✅ Complete | 2026-04-03 |
-| 40 | Module Init-scan Hooks | 1/1 | ✅ Complete | 2026-04-03 |
-| 41 | Brownfield SCAN | 1/1 | ✅ Complete | 2026-04-03 |
-| 42 | Brownfield SYNTHESIZE | 1/1 | ✅ Complete | 2026-04-03 |
-| 43 | Brownfield GAP ANALYSIS | 1/1 | ✅ Complete | 2026-04-03 |
-| 44 | Brownfield VALIDATE + ORIENT | 1/1 | ✅ Complete | 2026-04-03 |
-| 45 | Wire Brownfield into /coda forge | 1/1 | ✅ Complete | 2026-04-03 |
-| 46 | E2E Brownfield on coda-test-todo | 1/1 | ✅ Complete | 2026-04-03 |
+| 47 | UNIFY Runner Core | 1/1 | ✅ Complete | 2026-04-14 |
+| 48 | UNIFY Review Gate | 0/TBD | 🟡 Ready to plan | — |
+| 49 | Module Overlay Infrastructure | 0/TBD | ⚪ Not started | — |
+| 50 | Gate Automation | 0/TBD | ⚪ Not started | — |
+| 51 | E2E Validation | 0/TBD | ⚪ Not started | — |
 
-### Phase 36: Topic-based Section Retrieval
-Focus: Topic-based section retrieval in data layer — inject only matching sections from large ref docs
-Spec: docs/v0.4/01-topic-retrieval.md
+### Phase 47: UNIFY Runner Core
+Focus: Make UNIFY a first-class workflow phase with structured context, 5 mandatory actions, and expanded `unify→done` gating
+Spec: docs/coda-spec-v7.md (UNIFY section)
+Plans: 1/1 complete
+
+### Phase 48: UNIFY Review Gate
+Focus: Add the human review/approval mechanism that validates autonomous UNIFY output before finalization
+Spec: docs/coda-spec-v7.md (UNIFY review / approval follow-up)
+Depends: Phase 47
 Plans: TBD (defined during /paul:plan)
 
-### Phase 37: Dependency-based Carry-forward
-Focus: Dependency-based carry-forward in context builder — BUILD tasks get context from dependency tasks
-Spec: docs/v0.4/02-carry-forward.md
+### Phase 49: Module Overlay Infrastructure
+Focus: Add module overlay infrastructure for plan/apply customization without modifying base prompts
+Spec: docs/module-gaps-and-onboarding.md
+Depends: Phase 48
 Plans: TBD (defined during /paul:plan)
 
-### Phase 38: Adaptive Ceremony Rules
-Focus: Adaptive ceremony rules per issue type — features vs bugfixes vs chores get different phase depths
-Spec: docs/v0.4/03-ceremony.md
+### Phase 50: Gate Automation
+Focus: Add gate automation configuration (`human`, `auto`, `auto-unless-block`) for lifecycle transitions
+Spec: docs/module-gaps-and-onboarding.md
+Depends: Phases 47–49
 Plans: TBD (defined during /paul:plan)
 
-### Phase 39: Context Budget Management
-Focus: Per-phase context limits, module finding summarization, advisory budgets
-Spec: docs/v0.4/04-context-budgets.md
-Depends: Phases 36, 37
-Plans: TBD (defined during /paul:plan)
-
-### Phase 40: Module Init-scan Hooks
-Focus: Module init-scan hook point + dispatch — extends module system for brownfield scanning
-Spec: docs/v0.4/05-brownfield-forge.md
-Depends: v0.3 module system
-Plans: TBD (defined during /paul:plan)
-
-### Phase 41: Brownfield SCAN
-Focus: Module-driven evidence gathering during brownfield FORGE
-Spec: docs/v0.4/05-brownfield-forge.md
-Depends: Phase 40
-Plans: TBD (defined during /paul:plan)
-
-### Phase 42: Brownfield SYNTHESIZE
-Focus: Build reference docs from evidence gathered during SCAN
-Spec: docs/v0.4/05-brownfield-forge.md
-Depends: Phase 41
-Plans: TBD (defined during /paul:plan)
-
-### Phase 43: Brownfield GAP ANALYSIS
-Focus: Module-driven gap assessment with dependency-aware ordering
-Spec: docs/v0.4/05-brownfield-forge.md
-Depends: Phase 42
-Plans: TBD (defined during /paul:plan)
-
-### Phase 44: Brownfield VALIDATE + ORIENT
-Focus: Human review gate + future direction for brownfield onboarding
-Spec: docs/v0.4/05-brownfield-forge.md
-Depends: Phase 43
-Plans: TBD (defined during /paul:plan)
-
-### Phase 45: Wire Brownfield into /coda forge
-Focus: Detect backdrop, route to greenfield or brownfield in forge command
-Spec: docs/v0.4/05-brownfield-forge.md
-Depends: Phases 41–44
-Plans: TBD (defined during /paul:plan)
-
-### Phase 46: E2E Brownfield on coda-test-todo
-Focus: Full brownfield forge run on coda-test-todo project — validates entire flow
-Spec: docs/v0.4/E2E-TEST-SCRIPT-v0.4.md
-Depends: All previous phases
+### Phase 51: E2E Validation
+Focus: Validate the full v0.8 compounding engine end-to-end across UNIFY, review gate, overlays, and gate automation
+Spec: docs/module-gaps-and-onboarding.md
+Depends: All previous v0.8 phases
 Plans: TBD (defined during /paul:plan)
 ## Completed Milestones
 <details>
@@ -204,4 +163,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-03 — v0.7 Brownfield & Context milestone completed*
+*Roadmap updated: 2026-04-14 — v0.8 The Compounding Engine in progress; Phase 47 complete*
