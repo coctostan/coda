@@ -1,29 +1,24 @@
 # Project State
-
 ## Project Reference
-
 See: .paul/PROJECT.md (updated 2026-04-03)
-Version: v0.7.0
-
+Version: v0.8.0
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** Awaiting next milestone
-
+**Current focus:** v0.8 The Compounding Engine
 ## Current Position
-Milestone: Awaiting next milestone
-Phase: None active
-Plan: None
-Status: Milestone v0.7 Brownfield & Context complete — ready for next
-Last activity: 2026-04-03T07:00:00Z — Milestone completed
+Milestone: v0.8 The Compounding Engine
+Phase: 47 of 51 (UNIFY Runner Core)
+Plan: 47-01 APPLY complete
+Status: APPLY complete, ready for UNIFY
+Last activity: 2026-04-14T12:00:00Z — APPLY complete, all 3 tasks passed
 Progress:
-- v0.7 Brownfield & Context: [██████████] 100% ✓
-
+- v0.8 The Compounding Engine: [░░░░░░░░░░] 0%
+- Phase 47: [████████░░] 80%
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Milestone complete - ready for next]
+  ✓        ✓        ○     [APPLY complete, ready for UNIFY]
 ```
-
 ## Accumulated Context
 ### Decisions
 | Decision | Phase | Impact |
@@ -37,14 +32,17 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Overview always-include uses exact heading match (case-insensitive) | v0.7 P36 | Topic retrieval behavior |
 | context-budgets.ts separate from context-builder.ts | v0.7 P39 | Keeps context-builder under 500 lines |
 | Synthetic HookContext for forge: issueSlug='forge-onboarding', phase='forge' | v0.7 P41 | Dispatcher doesn't validate against state |
-Branch: main
+| Gate-mediated UNIFY approval (not inline) | v0.8 D1 | UNIFY stays autonomous; human approval via separate review step |
+| Diff presentation via conversation channel | v0.8 D2 | No special TUI widget needed |
+| Overlay write via coda_edit_body (no new tool for v0.8) | v0.8 D3 | coda_feedback deferred to v0.9 |
+| Gate automation replaces human_review_default | v0.8 D4 | Unified gate config with backward compat |
+Branch: feature/47-unify-runner-core
 Remote: https://github.com/coctostan/coda.git
-
-## Session Continuity
-Last session: 2026-04-03T07:00:00Z
-Stopped at: Milestone v0.7 Brownfield & Context complete
-Next action: /paul:discuss-milestone or /paul:milestone
-Resume file: .paul/MILESTONES.md
+Last session: 2026-04-14T12:00:00Z
+Stopped at: APPLY complete for Phase 47-01
+Next action: /paul:unify
+Resume file: .paul/phases/47-unify-runner-core/47-01-PLAN.md
+PR: https://github.com/coctostan/coda/pull/18 (state: open)
 
 ---
 *STATE.md — Updated after every significant action*
