@@ -88,6 +88,10 @@ export interface AdvanceInput {
   human_review_decision?: 'approved' | 'changes-requested';
   /** Optional human review feedback captured for requested changes. */
   review_feedback?: string;
+  /** Optional UNIFY review decision to apply before advancing to done. */
+  unify_review_decision?: 'approved' | 'changes-requested';
+  /** Optional UNIFY review feedback captured for requested changes. */
+  unify_review_feedback?: string;
 }
 
 /** Result from coda_advance. */
@@ -132,6 +136,8 @@ export interface StatusResult extends ToolResult {
   human_review_required?: boolean | null;
   /** Current durable human review status on the active plan. */
   human_review_status?: 'not-required' | 'pending' | 'approved' | 'changes-requested' | null;
+  /** Current UNIFY review status from the completion record. */
+  unify_review_status?: 'pending' | 'approved' | 'changes-requested' | null;
   /** Human-readable suggestion for next action */
   next_action: string;
 }

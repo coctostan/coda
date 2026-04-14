@@ -3,7 +3,7 @@
   "tools": {
     "read": {
       "name": "read",
-      "description": "Read a file. For text files, each line is prefixed with `LINE:HASH|` (e.g., `12:abc12|content`). Use these references as anchors for the `edit` tool.\nImages (`jpg`, `png`, `gif`, `webp`) are delegated to the built-in image reader and returned as image attachments.\n\nDefault limit: 2000 lines or 50.0KB.\n\nWhen a file is truncated (exceeds 2000 lines or 50.0KB), a **structural map** is appended after the hashlined content showing file symbols (classes, functions, interfaces, etc.) with line ranges.\n\nUse the appended map for targeted reads with `offset` and `limit` — e.g., `read(path, { offset: LINE, limit: N })`.\n\nMaps support 17 languages (including TypeScript, Python, Rust, Go, C/C++, Java, and more) and are cached in memory by file modification time for fast repeated access.\n\n## Map Parameter\n\nUse the `map` parameter to request a structural map alongside the file content:\n\n- `read(path, { map: true })` — appends the structural map after hashlined content, even for small files\n- `read(path, { map: true, offset: 50, limit: 20 })` — scoped hashlines with full-file map\n\n**Mutual exclusivity:** `map` cannot be combined with `symbol`. Use one or the other.\n\nWhen `map` is not specified, structural maps are only appended automatically when a file exceeds the truncation threshold.\n\n## Symbol Parameter\n\nUse the `symbol` parameter to read a specific symbol by name — no line numbers needed:\n\n- `read(path, { symbol: \"functionName\" })` — reads just that function\n- `read(path, { symbol: \"ClassName.methodName\" })` — reads a method inside a class (dot notation)\n\n**Examples by symbol type:**\n\n| Type | Example | What it reads |\n|------|---------|---------------|\n| Function | `{ symbol: \"processEvent\" }` | The full function body |\n| Class | `{ symbol: \"EventEmitter\" }` | The entire class declaration |\n| Method | `{ symbol: \"EventEmitter.emit\" }` | A single method within a class |\n| Interface | `{ symbol: \"RequestOptions\" }` | The full interface declaration |\n| Type alias | `{ symbol: \"EventHandler\" }` | The type alias definition |\n| Const/variable | `{ symbol: \"DEFAULT_TIMEOUT\" }` | The const/let/var declaration |\n| Enum | `{ symbol: \"LogLevel\" }` | The full enum declaration |\n\n**Mutual exclusivity:** `symbol` cannot be combined with `offset` or `limit`. Use one addressing mode or the other.\n\n**Behavior by result:**\n\n- **Found:** Returns hashlined content for the symbol's line range only, prepended with `[Symbol: name (kind), lines X-Y of Z]`.\n- **Ambiguous (multiple matches):** Returns a disambiguation list with each candidate's name, kind, and line range. Use dot notation (e.g., `ClassName.methodName`) to narrow the match.\n- **Not found:** Falls back to a normal read with a warning listing up to 20 available symbol names.\n- **Unmappable file:** Falls back to a normal read with a warning noting the file type doesn't support symbol lookup.\n\nHash anchors from symbol reads are valid for use with the `edit` tool.",
+      "description": "Read a file. For text files, each line is prefixed with `LINE:HASH|` (e.g., `12:abc12|content`). Use these references as anchors for the `edit` tool.\nImages (`jpg`, `png`, `gif`, `webp`) are delegated to the built-in image reader and returned as image attachments.\n\nDefault limit: 2000 lines or 50.0KB.\n\nWhen a file is truncated (exceeds 2000 lines or 50.0KB), a **structural map** is appended after the hashlined content showing file symbols (classes, functions, interfaces, etc.) with line ranges.\n\nUse the appended map for targeted reads with `offset` and `limit` — e.g., `read(path, { offset: LINE, limit: N })`.\nWhen provided, `offset` and `limit` must be positive integers; `0` and negative values are invalid.\n\nMaps support 17 languages (including TypeScript, Python, Rust, Go, C/C++, Java, and more) and are cached in memory by file modification time for fast repeated access.\n\n## Map Parameter\n\nUse the `map` parameter to request a structural map alongside the file content:\n\n- `read(path, { map: true })` — appends the structural map after hashlined content, even for small files\n- `read(path, { map: true, offset: 50, limit: 20 })` — scoped hashlines with full-file map\n\n**Mutual exclusivity:** `map` cannot be combined with `symbol`. Use one or the other.\n\nWhen `map` is not specified, structural maps are only appended automatically when a file exceeds the truncation threshold.\n\n## Symbol Parameter\n\nUse the `symbol` parameter to read a specific symbol by name — no line numbers needed:\n\n- `read(path, { symbol: \"functionName\" })` — reads just that function\n- `read(path, { symbol: \"ClassName.methodName\" })` — reads a method inside a class (dot notation)\n\n**Examples by symbol type:**\n\n| Type | Example | What it reads |\n|------|---------|---------------|\n| Function | `{ symbol: \"processEvent\" }` | The full function body |\n| Class | `{ symbol: \"EventEmitter\" }` | The entire class declaration |\n| Method | `{ symbol: \"EventEmitter.emit\" }` | A single method within a class |\n| Interface | `{ symbol: \"RequestOptions\" }` | The full interface declaration |\n| Type alias | `{ symbol: \"EventHandler\" }` | The type alias definition |\n| Const/variable | `{ symbol: \"DEFAULT_TIMEOUT\" }` | The const/let/var declaration |\n| Enum | `{ symbol: \"LogLevel\" }` | The full enum declaration |\n\n**Mutual exclusivity:** `symbol` cannot be combined with `offset` or `limit`. Use one addressing mode or the other.\n\n**Behavior by result:**\n\n- **Found:** Returns hashlined content for the symbol's line range only, prepended with `[Symbol: name (kind), lines X-Y of Z]`.\n- **Ambiguous (multiple matches):** Returns a disambiguation list with each candidate's name, kind, and line range. Use dot notation (e.g., `ClassName.methodName`) to narrow the match.\n- **Not found:** Falls back to a normal read with a warning listing up to 20 available symbol names.\n- **Unmappable file:** Falls back to a normal read with a warning noting the file type doesn't support symbol lookup.\n\nHash anchors from symbol reads are valid for use with the `edit` tool.",
       "parameters": {
         "type": "object",
         "required": [
@@ -15,12 +15,28 @@
             "type": "string"
           },
           "offset": {
-            "description": "Line number to start reading from (1-indexed)",
-            "type": "number"
+            "anyOf": [
+              {
+                "description": "Line number to start reading from (1-indexed)",
+                "type": "number"
+              },
+              {
+                "description": "Line number to start reading from (1-indexed)",
+                "type": "string"
+              }
+            ]
           },
           "limit": {
-            "description": "Maximum number of lines to read",
-            "type": "number"
+            "anyOf": [
+              {
+                "description": "Maximum number of lines to read",
+                "type": "number"
+              },
+              {
+                "description": "Maximum number of lines to read",
+                "type": "string"
+              }
+            ]
           },
           "symbol": {
             "description": "Symbol to read (e.g., functionName or ClassName.methodName)",
@@ -44,11 +60,13 @@
         "origin": "top-level"
       },
       "enabled": true,
-      "replaceStock": true,
+      "replaceSnippet": true,
+      "replaceGuidelines": true,
+      "includeSection": true,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/read.md",
-      "providerDescriptionOverride": "",
+      "providerDescriptionOverride": "Anchored file reading with ranges, symbol lookup, and structural maps.",
       "stale": false
     },
     "bash": {
@@ -77,11 +95,13 @@
         "origin": "top-level"
       },
       "enabled": true,
-      "replaceStock": true,
+      "replaceSnippet": true,
+      "replaceGuidelines": true,
+      "includeSection": true,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/bash.md",
-      "providerDescriptionOverride": "",
+      "providerDescriptionOverride": "Shell commands for tests/builds/git; not for file reading/editing/search.",
       "stale": false
     },
     "edit": {
@@ -221,11 +241,13 @@
         "origin": "top-level"
       },
       "enabled": true,
-      "replaceStock": true,
+      "replaceSnippet": true,
+      "replaceGuidelines": true,
+      "includeSection": true,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/edit.md",
-      "providerDescriptionOverride": "",
+      "providerDescriptionOverride": "Anchored file edits using LINE:HASH references; read first.",
       "stale": false
     },
     "write": {
@@ -259,7 +281,9 @@
         "origin": "top-level"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/write.md",
@@ -268,7 +292,7 @@
     },
     "grep": {
       "name": "grep",
-      "description": "Search file contents for a pattern. Returns matching lines with LINE:HASH anchors for hashline edit workflows.",
+      "description": "Search file contents for a pattern. Returns matching lines with `LINE:HASH` anchors for hashline edit workflows.",
       "parameters": {
         "type": "object",
         "required": [
@@ -296,12 +320,28 @@
             "type": "boolean"
           },
           "context": {
-            "description": "Number of lines to show before and after each match (default: 0)",
-            "type": "number"
+            "anyOf": [
+              {
+                "description": "Number of lines to show before and after each match (default: 0)",
+                "type": "number"
+              },
+              {
+                "description": "Number of lines to show before and after each match (default: 0)",
+                "type": "string"
+              }
+            ]
           },
           "limit": {
-            "description": "Maximum number of matches to return (default: 100)",
-            "type": "number"
+            "anyOf": [
+              {
+                "description": "Maximum number of matches to return (default: 100)",
+                "type": "number"
+              },
+              {
+                "description": "Maximum number of matches to return (default: 100)",
+                "type": "string"
+              }
+            ]
           },
           "summary": {
             "description": "Return per-file match counts only (no hashline anchors)",
@@ -321,44 +361,69 @@
         "origin": "top-level"
       },
       "enabled": true,
-      "replaceStock": true,
+      "replaceSnippet": true,
+      "replaceGuidelines": true,
+      "includeSection": true,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/grep.md",
-      "providerDescriptionOverride": "",
+      "providerDescriptionOverride": "Anchored file-content search results usable with edit.",
       "stale": false
     },
     "find": {
       "name": "find",
-      "description": "Search for files by glob pattern. Returns matching file paths relative to the search directory. Respects .gitignore. Output is truncated to 1000 results or 50KB (whichever is hit first).",
+      "description": "Find files recursively matching a glob pattern. Respects .gitignore, includes hidden files, returns sorted relative paths with structured metadata.",
       "parameters": {
-        "type": "object",
         "required": [
           "pattern"
         ],
+        "type": "object",
         "properties": {
           "pattern": {
-            "description": "Glob pattern to match files, e.g. '*.ts', '**/*.json', or 'src/**/*.spec.ts'",
+            "description": "Glob pattern (e.g. '*.ts', '*.test.ts')",
             "type": "string"
           },
           "path": {
-            "description": "Directory to search in (default: current directory)",
+            "description": "Directory to search (default: cwd)",
             "type": "string"
           },
           "limit": {
-            "description": "Maximum number of results (default: 1000)",
+            "description": "Max entries to return (default: 1000)",
+            "type": "number"
+          },
+          "type": {
+            "description": "Filter by entry type (default: \"file\")",
+            "anyOf": [
+              {
+                "const": "file",
+                "type": "string"
+              },
+              {
+                "const": "dir",
+                "type": "string"
+              },
+              {
+                "const": "any",
+                "type": "string"
+              }
+            ]
+          },
+          "maxDepth": {
+            "description": "Maximum directory depth",
             "type": "number"
           }
         }
       },
       "sourceInfo": {
-        "path": "<builtin:find>",
-        "source": "builtin",
-        "scope": "temporary",
+        "path": "/Users/maxwellnewman/pi/workspace/pi-hashline-readmap/index.ts",
+        "source": "local",
+        "scope": "user",
         "origin": "top-level"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/find.md",
@@ -367,31 +432,174 @@
     },
     "ls": {
       "name": "ls",
-      "description": "List directory contents. Returns entries sorted alphabetically, with '/' suffix for directories. Includes dotfiles. Output is truncated to 500 entries or 50KB (whichever is hit first).",
+      "description": "List directory contents. Shows directories first (with `/` suffix), then files, sorted alphabetically. Returns structured metadata for programmatic use.",
       "parameters": {
         "type": "object",
         "properties": {
           "path": {
-            "description": "Directory to list (default: current directory)",
+            "description": "Directory to list (default: cwd)",
             "type": "string"
           },
           "limit": {
-            "description": "Maximum number of entries to return (default: 500)",
+            "description": "Max entries to return (default: 500)",
+            "type": "number"
+          },
+          "glob": {
+            "description": "Filter entries by glob pattern (e.g. '*.ts')",
+            "type": "string"
+          }
+        }
+      },
+      "sourceInfo": {
+        "path": "/Users/maxwellnewman/pi/workspace/pi-hashline-readmap/index.ts",
+        "source": "local",
+        "scope": "user",
+        "origin": "top-level"
+      },
+      "enabled": true,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
+      "snippetOverride": "",
+      "guidelineOverrides": [],
+      "promptBodyPath": "tools/ls.md",
+      "providerDescriptionOverride": "",
+      "stale": false
+    },
+    "ast_search": {
+      "name": "ast_search",
+      "description": "AST-aware structural code search. Use this when grep is too brittle and you need to match code shape rather than raw text. Prefer over grep for finding function calls, imports, JSX elements, or syntax patterns. Returns anchored matches suitable for edit.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "pattern"
+        ],
+        "properties": {
+          "pattern": {
+            "description": "AST pattern to search for",
+            "type": "string"
+          },
+          "lang": {
+            "description": "Language hint for ast-grep (e.g. 'typescript')",
+            "type": "string"
+          },
+          "path": {
+            "description": "Directory or file to search (default: cwd)",
+            "type": "string"
+          }
+        }
+      },
+      "sourceInfo": {
+        "path": "/Users/maxwellnewman/pi/workspace/pi-hashline-readmap/index.ts",
+        "source": "local",
+        "scope": "user",
+        "origin": "top-level"
+      },
+      "enabled": true,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
+      "snippetOverride": "",
+      "guidelineOverrides": [],
+      "promptBodyPath": "tools/ast_search.md",
+      "providerDescriptionOverride": "",
+      "stale": false
+    },
+    "nu": {
+      "name": "nu",
+      "description": "Explore files, structured data (JSON/CSV/TOML/YAML), and system state using Nushell pipelines. Returns structured output ideal for inspection and analysis. Use for exploration and investigation — for running project commands, build tools, scripts, or git operations, use `bash` instead.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "description": "Nushell script to run. May be multi-line.",
+            "type": "string"
+          },
+          "timeout": {
+            "description": "Maximum run time in seconds. Defaults to 30.",
             "type": "number"
           }
         }
       },
       "sourceInfo": {
-        "path": "<builtin:ls>",
-        "source": "builtin",
-        "scope": "temporary",
+        "path": "/Users/maxwellnewman/pi/workspace/pi-hashline-readmap/index.ts",
+        "source": "local",
+        "scope": "user",
         "origin": "top-level"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
-      "promptBodyPath": "tools/ls.md",
+      "promptBodyPath": "tools/nu.md",
+      "providerDescriptionOverride": "",
+      "stale": false
+    },
+    "gh_status": {
+      "name": "gh_status",
+      "description": "Query GitHub status for monitored repositories. Returns PR status, CI results, assigned issues. Use to check if your push/PR succeeded, investigate CI failures, or see what needs attention.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": {
+            "description": "Repository (owner/repo). Omit for current repo.",
+            "type": "string"
+          },
+          "pr": {
+            "description": "PR number for detailed info",
+            "type": "number"
+          }
+        }
+      },
+      "sourceInfo": {
+        "path": "/Users/maxwellnewman/pi/workspace/thinkingSpace/prototypes/gh-aware/extension/index.ts",
+        "source": "local",
+        "scope": "user",
+        "origin": "top-level"
+      },
+      "enabled": true,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
+      "snippetOverride": "",
+      "guidelineOverrides": [],
+      "promptBodyPath": "tools/gh_status.md",
+      "providerDescriptionOverride": "",
+      "stale": false
+    },
+    "code_execution": {
+      "name": "code_execution",
+      "description": "Execute Python code with local programmatic tool calling.\n\nPrefer this tool first for repo-wide analysis, repeated lookups, loops, grouping, ranking, counting, filtering, or any task with 3+ dependent tool calls. Use direct tools instead for one-file reads, one-off grep/find calls, or tiny lookups.\nStrong signals to use code_execution:\n- Scan many files and return counts, grouped summaries, rankings, or compact JSON\n- Run the same tool across many inputs and aggregate the results\n- Keep large intermediate results out of the chat context\nExamples:\n- Count imports across src/**/*.ts and return the top 10 packages\n- Analyze the first 8 test files and return compact JSON only\n- Check many endpoints or records, then return only the failures\nImportant rules:\n- Top-level await is already available. Do not call asyncio.run(...).\n- Use generated helpers such as read(), glob(), find(), grep(), ls(), and ptc.* helpers. Do not call _rpc_call(...) directly.\n- Return a compact final answer only. If you return a dict/list, it will be JSON-serialized automatically.\n- Intermediate tool results stay local to this tool run and are not sent back to the model unless you include them in the final output.\n- Prefer compact JSON summaries over raw dumps.\n- Docker isolation is required for this session; if Docker is unavailable, execution fails instead of falling back to subprocess.\nPrefer these patterns:\n- Many file reads from explicit paths: ptc.read_many(paths, max_concurrency=...)\n- Find and read an entire tree: ptc.read_tree(pattern=..., path=..., max_files=..., concurrency=...)\n- Bounded concurrency for arbitrary coroutines: ptc.gather_limit(coros, limit=...)\n- Relative file discovery: glob(...) or ptc.find_files(...)\n- Absolute file discovery for later read()/write(): ptc.find_files_abs(...)\nPython helpers currently available in this session:\n- read(path: str, *, offset: Optional[int] = None, limit: Optional[int] = None, symbol: Optional[str] = None, map: Optional[bool] = None) -> Union[str, ReadResult]\n- grep(pattern: str, *, path: Optional[str] = None, glob: Optional[str] = None, ignoreCase: Optional[bool] = None, literal: Optional[bool] = None, context: Optional[Union[float, str]] = None, limit: Optional[Union[float, str]] = None, summary: Optional[bool] = None, scope: Optional[str] = None) -> Union[List[GrepMatch], GrepResult]\n- find(pattern: str, *, path: Optional[str] = None, limit: Optional[float] = None, type: Optional[str] = None, maxDepth: Optional[float] = None) -> List[str]\n- ls(*, path: Optional[str] = None, limit: Optional[float] = None, glob: Optional[str] = None) -> List[str]\n- glob(pattern: str, *, path: Optional[str] = None, limit: Optional[float] = None) -> List[str]\n- ptc.gather_limit(coros, limit=...) -> list\n- ptc.read_many(paths, max_concurrency=..., offset=None, line_limit=None) -> list[str]\n- ptc.read_tree(pattern=..., path='.', max_files=1000, concurrency=..., offset=None, line_limit=None) -> list[dict[str, Any]]\n- ptc.find_files(pattern='**/*', path='.', max_files=1000) -> list[str]\n- ptc.find_files_abs(pattern='**/*', path='.', max_files=1000) -> list[str]\n- ptc.read_text(path, offset=None, limit=None) -> str\n- await ptc.batch_tool(calls, max_concurrency=None, on_error=None) -> list[Any] | dict[str, Any]\n-   - on_error='collect' returns a kind=\"batch_partial\" envelope with per-call success/error entries instead of raising on first failure\n- await ptc.first_success(calls, max_concurrency=None) -> Any\n- await ptc.reduce_tool(calls, reducer, initial, max_concurrency=None) -> Any\n- ptc.fit_output(value, max_chars=None, max_items=None, max_depth=None) -> dict[str, Any]\n- ptc.expect_kind(value, kind) -> Any\n- ptc.list_callable_tools() -> list[dict[str, Any]]\n- ptc.get_tool_schema(name) -> dict[str, Any]\n- ptc.extract_handles(value, kind=None) -> list[SupportedHandle]\n- ptc.first_handle(value, kind=None) -> Optional[SupportedHandle]\n- ptc.json_dump(value) -> str\n- Use orchestration helpers for repeated multi-tool calls, ordered fallback logic, or bounded final-output shaping.\n- Inspect ptc.list_callable_tools() before branching on optional tools; only the current callable session surface is guaranteed.\nPrefer these for string content:\n- ptc.read_text(path) always returns str (extracts raw text from structured results)\n- ptc.read_many(paths) always returns list[str]\n- ptc.read_tree(pattern) returns list[dict] where each entry[\"content\"] is str\nUse read(path) directly when you need structured anchored data (ReadResult with .lines[].anchor).\nCallable tool set for this session: read, grep, find, ls, glob\nExample:\nentries = await ptc.read_tree(pattern=\"**/*.ts\", path=\"src\", max_files=1000, concurrency=6)\nreturn {\n  \"files\": len(entries),\n  \"sample_lengths\": [len(entry[\"content\"]) for entry in entries[:3]],\n}",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "description": "Python code to execute. Top-level await is supported; do not call asyncio.run(...). Prefer returning a compact final result.",
+            "type": "string"
+          }
+        }
+      },
+      "sourceInfo": {
+        "path": "/Users/maxwellnewman/pi/workspace/pi-ptc-next/src/index.ts",
+        "source": "local",
+        "scope": "user",
+        "origin": "top-level"
+      },
+      "enabled": true,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
+      "snippetOverride": "",
+      "guidelineOverrides": [],
+      "promptBodyPath": "tools/code_execution.md",
       "providerDescriptionOverride": "",
       "stale": false
     },
@@ -532,7 +740,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-web-tools"
       },
       "enabled": true,
-      "replaceStock": true,
+      "replaceSnippet": true,
+      "replaceGuidelines": true,
+      "includeSection": true,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/web_search.md",
@@ -578,7 +788,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-web-tools"
       },
       "enabled": true,
-      "replaceStock": true,
+      "replaceSnippet": true,
+      "replaceGuidelines": true,
+      "includeSection": true,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/fetch_content.md",
@@ -612,7 +824,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-web-tools"
       },
       "enabled": true,
-      "replaceStock": true,
+      "replaceSnippet": true,
+      "replaceGuidelines": true,
+      "includeSection": true,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/code_search.md",
@@ -662,7 +876,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-web-tools"
       },
       "enabled": true,
-      "replaceStock": true,
+      "replaceSnippet": true,
+      "replaceGuidelines": true,
+      "includeSection": true,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/get_search_content.md",
@@ -671,7 +887,7 @@
     },
     "switch_model": {
       "name": "switch_model",
-      "description": "List, search, or switch models. Supports aliases defined in aliases.json (e.g. 'cheap', 'coding'). Use when the user asks to change models or when you need a model with different capabilities (reasoning, vision, cost, context window).",
+      "description": "List, search, or switch models. Supports aliases defined in aliases.json (e.g. 'cheap', 'coding'). Use when the user mentions a model by name, asks to change/switch/try/test with a specific model, or when you need a model with different capabilities (reasoning, vision, cost, context window).",
       "parameters": {
         "type": "object",
         "required": [
@@ -680,7 +896,20 @@
         "properties": {
           "action": {
             "description": "Action to perform: 'list' (show all models), 'search' (filter by query), or 'switch' (change model)",
-            "type": "string"
+            "anyOf": [
+              {
+                "const": "list",
+                "type": "string"
+              },
+              {
+                "const": "search",
+                "type": "string"
+              },
+              {
+                "const": "switch",
+                "type": "string"
+              }
+            ]
           },
           "search": {
             "description": "For search/switch actions: search term to match model by provider, id, or name (e.g. 'sonnet', 'opus', 'gpt-5.2', 'anthropic/claude')",
@@ -700,7 +929,9 @@
         "baseDir": "/opt/homebrew/lib/node_modules/pi-model-switch"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/switch_model.md",
@@ -786,7 +1017,9 @@
         "baseDir": "/opt/homebrew/lib/node_modules/pi-hooks"
       },
       "enabled": true,
-      "replaceStock": true,
+      "replaceSnippet": true,
+      "replaceGuidelines": true,
+      "includeSection": true,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/lsp.md",
@@ -860,7 +1093,9 @@
         "baseDir": "/opt/homebrew/lib/node_modules/@tintinweb/pi-subagents"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/agent.md",
@@ -898,7 +1133,9 @@
         "baseDir": "/opt/homebrew/lib/node_modules/@tintinweb/pi-subagents"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/get_subagent_result.md",
@@ -933,7 +1170,9 @@
         "baseDir": "/opt/homebrew/lib/node_modules/@tintinweb/pi-subagents"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/steer_subagent.md",
@@ -967,7 +1206,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/symbol_graph.md",
@@ -1020,7 +1261,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/resolve_edge.md",
@@ -1068,7 +1311,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/delete_edge.md",
@@ -1128,7 +1373,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/impact.md",
@@ -1162,7 +1409,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/trace.md",
@@ -1192,7 +1441,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/graph_query.md",
@@ -1230,7 +1481,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/symbol_card.md",
@@ -1264,7 +1517,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/symbol_contract.md",
@@ -1286,7 +1541,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/graph_overview.md",
@@ -1325,7 +1582,9 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/dead_code.md",
@@ -1367,112 +1626,79 @@
         "baseDir": "/Users/maxwellnewman/pi/workspace/pi-codegraph"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
       "promptBodyPath": "tools/symbol_search.md",
       "providerDescriptionOverride": "",
       "stale": false
     },
-    "ast_search": {
-      "name": "ast_search",
-      "description": "AST-aware structural code search. Use this when grep is too brittle and you need to match code shape rather than raw text. Prefer over grep for finding function calls, imports, JSX elements, or syntax patterns. Returns anchored matches suitable for edit.",
+    "askclaude": {
+      "name": "AskClaude",
+      "description": "Delegate to Claude Code for a second opinion or analysis (code review, architecture questions, debugging theories), or to autonomously handle a task. Defaults to read-only mode — use full mode when the user wants to delegate a task that requires changes. Prefer to handle straightforward tasks yourself.",
       "parameters": {
         "type": "object",
         "required": [
-          "pattern"
+          "prompt"
         ],
         "properties": {
-          "pattern": {
-            "description": "AST pattern to search for",
+          "prompt": {
+            "description": "The question or task for Claude Code. By default Claude sees the full conversation history. Don't research up front, let Claude explore.",
             "type": "string"
           },
-          "lang": {
-            "description": "Language hint for ast-grep (e.g. 'typescript')",
+          "mode": {
+            "type": "string",
+            "enum": [
+              "read",
+              "full",
+              "none"
+            ],
+            "description": "\"read\" (default): questions about the codebase — review, analysis, explain. \"none\": general knowledge only (no file access). \"full\": allows writing and bash execution (careful: runs without feedback to pi)."
+          },
+          "model": {
+            "description": "Claude model (e.g. \"opus\", \"sonnet\", \"haiku\", or full ID). Defaults to \"opus\".",
             "type": "string"
           },
-          "path": {
-            "description": "Directory or file to search (default: cwd)",
-            "type": "string"
+          "thinking": {
+            "type": "string",
+            "enum": [
+              "off",
+              "minimal",
+              "low",
+              "medium",
+              "high",
+              "xhigh"
+            ],
+            "description": "Thinking effort level. Omit to use Claude Code's default."
+          },
+          "isolated": {
+            "description": "When true, Claude sees only this prompt (clean session). When false (default), Claude sees the full conversation history.",
+            "type": "boolean"
+          },
+          "background": {
+            "description": "When true, Claude runs in the background and you continue working. The result is delivered as a follow-up message when done. Use for tasks that don't block your current work.",
+            "type": "boolean"
           }
         }
       },
       "sourceInfo": {
-        "path": "/Users/maxwellnewman/pi/workspace/pi-hashline-readmap/index.ts",
-        "source": "local",
+        "path": "/opt/homebrew/lib/node_modules/pi-claude-bridge/index.ts",
+        "source": "npm:pi-claude-bridge",
         "scope": "user",
-        "origin": "top-level"
+        "origin": "package",
+        "baseDir": "/opt/homebrew/lib/node_modules/pi-claude-bridge"
       },
       "enabled": true,
-      "replaceStock": false,
+      "replaceSnippet": false,
+      "replaceGuidelines": false,
+      "includeSection": false,
       "snippetOverride": "",
       "guidelineOverrides": [],
-      "promptBodyPath": "tools/ast_search.md",
+      "promptBodyPath": "tools/askclaude.md",
       "providerDescriptionOverride": "",
-      "stale": false
-    },
-    "nu": {
-      "name": "nu",
-      "description": "Explore files, structured data (JSON/CSV/TOML/YAML), and system state using Nushell pipelines. Returns structured output ideal for inspection and analysis. Use for exploration and investigation — for running project commands, build tools, scripts, or git operations, use `bash` instead.",
-      "parameters": {
-        "type": "object",
-        "required": [
-          "command"
-        ],
-        "properties": {
-          "command": {
-            "description": "Nushell script to run. May be multi-line.",
-            "type": "string"
-          },
-          "timeout": {
-            "description": "Maximum run time in seconds. Defaults to 30.",
-            "type": "number"
-          }
-        }
-      },
-      "sourceInfo": {
-        "path": "/Users/maxwellnewman/pi/workspace/pi-hashline-readmap/index.ts",
-        "source": "local",
-        "scope": "user",
-        "origin": "top-level"
-      },
-      "enabled": true,
-      "replaceStock": false,
-      "snippetOverride": "",
-      "guidelineOverrides": [],
-      "promptBodyPath": "tools/nu.md",
-      "providerDescriptionOverride": "",
-      "stale": false
-    },
-    "gh_status": {
-      "name": "gh_status",
-      "description": "Query GitHub status for monitored repositories. Returns PR status, CI results, assigned issues. Use to check if your push/PR succeeded, investigate CI failures, or see what needs attention.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "repo": {
-            "description": "Repository (owner/repo). Omit for current repo.",
-            "type": "string"
-          },
-          "pr": {
-            "description": "PR number for detailed info",
-            "type": "number"
-          }
-        }
-      },
-      "sourceInfo": {
-        "path": "/Users/maxwellnewman/pi/workspace/thinkingSpace/prototypes/gh-aware/extension/index.ts",
-        "source": "local",
-        "scope": "user",
-        "origin": "top-level"
-      },
-      "enabled": true,
-      "replaceStock": false,
-      "snippetOverride": "",
-      "guidelineOverrides": [],
-      "promptBodyPath": "tools/gh_status.md",
-      "providerDescriptionOverride": "",
-      "stale": false
+      "stale": true
     }
   }
 }

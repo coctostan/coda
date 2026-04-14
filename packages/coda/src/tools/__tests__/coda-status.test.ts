@@ -316,3 +316,79 @@ describe('codaStatus', () => {
     expect(result.next_action.toLowerCase()).toContain('verify');
   });
 });
+
+describe('codaStatus UNIFY review', () => {
+  function writeUnifyState(unifyReviewStatus?: string): void {
+    writeRecord(join(codaRoot, 'issues', 'my-issue.md'), {
+      title: 'My Issue',
+      issue_type: 'feature',
+      status: 'active',
+      phase: 'unify',
+      priority: 3,
+      topics: [],
+      acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'met' }],
+      open_questions: [],
+      deferred_items: [],
+      human_review: false,
+    } as IssueRecord, '## Description\nUnify phase.\n');
+
+    if (unifyReviewStatus !== undefined) {
+      mkdirSync(join(codaRoot, 'records'), { recursive: true });
+      writeRecord(join(codaRoot, 'records', 'my-issue-completion.md'), {
+        title: 'Completion Record',
+        issue: 'my-issue',
+        completed_at: '2026-04-14',
+        topics: [],
+        system_spec_updated: true,
+        reference_docs_reviewed: true,
+        milestone_updated: true,
+        unify_review_status: unifyReviewStatus,
+      }, '## Summary\nDone.\n');
+    }
+
+    persistState({
+      ...createDefaultState(),
+      focus_issue: 'my-issue',
+      phase: 'unify',
+    }, statePath);
+  }
+
+  test('reports unify_review_status as pending when completion record has pending', () => {
+    writeUnifyState('pending');
+
+    const result = codaStatus(statePath, codaRoot);
+
+    expect(result.unify_review_status).toBe('pending');
+    expect(result.next_action).toContain('UNIFY review pending');
+    expect(result.next_action).toContain('approve');
+  });
+
+  test('reports unify_review_status as changes-requested', () => {
+    writeUnifyState('changes-requested');
+
+    const result = codaStatus(statePath, codaRoot);
+
+    expect(result.unify_review_status).toBe('changes-requested');
+    expect(result.next_action).toContain('changes requested');
+    expect(result.next_action).toContain('feedback');
+  });
+
+  test('reports unify_review_status as null when no completion record exists', () => {
+    writeUnifyState();
+
+    const result = codaStatus(statePath, codaRoot);
+
+    expect(result.unify_review_status).toBeNull();
+  });
+
+  test('returns default UNIFY guidance when review status is approved', () => {
+    writeUnifyState('approved');
+
+    const result = codaStatus(statePath, codaRoot);
+
+    expect(result.unify_review_status).toBe('approved');
+    // Should show default UNIFY guidance, not review-specific guidance
+    expect(result.next_action).toContain('UNIFY');
+    expect(result.next_action).not.toContain('pending');
+  });
+});

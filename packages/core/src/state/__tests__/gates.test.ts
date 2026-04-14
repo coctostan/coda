@@ -88,14 +88,50 @@ describe('GATES', () => {
     expect(result.reason).toContain('acceptance criteria');
   });
 
-  test('unify→done passes when all 4 fields are true', () => {
+  test('unify→done passes when all 5 fields are true (including unifyReviewStatus approved)', () => {
+    const result = checkGate('unify', 'done', {
+      completionRecordExists: true,
+      systemSpecUpdated: true,
+      referenceDocsReviewed: true,
+      milestoneUpdated: true,
+      unifyReviewStatus: 'approved',
+    });
+    expect(result.passed).toBe(true);
+  });
+
+  test('unify→done fails when unifyReviewStatus is pending', () => {
+    const result = checkGate('unify', 'done', {
+      completionRecordExists: true,
+      systemSpecUpdated: true,
+      referenceDocsReviewed: true,
+      milestoneUpdated: true,
+      unifyReviewStatus: 'pending',
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('UNIFY review pending');
+  });
+
+  test('unify→done fails when unifyReviewStatus is changes-requested', () => {
+    const result = checkGate('unify', 'done', {
+      completionRecordExists: true,
+      systemSpecUpdated: true,
+      referenceDocsReviewed: true,
+      milestoneUpdated: true,
+      unifyReviewStatus: 'changes-requested',
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('UNIFY review pending');
+  });
+
+  test('unify→done fails when unifyReviewStatus is undefined (missing)', () => {
     const result = checkGate('unify', 'done', {
       completionRecordExists: true,
       systemSpecUpdated: true,
       referenceDocsReviewed: true,
       milestoneUpdated: true,
     });
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('UNIFY review pending');
   });
   test('unify→done fails when completion record missing', () => {
     const result = checkGate('unify', 'done', { completionRecordExists: false });

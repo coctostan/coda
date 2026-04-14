@@ -6,13 +6,14 @@
  * based on the current lifecycle phase.
  */
 import { loadState, readRecord } from '@coda/core';
-import type { CodaState, IssueRecord, PlanRecord, TaskRecord } from '@coda/core';
+import type { CodaState, CompletionRecord, IssueRecord, PlanRecord, TaskRecord } from '@coda/core';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { isLoopExhausted } from '../../../core/src/state/machine';
 import type { LoopIterationConfig } from '../../../core/src/state/types';
 import type { StatusResult } from './types';
 import { sortByNumericSuffix } from './sort-utils';
+import { findCompletionRecordPath } from './coda-advance';
 
 /** Phase-specific next action suggestions. */
 const NEXT_ACTIONS: Record<string, string> = {
@@ -60,6 +61,9 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
     ? loadHumanReviewState(codaRoot, state.focus_issue)
     : null;
   const exhausted = codaRoot ? isExhaustedState(codaRoot, state) : false;
+  const unifyReviewStatus = state.focus_issue && codaRoot && state.phase === 'unify'
+    ? loadUnifyReviewStatus(codaRoot, state.focus_issue)
+    : null;
   const activeTask = state.focus_issue && codaRoot && state.current_task !== null
     ? loadActiveTask(codaRoot, state.focus_issue, state.current_task)
     : null;
@@ -77,14 +81,16 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
     tdd_gate: state.tdd_gate,
     human_review_required: reviewState?.required ?? null,
     human_review_status: reviewState?.status ?? null,
-    next_action: getNextAction(state, reviewState, exhausted),
+    unify_review_status: unifyReviewStatus,
+    next_action: getNextAction(state, reviewState, exhausted, unifyReviewStatus),
   };
 }
 
 function getNextAction(
   state: CodaState,
   reviewState: { required: boolean; status: PlanRecord['human_review_status'] | null } | null,
-  exhausted: boolean
+  exhausted: boolean,
+  unifyReviewStatus?: CompletionRecord['unify_review_status'] | null
 ): string {
   if (exhausted && state.phase === 'review') {
     return 'Review loop exhausted — provide guidance, approve to enter build, or kill the issue';
@@ -109,6 +115,14 @@ function getNextAction(
     if (reviewState.status === 'changes-requested') {
       return 'Human changes requested — revise the plan using the recorded feedback before re-review';
     }
+  }
+
+  if (state.phase === 'unify' && unifyReviewStatus === 'pending') {
+    return 'UNIFY review pending — approve to finalize or request changes with /coda advance changes <feedback>';
+  }
+
+  if (state.phase === 'unify' && unifyReviewStatus === 'changes-requested') {
+    return 'UNIFY review changes requested — address the feedback on the completion record, then reset unify_review_status to pending';
   }
 
   if (!state.phase) {
@@ -194,5 +208,25 @@ function loadLoopConfig(codaRoot: string): LoopIterationConfig {
     return JSON.parse(readFileSync(configPath, 'utf-8')) as LoopIterationConfig;
   } catch {
     return {};
+  }
+}
+
+/**
+ * Load UNIFY review status from the completion record.
+ */
+function loadUnifyReviewStatus(
+  codaRoot: string,
+  issueSlug: string
+): CompletionRecord['unify_review_status'] | null {
+  const recordPath = findCompletionRecordPath(codaRoot, issueSlug);
+  if (!recordPath) {
+    return null;
+  }
+
+  try {
+    const record = readRecord<CompletionRecord>(recordPath);
+    return record.frontmatter.unify_review_status ?? null;
+  } catch {
+    return null;
   }
 }

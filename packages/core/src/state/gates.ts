@@ -82,6 +82,9 @@ export const GATES: Record<string, Gate> = {
       if (d.milestoneUpdated !== true) {
         return { passed: false, reason: 'Milestone progress must be updated (or confirmed no milestone)' };
       }
+      if (d.unifyReviewStatus !== 'approved') {
+        return { passed: false, reason: 'UNIFY review pending — human must approve before advancing to DONE' };
+      }
       return { passed: true };
     },
   },

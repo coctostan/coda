@@ -103,6 +103,8 @@ export interface GateCheckData {
   referenceDocsReviewed?: boolean;
   /** Whether milestone progress was updated (or confirmed no milestone). */
   milestoneUpdated?: boolean;
+  /** Current UNIFY review status from the completion record. */
+  unifyReviewStatus?: string;
 }
 
 /** Result of a phase transition attempt. */

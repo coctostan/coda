@@ -32,3 +32,17 @@ export { createRegistry, MODULE_DEFINITIONS, DEFAULT_THRESHOLDS } from './regist
 // Dispatcher
 export type { ModuleDispatcher, HookContext } from './dispatcher';
 export { createDispatcher, exceedsThreshold, FINDINGS_OUTPUT_TEMPLATE } from './dispatcher';
+
+// Overlay
+export type {
+  OverlaySection,
+  OverlayFrontmatter,
+  OverlayData,
+} from './overlay';
+export {
+  readOverlay,
+  writeOverlay,
+  appendToOverlay,
+  loadMergedPrompt,
+  formatOverlayBody,
+} from './overlay';
