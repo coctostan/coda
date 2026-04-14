@@ -4,15 +4,17 @@
  *
  * Registers the `/coda` slash command and dispatches supported subcommands.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-coding-agent';
 import { createDefaultState, loadState, persistState } from '@coda/core';
 import type { Phase } from '@coda/core';
-import { scaffoldCoda, detectBackdrop, assembleScanContext } from '../forge';
+import type { CodaConfig } from '../forge/types';
+import { assembleScanContext, detectBackdrop, getDefaultConfig, scaffoldCoda } from '../forge';
 import { codaAdvance, codaBack, codaCreate, codaKill, codaRead, codaStatus } from '../tools';
 import type { AdvanceInput, StatusResult } from '../tools';
 import { createBranch, getBuildSequence } from '../workflow';
+import { resolveGateMode } from '../workflow/gate-automation';
 import { handleAutonomousAdvanceTrigger } from './hooks';
 
 /** Supported issue types for `/coda new`. */
@@ -148,6 +150,7 @@ async function handleCodaCommand(
     }
     case 'new': {
       const { issueType, title } = parseNewIssueArgs(parsed.remainder);
+      const gateMode = resolveGateMode('plan_review', issueType, loadCodaConfig(codaRoot) ?? getDefaultConfig());
       const result = codaCreate({
         type: 'issue',
         fields: {
@@ -160,7 +163,7 @@ async function handleCodaCommand(
           acceptance_criteria: [],
           open_questions: [],
           deferred_items: [],
-          human_review: true,
+          human_review: gateMode !== 'auto',
         },
         body: '',
       }, codaRoot);
@@ -295,6 +298,19 @@ function parseCommandArgs(args: string): { subcommand: string; remainder: string
     subcommand: subcommand.toLowerCase(),
     remainder: remainderParts.join(' '),
   };
+}
+
+function loadCodaConfig(codaRoot: string): CodaConfig | null {
+  const configPath = join(codaRoot, 'coda.json');
+  if (!existsSync(configPath)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(readFileSync(configPath, 'utf-8')) as CodaConfig;
+  } catch {
+    return null;
+  }
 }
 
 /** Parse `/coda new` arguments into an issue type and title. */

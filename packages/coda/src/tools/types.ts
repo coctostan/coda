@@ -138,6 +138,8 @@ export interface StatusResult extends ToolResult {
   human_review_status?: 'not-required' | 'pending' | 'approved' | 'changes-requested' | null;
   /** Current UNIFY review status from the completion record. */
   unify_review_status?: 'pending' | 'approved' | 'changes-requested' | null;
+  /** Resolved gate mode for the active review phase when available. */
+  gate_mode?: string | null;
   /** Human-readable suggestion for next action */
   next_action: string;
 }
