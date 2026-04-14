@@ -36,13 +36,17 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Diff presentation via conversation channel | v0.8 D2 | No special TUI widget needed |
 | Overlay write via coda_edit_body (no new tool for v0.8) | v0.8 D3 | coda_feedback deferred to v0.9 |
 | Gate automation replaces human_review_default | v0.8 D4 | Unified gate config with backward compat |
-Branch: feature/47-unify-runner-core
+Branch: main
 Remote: https://github.com/coctostan/coda.git
-Last session: 2026-04-14T12:35:00Z
-Stopped at: Phase 47 complete, ready to plan Phase 48
-Next action: /paul:plan
-Resume file: .paul/phases/47-unify-runner-core/47-01-SUMMARY.md
-PR: https://github.com/coctostan/coda/pull/18 (state: open)
+Last session: 2026-04-14T13:00:00Z
+Stopped at: Phase 47 complete, session paused at clean loop boundary
+Next action: /paul:plan for Phase 48
+Resume file: .paul/HANDOFF-2026-04-14.md
+Resume context:
+- Phase 47 (UNIFY Runner Core) fully shipped and merged (PR #18)
+- PROJECT.md and ROADMAP.md reconciled to v0.8
+- Git repo cleaned: 0 open PRs, single branch (main), 0 stashes
+- Ready for Phase 48 planning (UNIFY Review Gate)
 
 ---
 *STATE.md — Updated after every significant action*
