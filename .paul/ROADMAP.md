@@ -4,7 +4,24 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-Awaiting next milestone. Run `/paul:discuss` or `/paul:milestone` to define.
+**v0.9 Live Compounding Validation** (v0.9.0)
+Status: 🚧 In Progress
+Started: 2026-04-15
+| Phase | Name | Plans | Status | Completed |
+|-------|------|-------|--------|-----------|
+| 52 | Greenfield Compounding Test | 0/TBD | ⚪ Not started | — |
+| 53 | Brownfield Onboarding Test | 0/TBD | ⚪ Not started | — |
+
+### Phase 52: Greenfield Compounding Test
+Focus: Script A — URL shortener from scratch, 2-issue lifecycle, overlay compounding validation via CMUX
+Spec: cmux-v08-test-scripts.md (Script A)
+Plans: TBD (defined during /paul:plan)
+
+### Phase 53: Brownfield Onboarding Test
+Focus: Script B — Existing project brownfield FORGE, 2-feature build, cross-feature compounding via CMUX
+Spec: cmux-v08-test-scripts.md (Script B)
+Depends: Phase 52 (run greenfield first)
+Plans: TBD (defined during /paul:plan)
 ## Completed Milestones
 <details>
 <summary>v0.8 The Compounding Engine — 2026-04-15 (5 phases, 5 plans)</summary>
@@ -140,4 +157,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-15 — v0.8 The Compounding Engine complete; awaiting next milestone*
+*Roadmap updated: 2026-04-15 — v0.9 Live Compounding Validation started*
