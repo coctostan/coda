@@ -5,7 +5,7 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
 **v0.8 The Compounding Engine** (v0.8.0)
-Status: 🔵 In Progress
+Status: ✅ Complete
 Started: 2026-04-14
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
@@ -13,7 +13,7 @@ Started: 2026-04-14
 | 48 | UNIFY Review Gate | 1/1 | ✅ Complete | 2026-04-14 |
 | 49 | Module Overlay Infrastructure | 1/1 | ✅ Complete | 2026-04-14 |
 | 50 | Gate Automation | 1/1 | ✅ Complete | 2026-04-15 |
-| 51 | E2E Validation | 0/TBD | ⚪ Not started | — |
+| 51 | E2E Validation | 1/1 | ✅ Complete | 2026-04-15 |
 
 ### Phase 47: UNIFY Runner Core
 Focus: Make UNIFY a first-class workflow phase with structured context, 5 mandatory actions, and expanded `unify→done` gating
@@ -39,10 +39,10 @@ Depends: Phases 47–49
 Plans: 1/1 complete
 
 ### Phase 51: E2E Validation
-Focus: Validate the full v0.8 compounding engine end-to-end across UNIFY, review gate, overlays, and gate automation
-Spec: docs/module-gaps-and-onboarding.md
+Focus: Validate the full v0.8 compounding engine end-to-end — cross-feature E2E tests, gate-aware commands and runners
+Spec: docs/coda-spec-v7.md
 Depends: All previous v0.8 phases
-Plans: TBD (defined during /paul:plan)
+Plans: 1/1 complete
 ## Completed Milestones
 <details>
 <summary>v0.7 Brownfield & Context — 2026-04-03 (11 phases, 11 plans)</summary>
@@ -163,4 +163,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-15 — v0.8 The Compounding Engine in progress; Phases 47–50 complete*
+*Roadmap updated: 2026-04-15 — v0.8 The Compounding Engine COMPLETE; all 5 phases (47–51) done*

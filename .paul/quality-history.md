@@ -35,3 +35,4 @@
 | 2026-04-03 | 45-wire-brownfield-forge | 569 pass / 0 fail | N/A | clean | N/A | ↑ improving (+2 new command tests) |
 | 2026-04-03 | 46-e2e-brownfield-coda-test-todo | 573 pass / 0 fail | N/A | clean | N/A | ↑ improving (+4 E2E tests, milestone complete) |
 | 2026-04-14 | 47-unify-runner-core | 589 pass / 0 fail | clean | clean | N/A | ↑ improving (+16 tests, UNIFY runner + gate expansion) |
+| 2026-04-15 | 51-e2e-validation | 655 pass / 0 fail | N/A | clean | N/A | ↑ improving (+66 tests since P47; +11 new E2E in this phase) |

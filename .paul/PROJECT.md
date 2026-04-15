@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.8 The Compounding Engine in progress: Phase 50 complete (Gate Automation), 644 tests, 10 tools, 5 modules + init-scan + overlays + gate automation, tsc clean
+- v0.8 The Compounding Engine COMPLETE: 51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
@@ -9,8 +9,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Attribute | Value |
 |-----------|-------|
 | Version | 0.8.0 |
-| Status | Milestone v0.8 in progress |
-| Last Updated | 2026-04-14 |
+| Status | Milestone v0.8 complete |
+| Last Updated | 2026-04-15 |
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
 - `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, topic-based section retrieval, and dependency-aware carry-forward primitives
@@ -21,7 +21,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 - UNIFY Review Gate shipped in Phase 48: human review/approval mechanism for UNIFY output, `unify_review_status` on completion record, revision-aware UNIFY context, shared `findCompletionRecordPath()` helper
 - Module Overlay Infrastructure shipped in Phase 49: two-layer prompt model (default + `.coda/modules/*.local.md` overlay), overlay-aware dispatcher, UNIFY compounding instruction (ACTION 3b), FORGE overlay seeding in SYNTHESIZE context
 - Gate Automation shipped in Phase 50: configurable gate modes (human/auto/auto-unless-block) for 3 lifecycle transitions, per-issue-type overrides, backward compat with `human_review_default`
-- 644 tests passing, TypeScript strict clean, no `any` types in source, zero external deps in core
+- E2E Validation shipped in Phase 51: 11 cross-feature E2E tests proving v0.8 features compose correctly, `/coda new`/review-runner/coda-status aligned with gate automation
+- 655 tests passing, TypeScript strict clean, no `any` types in source, zero external deps in core
 
 ## Scope Snapshot
 ### Validated
@@ -80,12 +81,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Phase 48 — UNIFY Review Gate: human review/approval of autonomous UNIFY output before DONE (Phase 48 — v0.8)
 - [x] Phase 49 — Module Overlay Infrastructure: two-layer prompt model, overlay-aware dispatcher, UNIFY compounding, FORGE seeding (Phase 49 — v0.8)
 - [x] Phase 50 — Gate Automation: configurable gate modes (human/auto/auto-unless-block) for plan_review, build_review, unify_review transitions (Phase 50 — v0.8)
-- [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
-- [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
-- [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
-- [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
+- [x] Phase 51 — E2E Validation: 11 cross-feature E2E tests, gate-aware `/coda new`, review-runner, and coda-status (Phase 51 — v0.8)
 ### Planned
-- [ ] Phase 51 — v0.8 end-to-end validation
 
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
@@ -104,8 +101,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.8 progress | 5 phases complete | 4 of 5 complete ✅ |
-| Test suite | Green | 644 passing, 0 failing |
+| Milestone v0.8 progress | 5 phases complete | 5 of 5 complete ✅ |
+| Test suite | Green | 655 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
 | Pi tools | 10 registered | 10/10 ✅ |
 | Modules | 5 modules active + overlays | security, tdd, architecture, quality, knowledge + overlay infrastructure ✅ |
@@ -113,6 +110,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | UNIFY review gate | Human approval before DONE | Phase 48 PASS ✅ |
 | Module overlays | Two-layer prompt model | Phase 49 PASS ✅ |
 | Gate automation | Configurable gate modes | Phase 50 PASS ✅ |
+| E2E validation | Cross-feature composition | Phase 51 PASS ✅ |
 ## Key Decisions
 | Decision | Rationale | Date | Status |
 |----------|-----------|------|--------|
@@ -150,4 +148,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-15 after Phase 50 Gate Automation completion*
+*Last updated: 2026-04-15 after Phase 51 E2E Validation — v0.8 milestone complete*
