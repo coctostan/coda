@@ -9,7 +9,7 @@ Status: 🚧 In Progress
 Started: 2026-04-15
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 52 | Greenfield Compounding Test | 0/TBD | ⚪ Not started | — |
+| 52 | Greenfield Compounding Test | 0/1 | 🟡 Planning | — |
 | 53 | Brownfield Onboarding Test | 0/TBD | ⚪ Not started | — |
 
 ### Phase 52: Greenfield Compounding Test
