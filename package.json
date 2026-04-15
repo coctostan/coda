@@ -1,6 +1,6 @@
 {
   "name": "coda-ecosystem",
-  "version": "0.6.0",
+  "version": "0.8.0",
   "private": true,
   "workspaces": [
     "packages/*"

@@ -10,6 +10,82 @@ Completed milestone log for this project.
 | v0.4 Live Validation | 2026-03-29 | ~3 hours | 3 phases, 3 plans, 21 files |
 | v0.5 Module Completion | 2026-04-03 | ~1.5 hours | 3 phases, 3 plans, 433 tests |
 | v0.6 VCS & Workflow Gaps | 2026-04-03 | ~1.5 hours | 4 phases, 4 plans, 460 tests |
+| v0.7 Brownfield & Context | 2026-04-03 | ~6 hours | 11 phases, 11 plans, 573 tests |
+| v0.8 The Compounding Engine | 2026-04-15 | 2 days | 5 phases, 5 plans, 655 tests |
+
+---
+
+## ✅ v0.8 The Compounding Engine
+
+**Completed:** 2026-04-15
+**Version:** v0.8.0
+**Duration:** 2 days (2026-04-14 to 2026-04-15)
+
+### Stats
+
+| Metric | Value |
+|--------|-------|
+| Phases | 5 |
+| Plans | 5 |
+| Tests | 655 passing (197 core + 458 coda) |
+| New source files | 7 (2 production + 5 test) |
+| Lines added | +2,963 / −68 |
+| TypeScript | `tsc --noEmit` clean |
+| External deps in core | 0 |
+
+### Key Accomplishments
+
+- Built the UNIFY Runner Core (Phase 47): structured 5-action UNIFY prompt, expanded `unify→done` gate with completion-record-backed data, shared `findCompletionRecordPath()` helper.
+- Added UNIFY Review Gate (Phase 48): human approval mechanism for autonomous UNIFY output, `unify_review_status` on completion record, revision-aware UNIFY context that incorporates prior feedback.
+- Shipped Module Overlay Infrastructure (Phase 49): two-layer prompt model (default + `.coda/modules/*.local.md`), overlay-aware dispatcher, UNIFY ACTION 3b compounding instruction, FORGE overlay seeding.
+- Implemented Gate Automation (Phase 50): configurable gate modes (`human`/`auto`/`auto-unless-block`) for 3 lifecycle transitions (`plan_review`, `build_review`, `unify_review`), per-issue-type overrides, full backward compat with `human_review_default`.
+- Validated cross-feature composition (Phase 51): 11 E2E tests proving overlays + gate automation + review gate compose correctly; `/coda new`, review-runner, and coda-status aligned with gate config.
+- Quality trajectory: 589 → 655 tests (+66), zero regressions, TypeScript strict clean throughout.
+
+### Key Decisions
+
+- D1: Gate-mediated UNIFY approval (not inline) — keeps UNIFY autonomous; human validates via separate review step.
+- D2: Diff presentation via conversation channel — no special TUI widget needed for v0.8.
+- D3: Overlay write via `coda_edit_body` — reuses existing mutation path; `coda_feedback` deferred to v0.9.
+- D4: Gate automation replaces `human_review_default` — unified gate config with backward compat.
+- D5: Aggregate UNIFY review gate (not per-action) — v0.8 uses post-UNIFY review; per-action deferred.
+- D6: Shared `findCompletionRecordPath()` helper — 3 call sites share completion record lookup.
+- D7: Completion record carries `unify_review_status` — disk-based signal for revision detection.
+- D8: 3-gate-point scope (not 5 from spec) — `specify_approval`/`spec_delta` deferred.
+
+---
+
+## ✅ v0.7 Brownfield & Context
+
+**Completed:** 2026-04-03
+**Version:** v0.7.0
+**Duration:** ~6 hours
+
+### Stats
+
+| Metric | Value |
+|--------|-------|
+| Phases | 11 |
+| Plans | 11 |
+| Tests | 573 passing |
+| TypeScript | `tsc --noEmit` clean |
+
+### Key Accomplishments
+
+- Topic-based section retrieval (`getSectionsByTopics` + `getSectionHeadings`) in core data layer.
+- Dependency-based carry-forward with 3 selection paths (dependency/correction/recency).
+- Adaptive ceremony rules for 5 issue types with config overrides.
+- Context budget management with `assembleWithinBudget`, advisory budgets, no mid-section truncation.
+- 5 modules gained init-scan hooks with brownfield detection and evidence file I/O.
+- Full brownfield FORGE pipeline: SCAN → SYNTHESIZE → GAP ANALYSIS → VALIDATE → ORIENT.
+- Wired brownfield into `/coda forge` with `detectBackdrop` routing.
+- 4 E2E tests covering full brownfield pipeline.
+
+### Key Decisions
+
+- Overview always-include uses exact heading match (case-insensitive) for topic retrieval.
+- `context-budgets.ts` separated from `context-builder.ts` to keep files under 500 lines.
+- Synthetic `HookContext` for forge: `issueSlug='forge-onboarding'`, `phase='forge'` — dispatcher doesn't validate against state.
 
 ---
 
