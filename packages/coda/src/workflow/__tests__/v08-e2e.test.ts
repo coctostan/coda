@@ -23,7 +23,7 @@ import type {
   PlanRecord,
   TaskRecord,
 } from '@coda/core';
-import type { CodaConfig } from '../../forge/types';
+import type { CodaConfig, GateConfig } from '../../forge/types';
 import { getDefaultConfig } from '../../forge/scaffold';
 import { registerCommands } from '../../pi/commands';
 import { codaAdvance } from '../../tools/coda-advance';
@@ -58,16 +58,16 @@ function writeConfig(transform?: (config: CodaConfig) => CodaConfig): CodaConfig
   return nextConfig;
 }
 
-function writeLegacyHumanReviewConfig(overrides: Partial<CodaConfig['human_review_default']>): void {
+function writeLegacyHumanReviewConfig(overrides: Partial<GateConfig>): void {
   const config = getDefaultConfig();
-  const merged: CodaConfig = {
+  const legacyConfig = (config as CodaConfig & { human_review_default: GateConfig }).human_review_default;
+  const merged: CodaConfig & { human_review_default: GateConfig } = {
     ...config,
     human_review_default: {
-      ...config.human_review_default,
+      ...legacyConfig,
       ...overrides,
     },
   };
-
   delete (merged as CodaConfig & { gates?: CodaConfig['gates'] }).gates;
   writeFileSync(join(codaRoot, 'coda.json'), JSON.stringify(merged, null, 2));
 }
