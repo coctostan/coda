@@ -1,4 +1,7 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
 import { checkGate, GATES } from '../gates';
 
 describe('GATES', () => {
@@ -170,6 +173,185 @@ describe('GATES', () => {
     });
     expect(result.passed).toBe(false);
     expect(result.reason).toContain('Milestone');
+  });
+});
+
+describe('unify→done evidence gate', () => {
+  let codaRoot: string;
+
+  beforeEach(() => {
+    codaRoot = mkdtempSync(join(tmpdir(), 'gates-evidence-'));
+  });
+
+  afterEach(() => {
+    rmSync(codaRoot, { recursive: true, force: true });
+  });
+
+  const baseApprovedData = () => ({
+    completionRecordExists: true,
+    systemSpecUpdated: true,
+    referenceDocsReviewed: true,
+    milestoneUpdated: true,
+    unifyReviewStatus: 'approved',
+    codaRoot,
+  });
+
+  function writeOverlayFile(moduleName: string, body: string): string {
+    const modulesDir = join(codaRoot, 'modules');
+    mkdirSync(modulesDir, { recursive: true });
+    const relative = `modules/${moduleName}.local.md`;
+    const content = `---\nmodule: ${moduleName}\nlast_updated: 2026-04-16\nupdated_by: test\n---\n\n${body}\n`;
+    writeFileSync(join(codaRoot, relative), content, 'utf-8');
+    return relative;
+  }
+
+  function writeRefDoc(name: string, body: string): string {
+    const refDir = join(codaRoot, 'reference');
+    mkdirSync(refDir, { recursive: true });
+    const relative = `reference/${name}`;
+    const content = `---\ntitle: ${name}\ntopics: []\n---\n\n${body}\n`;
+    writeFileSync(join(codaRoot, relative), content, 'utf-8');
+    return relative;
+  }
+
+  test('fails when artifactsProduced is undefined AND issueType feature/bugfix', () => {
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: true,
+      // artifactsProduced omitted
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('no compounding artifacts produced');
+  });
+
+  test('fails when artifactsProduced.overlays empty AND reference_docs empty AND no exemptions AND issueType feature', () => {
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: true,
+      artifactsProduced: { overlays: [], reference_docs: [], decisions: [] },
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('no compounding artifacts produced');
+  });
+
+  test('fails when an overlay path is declared but the file does not exist on disk', () => {
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: true,
+      artifactsProduced: {
+        overlays: ['modules/missing.local.md'],
+        reference_docs: [],
+        decisions: [],
+      },
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('does not exist');
+  });
+
+  test('fails when an overlay path is declared and exists but the file has no non-empty sections', () => {
+    const relative = writeOverlayFile('security', '## Project Values\n\n## Validated Patterns\n');
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: true,
+      artifactsProduced: {
+        overlays: [relative],
+        reference_docs: [],
+        decisions: [],
+      },
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('no non-empty sections');
+  });
+
+  test('passes when overlays list includes a non-empty overlay file on disk', () => {
+    const relative = writeOverlayFile('security', '## Validated Patterns\n- Always prefix logs with request ID\n');
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: true,
+      artifactsProduced: {
+        overlays: [relative],
+        reference_docs: [],
+        decisions: [],
+      },
+    });
+    expect(result.passed).toBe(true);
+  });
+
+  test('passes when reference_docs list includes a non-empty ref doc on disk', () => {
+    const relative = writeRefDoc('ref-system.md', '## Overview\nSystem evolved this way.\n');
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: true,
+      artifactsProduced: {
+        overlays: [],
+        reference_docs: [relative],
+        decisions: [],
+      },
+    });
+    expect(result.passed).toBe(true);
+  });
+
+  test('passes when exemptions.overlays is a non-empty string AND no artifacts declared', () => {
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: true,
+      artifactsProduced: { overlays: [], reference_docs: [], decisions: [] },
+      artifactExemptions: { overlays: 'no project-specific patterns emerged' },
+    });
+    expect(result.passed).toBe(true);
+  });
+
+  test('fails when exemptions.overlays is present but is an empty string', () => {
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: true,
+      artifactsProduced: { overlays: [], reference_docs: [], decisions: [] },
+      artifactExemptions: { overlays: '' },
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('exemption requires a non-empty reason');
+  });
+
+  test('relaxes evidence check when issueType refactor with empty artifacts AND no exemptions', () => {
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: false,
+      artifactsProduced: { overlays: [], reference_docs: [], decisions: [] },
+    });
+    expect(result.passed).toBe(true);
+  });
+
+  test('still enforces spec_delta requirement for refactor issues', () => {
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: false,
+      specDeltaPresent: true,
+      artifactsProduced: { overlays: [], reference_docs: [], decisions: [] },
+    });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain('spec_delta declared but ref-system.md not updated');
+  });
+
+  test('spec_delta is satisfied by a non-empty ref doc update', () => {
+    const relative = writeRefDoc('ref-system.md', '## System\nUpdated content.\n');
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: false,
+      specDeltaPresent: true,
+      artifactsProduced: { overlays: [], reference_docs: [relative], decisions: [] },
+    });
+    expect(result.passed).toBe(true);
+  });
+
+  test('spec_delta is satisfied by a non-empty system_spec exemption', () => {
+    const result = checkGate('unify', 'done', {
+      ...baseApprovedData(),
+      artifactEvidenceRequired: false,
+      specDeltaPresent: true,
+      artifactsProduced: { overlays: [], reference_docs: [], decisions: [] },
+      artifactExemptions: { system_spec: 'intentionally deferred to follow-up' },
+    });
+    expect(result.passed).toBe(true);
   });
 });
 

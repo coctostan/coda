@@ -147,6 +147,10 @@ function writeCompletionRecord(slug: string, overrides: Partial<CompletionRecord
     reference_docs_reviewed: true,
     milestone_updated: true,
     unify_review_status: 'pending',
+    exemptions: {
+      overlays: 'fixture: no project-specific patterns emerged',
+      reference_docs: 'fixture: no system change',
+    },
     ...overrides,
   } as CompletionRecord, '## Summary\nComplete.\n');
 }

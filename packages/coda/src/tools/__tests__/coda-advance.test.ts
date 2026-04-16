@@ -484,6 +484,8 @@ describe('codaAdvance unify→done gate with completion record fields', () => {
     reference_docs_reviewed: boolean;
     milestone_updated: boolean;
     unify_review_status?: 'pending' | 'approved' | 'changes-requested';
+    artifacts_produced?: { overlays: string[]; reference_docs: string[]; decisions: string[] };
+    exemptions?: { overlays?: string; reference_docs?: string; system_spec?: string };
   }): void {
     const recordsDir = join(codaRoot, 'records');
     const { mkdirSync } = require('fs');
@@ -504,6 +506,7 @@ describe('codaAdvance unify→done gate with completion record fields', () => {
       reference_docs_reviewed: true,
       milestone_updated: true,
       unify_review_status: 'approved',
+      exemptions: { overlays: 'no patterns emerged', reference_docs: 'no system change' },
     });
     const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
     expect(result.success).toBe(true);
@@ -526,6 +529,7 @@ describe('codaAdvance unify→done gate with completion record fields', () => {
       reference_docs_reviewed: true,
       milestone_updated: true,
       unify_review_status: 'approved',
+      exemptions: { overlays: 'no patterns emerged', reference_docs: 'no system change' },
     });
 
     const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
@@ -579,6 +583,7 @@ describe('codaAdvance unify→done gate with completion record fields', () => {
       reference_docs_reviewed: true,
       milestone_updated: true,
       unify_review_status: 'pending',
+      exemptions: { overlays: 'no patterns emerged', reference_docs: 'no system change' },
     });
 
     const result = codaAdvance({
@@ -636,5 +641,162 @@ describe('codaAdvance unify→done gate with completion record fields', () => {
     }, codaRoot, statePath);
     expect(result.success).toBe(false);
     expect(result.reason).toContain('feedback is required');
+  });
+
+  test('gatherGateData populates artifactsProduced from completion record frontmatter when present', () => {
+    setupUnifyReadyIssue();
+    // Write an overlay file so declared path exists & has content.
+    const { mkdirSync } = require('fs');
+    mkdirSync(join(codaRoot, 'modules'), { recursive: true });
+    writeFileSync(
+      join(codaRoot, 'modules', 'security.local.md'),
+      `---\nmodule: security\nlast_updated: 2026-04-16\nupdated_by: test\n---\n\n## Validated Patterns\n- Example pattern captured during this issue.\n`,
+      'utf-8'
+    );
+    writeCompletionRecord({
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'approved',
+      artifacts_produced: {
+        overlays: ['modules/security.local.md'],
+        reference_docs: [],
+        decisions: [],
+      },
+    });
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(true);
+    expect(result.new_phase).toBe('done');
+  });
+
+  test('gatherGateData populates artifactExemptions from completion record frontmatter when present', () => {
+    setupUnifyReadyIssue();
+    writeCompletionRecord({
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'approved',
+      exemptions: {
+        overlays: 'no project-specific patterns emerged',
+        reference_docs: 'no system change',
+      },
+    });
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(true);
+    expect(result.new_phase).toBe('done');
+  });
+
+  test('gatherGateData treats completion record with no artifacts_produced as empty (backward compat) and blocks feature issue', () => {
+    setupUnifyReadyIssue();
+    // Feature issue is issueType default; no artifacts_produced field at all.
+    writeCompletionRecord({
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'approved',
+    });
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(false);
+    expect(result.reason).toContain('no compounding artifacts produced');
+  });
+
+  test('gatherGateData derives artifactEvidenceRequired from ceremony.unifyFull: refactor issue relaxes evidence check', () => {
+    // Set up refactor issue at unify
+    codaCreate(
+      {
+        type: 'issue',
+        fields: {
+          title: 'Refactor Issue',
+          issue_type: 'refactor',
+          status: 'active',
+          phase: 'unify',
+          priority: 3,
+          topics: [],
+          acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'met' }],
+          open_questions: [],
+          deferred_items: [],
+          human_review: false,
+        },
+      },
+      codaRoot
+    );
+    writeRecord<PlanRecord>(join(codaRoot, 'issues', 'refactor-issue', 'plan-v1.md'), {
+      title: 'Plan', issue: 'refactor-issue', status: 'approved', iteration: 1, task_count: 0,
+      human_review_status: 'not-required',
+    }, '## Approach\nRefactor.\n');
+    persistState({
+      ...createDefaultState(),
+      focus_issue: 'refactor-issue',
+      phase: 'unify',
+    }, statePath);
+    // Completion record with empty artifacts, no exemptions, but approved review
+    const { mkdirSync } = require('fs');
+    const recordsDir = join(codaRoot, 'records');
+    mkdirSync(recordsDir, { recursive: true });
+    writeRecord<Record<string, unknown>>(join(recordsDir, 'refactor-issue-completion.md'), {
+      title: 'Completion Record',
+      issue: 'refactor-issue',
+      completed_at: '2026-04-16',
+      topics: [],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'approved',
+    }, '## Summary\nDone.\n');
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(true);
+    expect(result.new_phase).toBe('done');
+  });
+
+  test('gatherGateData derives specDeltaPresent from issue.spec_delta and blocks refactor when ref-system.md not updated', () => {
+    codaCreate(
+      {
+        type: 'issue',
+        fields: {
+          title: 'Refactor With Spec Delta',
+          issue_type: 'refactor',
+          status: 'active',
+          phase: 'unify',
+          priority: 3,
+          topics: [],
+          acceptance_criteria: [{ id: 'AC-1', text: 'Criterion 1', status: 'met' }],
+          open_questions: [],
+          deferred_items: [],
+          human_review: false,
+          spec_delta: {
+            added: ['new-behavior'],
+            modified: [],
+            removed: [],
+            delta_summary: 'Adds a new behavior needing ref update',
+          },
+        },
+      },
+      codaRoot
+    );
+    writeRecord<PlanRecord>(join(codaRoot, 'issues', 'refactor-with-spec-delta', 'plan-v1.md'), {
+      title: 'Plan', issue: 'refactor-with-spec-delta', status: 'approved', iteration: 1, task_count: 0,
+      human_review_status: 'not-required',
+    }, '## Approach\nRefactor.\n');
+    persistState({
+      ...createDefaultState(),
+      focus_issue: 'refactor-with-spec-delta',
+      phase: 'unify',
+    }, statePath);
+    const { mkdirSync } = require('fs');
+    const recordsDir = join(codaRoot, 'records');
+    mkdirSync(recordsDir, { recursive: true });
+    writeRecord<Record<string, unknown>>(join(recordsDir, 'refactor-with-spec-delta-completion.md'), {
+      title: 'Completion Record',
+      issue: 'refactor-with-spec-delta',
+      completed_at: '2026-04-16',
+      topics: [],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'approved',
+    }, '## Summary\nDone.\n');
+    const result = codaAdvance({ target_phase: 'done' }, codaRoot, statePath);
+    expect(result.success).toBe(false);
+    expect(result.reason).toContain('spec_delta declared but ref-system.md not updated');
   });
 });

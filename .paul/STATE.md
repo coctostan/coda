@@ -6,18 +6,18 @@ Version: v0.10.0-dev
 **Current focus:** v0.10 Close the Agent Loop
 ## Current Position
 Milestone: v0.10 Close the Agent Loop
-Phase: 54 of 57 (UNIFY Actually Produces Artifacts) — Not started
-Plan: Not started
-Status: Ready to plan Phase 54
-Last activity: 2026-04-16 — Phase 53 complete (merged as 65a9df7 via PR #21); transitioned to Phase 54.
+Phase: 54 of 57 (UNIFY Actually Produces Artifacts) — Complete
+Plan: 54-01 complete
+Status: UNIFY complete; phase 54 ready for transition to phase 55
+Last activity: 2026-04-16 — Closed UNIFY for 54-01: SUMMARY written, F5 headline fix landed.
 Progress:
-- v0.10 Close the Agent Loop: [██░░░░░░░░] 20% (1 of 5 phases complete; 54–57 remaining)
-- Phase 54: [░░░░░░░░░░] 0% (not started)
+- v0.10 Close the Agent Loop: [████░░░░░░] 40% (2 of 5 phases complete: 53 + 54; 55–57 remaining)
+- Phase 54: [██████████] 100% (PLAN + APPLY + UNIFY complete)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Phase 54 not started — run /paul:plan]
+  ✓        ✓        ✓     [Loop complete for 54-01 — phase 54 ready for transition]
 ```
 ## Accumulated Context
 ### Decisions
@@ -52,24 +52,23 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Task 1+2 scope expanded by 1 line each in hooks.test.ts | tools.length assertion mechanically coupled to Pi registration; plan <files> didn't anticipate | v0.10 P53 APPLY | Logged for UNIFY |
 | Plan verify commands reference typecheck/tsc that don't exist in this repo | bun test is the de-facto type check via Bun TS loader; no typecheck script or installed tsc | v0.10 P53 APPLY | Logged for UNIFY |
 | Pi mutation tool surface = {write, edit} only | Full audit of @mariozechner/pi-coding-agent/dist types: bash/read/edit/write/grep/find/ls/custom; only write + edit mutate. No str_replace/apply_patch/multi_edit exist | v0.10 P53 APPLY | Active |
+| 3 integration-test fixtures updated to declare exemptions | gate-automation-integration, v08-e2e, autonomous-loops-e2e had feature-issue completion records with empty artifacts; new evidence gate correctly flags them. Fix is mechanical (add exemption stubs) rather than weakening the gate | v0.10 P54 APPLY | Logged for UNIFY |
+| Inline overlay-parser in gates.ts rather than importing overlay.ts | Avoids L3→L2 dep cycle; ~15 lines of heading/bullet parsing duplicated by design. Keeps core self-contained | v0.10 P54 APPLY | Active |
 ### Git State
-Branch: main (phases/53-agent-entry-points merged and deleted)
+Branch: phases/54-unify-produces-artifacts
 Remote: https://github.com/coctostan/coda.git
-Last commit: 65a9df7 (squash-merge of PR #21 on main)
-PR: #21 MERGED (https://github.com/coctostan/coda/pull/21) — branch deleted
-Last session: 2026-04-16 (Phase 53 UNIFY + merge complete)
-Stopped at: Phase 53 complete — loop closed, PR merged, branch cleaned, ready for Phase 54 PLAN
-Next action: /paul:plan (Phase 54 — UNIFY Actually Produces Artifacts / F5)
-Resume file: .paul/phases/53-agent-entry-points/53-01-SUMMARY.md
+Last commit: 076b917 feat(54-unify-produces-artifacts): evidence-based unify→done gate + runner prompt restructure (pushed)
+PR: #22 open — https://github.com/coctostan/coda/pull/22 (ci_checks=false)
+Last session: 2026-04-16 (Phase 54 APPLY completed)
+Stopped at: APPLY complete, 708 tests pass, ready for UNIFY
+Next action: /paul:unify .paul/phases/54-unify-produces-artifacts/54-01-PLAN.md
 Resume context:
-- Phase 53 APPLY: 3/3 tasks PASS with full TDD discipline (9 phase gates total)
-- Task 1 (2036e88): issue-activation helper + coda_focus tool + /coda activate refactor (8-line handler, byte-identical ctx.ui.notify)
-- Task 2 (2b4fac9): coda_forge tool + /coda forge refactor (2-line handler) + AC-5 bare-workspace E2E
-- Task 3 (3d352e5): Pi mutation tool surface audit (write + edit only) + F7 write-gate integration test (6 cases) + DEBUG=coda:* structured-JSON diagnostic
-- Tests 655 → 673 (+18 new, 0 regressions, 0 fail)
-- All 6 AC satisfied (AC-1 through AC-6)
-- Module dispatch: TODD × 5 PASS / WALT PASS / DEAN PASS (delta 0) / ARCH/SETH/VERA PASS / 5 advisory annotations surfaced
-- 2 deviations logged above for UNIFY reconciliation (coupled hooks.test.ts bump; typecheck command absent)
-- PR #21 OPEN, Socket Security CI passing (informational)
+- 3 TDD cycles completed: evidence gate + schema (Task 1), runner prompt restructure (Task 2), 10-case e2e integration test (Task 3). All GREEN.
+- Test baseline: 673 → 708 pass (+35 new, 0 regressions, 2092 expect calls).
+- LOC: coda-advance.ts grew 645→681 (+36, under RUBY ceiling of +40). gates.ts 114→267. unify-runner.ts 274→323.
+- DEAN: delta 0 vs baseline (2 high basic-ftp advisories unchanged).
+- Deviations logged for UNIFY: (1) 3 integration test fixtures expanded to declare exemptions (mechanical fix, not scope creep); (2) inline overlay-parser in gates.ts rather than importing overlay.ts (L3→L2 cycle avoidance, ~15 lines duplicated by design).
+- DOCS flagged: docs/coda-spec-v7.md should document artifacts_produced schema — plan explicitly deferred to milestone close; carry into UNIFY SUMMARY as a known follow-up.
+- Module dispatch: IRIS 0 annotations, DOCS 1 drift deferred, RUBY 1 WARN (coda-advance.ts still 681L — consider extraction in Phase 55+ if growth continues), SKIP 2 decisions queued. All enforcement (WALT/DEAN/TODD) PASS.
 ---
 *STATE.md — Updated after every significant action*

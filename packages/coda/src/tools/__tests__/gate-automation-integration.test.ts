@@ -138,6 +138,10 @@ function setupUnifyPhase(): void {
     reference_docs_reviewed: true,
     milestone_updated: true,
     unify_review_status: 'pending',
+    exemptions: {
+      overlays: 'no project-specific patterns emerged in this fixture',
+      reference_docs: 'no system change in this fixture',
+    },
   }, '## Summary\nDone.\n');
 
   persistState({

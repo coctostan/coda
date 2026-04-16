@@ -38,3 +38,4 @@
 | 2026-04-15 | 51-e2e-validation | 655 pass / 0 fail | N/A | clean | N/A | ↑ improving (+66 tests since P47; +11 new E2E in this phase) |
 | 2026-04-16 | 52-greenfield-compounding-test | 655 pass / 0 fail | N/A | clean | N/A | → stable (validation-only phase — no CODA source changes) |
 | 2026-04-16 | 53-agent-entry-points | 673 pass / 0 fail | N/A | clean (bun test as de-facto type check — repo has no tsc installed) | N/A | ↑ improving (+18 new tests: 6 focusIssue + 3 coda_focus + 4 coda_forge + 1 bare-workspace E2E + 1 activate characterization + 1 integration + 2 DEBUG cases; tool count 10→12) |
+| 2026-04-16 | 54-unify-produces-artifacts | 708 pass / 0 fail | N/A | clean (bun test as de-facto type check) | N/A | ↑ improving (+35 new tests: 12 gate-evidence + 5 gatherGateData + 8 prompt schema + 10 e2e integration; F5 headline fix landed) |

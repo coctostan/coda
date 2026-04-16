@@ -35,6 +35,7 @@ import { sortByNumericSuffix } from './sort-utils';
 import { resolveGateMode, shouldRequireHuman } from '../workflow/gate-automation';
 import type { GateMode } from '../workflow/gate-automation';
 import type { CodaConfig } from '../forge/types';
+import { getCeremonyRules } from '../workflow/ceremony';
 
 type PersistedHookResult = {
   hookPoint?: string;
@@ -144,13 +145,48 @@ function gatherGateData(
       data.referenceDocsReviewed = record.frontmatter.reference_docs_reviewed === true;
       data.milestoneUpdated = record.frontmatter.milestone_updated === true;
       data.unifyReviewStatus = record.frontmatter.unify_review_status;
+      const { artifacts, exemptions } = readArtifactFields(record.frontmatter);
+      data.artifactsProduced = artifacts;
+      data.artifactExemptions = exemptions;
     } catch {
       data.systemSpecUpdated = false;
       data.referenceDocsReviewed = false;
       data.milestoneUpdated = false;
     }
   }
+
+  // Ceremony-derived booleans (kept in coda; gate stays dumb).
+  const ceremony = getCeremonyRules(issueType);
+  data.artifactEvidenceRequired = ceremony.unifyFull === true;
+  if (ceremony.specDeltaRequired === true) {
+    const issueFrontmatter = existsSync(issuePath)
+      ? readRecord<IssueRecord>(issuePath).frontmatter
+      : undefined;
+    data.specDeltaPresent = Boolean(issueFrontmatter?.spec_delta);
+  } else {
+    data.specDeltaPresent = false;
+  }
+  data.codaRoot = codaRoot;
   return { gateData: data, issueType };
+}
+
+/**
+ * Read artifacts_produced and exemptions from a completion record's
+ * frontmatter with defensive defaults. Keeps optional-field handling
+ * contained so gatherGateData stays readable.
+ */
+function readArtifactFields(frontmatter: CompletionRecord): {
+  artifacts: { overlays: string[]; reference_docs: string[]; decisions: string[] };
+  exemptions: { overlays?: string; reference_docs?: string; system_spec?: string } | undefined;
+} {
+  const ap = frontmatter.artifacts_produced;
+  const artifacts = {
+    overlays: Array.isArray(ap?.overlays) ? ap!.overlays : [],
+    reference_docs: Array.isArray(ap?.reference_docs) ? ap!.reference_docs : [],
+    decisions: Array.isArray(ap?.decisions) ? ap!.decisions : [],
+  };
+  const exemptions = frontmatter.exemptions ? { ...frontmatter.exemptions } : undefined;
+  return { artifacts, exemptions };
 }
 
 /**

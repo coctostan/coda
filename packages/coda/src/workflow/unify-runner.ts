@@ -18,6 +18,8 @@ import {
 import { join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { findCompletionRecordPath } from '../tools/coda-advance';
+import { getCeremonyRules } from './ceremony';
+import type { CeremonyRules } from './ceremony';
 
 /**
  * Load topic-matched reference doc sections for UNIFY context.
@@ -141,10 +143,13 @@ export function assembleUnifyContext(
   const revisionFeedback = loadUnifyReviewFeedback(codaRoot, issueSlug);
   const isRevision = revisionFeedback !== null;
 
+  const issueType = issue?.frontmatter.issue_type ?? 'feature';
+  const ceremony = getCeremonyRules(issueType);
+
   // Build the system prompt — revision-aware when changes have been requested
   const systemPrompt = isRevision
     ? buildUnifyRevisionPrompt(revisionFeedback)
-    : buildUnifySystemPrompt(specDelta, hasMilestone);
+    : buildUnifySystemPrompt(specDelta, hasMilestone, ceremony, issueType);
   const context = [
     issueContext,
     planContext,
@@ -168,9 +173,51 @@ export function assembleUnifyContext(
 }
 
 /**
+ * YAML schema block agents emit in ACTION 5 for the `artifacts_produced`
+ * field. Held as a byte-stable constant so tests can assert exact substrings.
+ */
+const ARTIFACTS_SCHEMA_BLOCK = `  artifacts_produced:
+    overlays: ['modules/{module}.local.md', …]     # paths you wrote under .coda/modules/
+    reference_docs: ['reference/{doc}.md', …]     # paths you wrote under .coda/reference/
+    decisions: ['records/{slug}.md', …]            # any coda_create type:'decision' records
+  exemptions:         # include ONLY for categories with no artifact
+    overlays: "short reason"
+    reference_docs: "short reason"
+    system_spec: "short reason"    # required if issue has spec_delta and ref-system.md was not updated`;
+
+/**
+ * Build the "Before You Write the Completion Record" evidence instruction
+ * block. Ceremony-aware — strict wording for feature/bugfix, relaxed wording
+ * for refactor/chore/docs. Spec-delta enforcement is ceremony-independent.
+ */
+function buildEvidenceBlock(ceremony: CeremonyRules, hasSpecDelta: boolean): string {
+  const strictClause = ceremony.unifyFull === true
+    ? `- This issue type has full UNIFY ceremony: at least one artifact is required. You MUST produce at least one overlay update (.coda/modules/{module}.local.md) OR reference-doc update (.coda/reference/{doc}.md). If you legitimately have no compounding signal for one category, declare an exemption with a concrete reason in the \`exemptions\` block.`
+    : `- This issue type has relaxed UNIFY ceremony. If you legitimately have no compounding signal, leave artifacts_produced empty — no exemption needed — but if you DO have insight worth capturing, prefer an overlay update.`;
+
+  const specDeltaClause = hasSpecDelta
+    ? `\n- spec_delta declared on issue: you MUST update \`reference/ref-system.md\` OR declare \`exemptions.system_spec\` with a concrete reason. The gate will block until one of these is true.`
+    : '';
+
+  return `Before You Write the Completion Record — Collect Evidence
+- Before writing the completion record, list the paths of every overlay or reference doc you created or modified during this UNIFY pass.
+- Gather decision-record paths (anything you created via coda_create type:'decision').
+${strictClause}${specDeltaClause}
+- The gate verifies every declared path exists on disk and contains non-empty content. Fake paths will be rejected. Empty exemption strings will be rejected.`;
+}
+
+/**
  * Build the UNIFY system prompt with instructions for all 5 mandatory actions.
  */
-function buildUnifySystemPrompt(specDelta: string | undefined, hasMilestone: boolean): string {
+function buildUnifySystemPrompt(
+  specDelta: string | undefined,
+  hasMilestone: boolean,
+  ceremony: CeremonyRules,
+  _issueType: string
+): string {
+  const hasSpecDelta = specDelta !== undefined && specDelta !== null;
+  const evidenceBlock = buildEvidenceBlock(ceremony, hasSpecDelta);
+
   return `You are completing the UNIFY phase — CODA's compounding engine. Every completed issue should make future issues easier.
 
 You MUST perform all 5 mandatory actions in order:
@@ -182,7 +229,7 @@ ACTION 1: Merge Spec Delta into ref-system.md
 - Use coda_edit_body to apply ADDED/MODIFIED/REMOVED changes to reference/ref-system
 - If no spec delta exists on the issue, confirm explicitly: no spec change needed
 - Remember whether you made changes (you will report this in the completion record)
-${specDelta ? `\nSpec delta found on issue:\n${specDelta}\n` : ''}
+${hasSpecDelta ? `\nSpec delta found on issue:\n${String(specDelta)}\n` : ''}
 ACTION 2: Review and Update Other Reference Docs
 - Check which reference docs share topics with this issue
 - For each matching doc: does this issue change anything about the documented content?
@@ -211,6 +258,8 @@ ${hasMilestone
     ? '- This issue has a milestone field — check if a milestone record exists\n- If a milestone record exists: update its success criteria status'
     : '- This issue has no milestone field — this action is satisfied automatically'}
 
+${evidenceBlock}
+
 ACTION 5: Write Completion Record (LAST — after all other actions)
 - Use coda_create with type 'record' to create the completion record
 - Include frontmatter: title, issue slug, completed_at (ISO date), topics (from issue),
@@ -218,11 +267,11 @@ ACTION 5: Write Completion Record (LAST — after all other actions)
   reference_docs_reviewed: true (after completing Action 2),
   milestone_updated: true (after completing Action 4 — even if no milestone exists),
   unify_review_status: 'pending' (triggers human review before advancing to DONE)
+- Also include the following YAML schema describing the artifacts you produced:
+${ARTIFACTS_SCHEMA_BLOCK}
 - Include body sections: Summary, Verification Evidence (per-AC), Deviations,
   Decisions, Patterns, Module Findings
-reference_docs_reviewed, milestone_updated) MUST all be true before you can
-advance to DONE. The unify_review_status must be set to 'pending' — a human
-will review your UNIFY output and approve or request changes before DONE.
+- The three boolean flags (system_spec_updated, reference_docs_reviewed, milestone_updated) MUST all be true before you can advance to DONE. The unify_review_status must be set to 'pending' — a human will review your UNIFY output and approve or request changes before DONE.
 Since you write the record LAST, all fields should reflect the actual outcomes
 of Actions 1-4.`;
 }
