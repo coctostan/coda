@@ -16,6 +16,7 @@ import {
   codaCreate,
   codaEditBody,
   codaFocus,
+  codaForge,
   codaQuery,
   codaRead,
   codaReportFindings,
@@ -80,6 +81,10 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: s
     create_branch: Type.Optional(Type.Boolean()),
   });
 
+  const forgeSchema = Type.Object({
+    project_root: Type.Optional(Type.String()),
+  });
+
   const configSchema = Type.Object({
     action: Type.Union([Type.Literal('get'), Type.Literal('set')]),
     key: Type.Optional(Type.String()),
@@ -110,6 +115,16 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: s
       topic: Type.Optional(Type.String()),
       status: Type.Optional(Type.String()),
     })),
+  });
+
+  pi.registerTool({
+    name: 'coda_forge',
+    label: 'Initialize CODA',
+    description: 'Initialize CODA in the project (greenfield scaffold or brownfield onboarding). Call this before coda_create. Idempotent — returns already_initialized if .coda/ exists.',
+    parameters: forgeSchema,
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      return executeWithCodaErrorHandling(() => codaForge(params, projectRoot));
+    },
   });
 
   pi.registerTool({

@@ -667,10 +667,10 @@ describe('Pi Commands', () => {
 });
 
 describe('Pi Tools', () => {
-  test('registerTools registers 11 tools', () => {
+  test('registerTools registers 12 tools', () => {
     const { pi, tools } = createMockPi();
     registerTools(pi, '/tmp/test/.coda');
-    expect(tools.length).toBe(11);
+    expect(tools.length).toBe(12);
   });
 
   test('registered tools include all coda_* tool names', () => {
@@ -685,6 +685,7 @@ describe('Pi Tools', () => {
     expect(names).toContain('coda_advance');
     expect(names).toContain('coda_status');
     expect(names).toContain('coda_focus');
+    expect(names).toContain('coda_forge');
     expect(names).toContain('coda_run_tests');
   });
 

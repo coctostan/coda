@@ -6,6 +6,7 @@
  * All results extend ToolResult with success/error base fields.
  */
 
+import type { ScanContext } from '../forge';
 /** Base result type for all CODA tools. */
 export interface ToolResult {
   success: boolean;
@@ -148,6 +149,32 @@ export interface FocusErrorOutput {
 
 /** Result from coda_focus. */
 export type FocusOutput = FocusedOutput | AlreadyFocusedOutput | FocusErrorOutput;
+
+/** Input for coda_forge — initialize CODA in a project. */
+export interface ForgeInput {
+  /** Optional project root override; defaults to the caller-provided cwd. */
+  project_root?: string;
+}
+
+/** Scaffold result for coda_forge. */
+export interface ForgeScaffoldedOutput {
+  status: 'scaffolded';
+  backdrop: 'greenfield' | 'brownfield';
+  coda_root: string;
+  next_action: string;
+  scan_context?: ScanContext;
+}
+
+/** Idempotent coda_forge result when .coda already exists. */
+export interface ForgeAlreadyInitializedOutput {
+  status: 'already_initialized';
+  backdrop: 'existing';
+  coda_root: string;
+  next_action: string;
+}
+
+/** Result from coda_forge. */
+export type ForgeOutput = ForgeScaffoldedOutput | ForgeAlreadyInitializedOutput;
 
 /** Result from coda_status. */
 export interface StatusResult extends ToolResult {
