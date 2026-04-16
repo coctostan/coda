@@ -47,19 +47,21 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | v0.10 "Close the Agent Loop" as full pivot | v0.8 compounding plumbing works but doesn't compound in practice; fix before more FORGE | 2026-04-16 | Active |
 | Plan-doc phases 52–56 → our phases 53–57 | 52 already used for v0.9 Greenfield validation | 2026-04-16 | Active |
 ### Git State
-Branch: phases/48-50-compounding-engine
+Branch: phases/53-agent-entry-points
 Remote: https://github.com/coctostan/coda.git
-Last commit: c1c801d
-PR: https://github.com/coctostan/coda/pull/20 (OPEN)
+Last commit: 781be30
+PR: none yet (will open on first push)
 Last session: 2026-04-16
-Stopped at: Milestone transition complete — v0.9 closed, v0.10 kicked off; ready to plan Phase 53 (Agent Entry Points)
+Stopped at: Post-omnibus cleanup complete — PR #20 merged (v0.8 close + v0.9 + v0.10 kickoff), fresh branch for Phase 53, per-phase PR enforcement enabled
 Next action: /paul:plan for Phase 53
-Resume file: .paul/HANDOFF-2026-04-16-v0.10-kickoff.md
+Resume file: (none — consumed on 2026-04-16, archived to .paul/handoffs/archive/)
 Resume context:
-- v0.9 Live Compounding Validation closed (Phase 52 shipped, Phase 53 Brownfield deferred)
-- v0.10 "Close the Agent Loop" opened with phases 53-57 addressing 7 critical/high findings
-- Phase 53 = Agent Entry Points: add coda_forge + coda_focus tools; reinstate write gate
+- PR #20 squash-merged as 9611ff0 on main (closed the multi-milestone omnibus)
+- Branch phases/53-agent-entry-points cut fresh from main for Phase 53 work
+- pals.json: require_pr_before_next_phase flipped true — every phase gets its own PR going forward
+- Phase 53 = Agent Entry Points: add coda_forge + coda_focus tools; reinstate write gate (F1, F2, F7)
 - Primary planning inputs: .paul/milestones/v0.10.0-ROADMAP.md + docs/v0.8/E2E-COMPOUNDING-FINDINGS.md
-- Branch is 1 behind main / 17 ahead — consider rebase + PR #20 merge before next phase ships
+- Open design Q for PLAN: should coda_focus also create the VCS branch, or split it?
+- Dirty working tree: .pi/prompt-assembler/registry.json (pre-existing uncommitted change, unrelated to phase work)
 ---
 *STATE.md — Updated after every significant action*
