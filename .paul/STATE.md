@@ -6,18 +6,18 @@ Version: v0.10.0-dev
 **Current focus:** v0.10 Close the Agent Loop
 ## Current Position
 Milestone: v0.10 Close the Agent Loop
-Phase: 53 of 57 (Agent Entry Points)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-16 — v0.9 closed (Phase 52 shipped, Phase 53 deferred); v0.10 "Close the Agent Loop" begins
+Phase: 53 of 57 (Agent Entry Points) — Complete
+Plan: 53-01 complete — SUMMARY recorded
+Status: Loop complete, ready for Phase 54 PLAN
+Last activity: 2026-04-16 — UNIFY complete. SUMMARY at .paul/phases/53-agent-entry-points/53-01-SUMMARY.md.
 Progress:
-- v0.10 Close the Agent Loop: [░░░░░░░░░░] 0%
-- Phase 53: [░░░░░░░░░░] 0% (not started)
+- v0.10 Close the Agent Loop: [██░░░░░░░░] 20% (Phase 53 complete; 54–57 remaining)
+- Phase 53: [██████████] 100% (PLAN ✓, APPLY ✓, UNIFY ✓)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [New phase — ready to plan]
+  ✓        ✓        ✓     [Loop complete — ready for Phase 54 PLAN]
 ```
 ## Accumulated Context
 ### Decisions
@@ -46,20 +46,30 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Defer v0.9 Phase 53 (Brownfield); close v0.9 with just Phase 52 | Brownfield test would hit same F1/F2/F5 blockers as greenfield | 2026-04-16 | Active |
 | v0.10 "Close the Agent Loop" as full pivot | v0.8 compounding plumbing works but doesn't compound in practice; fix before more FORGE | 2026-04-16 | Active |
 | Plan-doc phases 52–56 → our phases 53–57 | 52 already used for v0.9 Greenfield validation | 2026-04-16 | Active |
+| coda_focus keeps VCS branch creation (opt-out via create_branch=false) | Option C from posture probe — single-call ergonomics, escape hatch for non-git contexts | v0.10 P53 | Active |
+| F7 root cause = integration gap not logic bug | checkWriteGate blocks .coda/ edits in unit tests; regression is in Pi-hook perimeter (tool surface audit) | v0.10 P53 | Active |
+| Write-gate deeper hardening deferred to Phase 55 | Phase 53 scope = audit + regression test + diagnostic logging; Phase 55 handles new attack patterns | v0.10 P53 | Active |
+| Task 1+2 scope expanded by 1 line each in hooks.test.ts | tools.length assertion mechanically coupled to Pi registration; plan <files> didn't anticipate | v0.10 P53 APPLY | Logged for UNIFY |
+| Plan verify commands reference typecheck/tsc that don't exist in this repo | bun test is the de-facto type check via Bun TS loader; no typecheck script or installed tsc | v0.10 P53 APPLY | Logged for UNIFY |
+| Pi mutation tool surface = {write, edit} only | Full audit of @mariozechner/pi-coding-agent/dist types: bash/read/edit/write/grep/find/ls/custom; only write + edit mutate. No str_replace/apply_patch/multi_edit exist | v0.10 P53 APPLY | Active |
 ### Git State
-Branch: phases/48-50-compounding-engine
+Branch: phases/53-agent-entry-points
 Remote: https://github.com/coctostan/coda.git
-Last commit: c1c801d
-PR: https://github.com/coctostan/coda/pull/20 (OPEN)
-Last session: 2026-04-16
-Stopped at: Milestone transition complete — v0.9 closed, v0.10 kicked off; ready to plan Phase 53 (Agent Entry Points)
-Next action: /paul:plan for Phase 53
-Resume file: .paul/HANDOFF-2026-04-16-v0.10-kickoff.md
+Last commit: 3d352e5 (PR #21 open: https://github.com/coctostan/coda/pull/21)
+PR: #21 OPEN, CI Socket Security SUCCESS (ci_checks=false so informational)
+Last session: 2026-04-16 (APPLY complete)
+Stopped at: All 3 tasks GREEN, PR #21 open with CI passing, working tree clean, ready for UNIFY
+Next action: /paul:unify .paul/phases/53-agent-entry-points/53-01-PLAN.md
+Resume file: .paul/handoffs/archive/HANDOFF-2026-04-16-phase-53-planned.md (consumed 2026-04-16 on /paul:resume)
 Resume context:
-- v0.9 Live Compounding Validation closed (Phase 52 shipped, Phase 53 Brownfield deferred)
-- v0.10 "Close the Agent Loop" opened with phases 53-57 addressing 7 critical/high findings
-- Phase 53 = Agent Entry Points: add coda_forge + coda_focus tools; reinstate write gate
-- Primary planning inputs: .paul/milestones/v0.10.0-ROADMAP.md + docs/v0.8/E2E-COMPOUNDING-FINDINGS.md
-- Branch is 1 behind main / 17 ahead — consider rebase + PR #20 merge before next phase ships
+- Phase 53 APPLY: 3/3 tasks PASS with full TDD discipline (9 phase gates total)
+- Task 1 (2036e88): issue-activation helper + coda_focus tool + /coda activate refactor (8-line handler, byte-identical ctx.ui.notify)
+- Task 2 (2b4fac9): coda_forge tool + /coda forge refactor (2-line handler) + AC-5 bare-workspace E2E
+- Task 3 (3d352e5): Pi mutation tool surface audit (write + edit only) + F7 write-gate integration test (6 cases) + DEBUG=coda:* structured-JSON diagnostic
+- Tests 655 → 673 (+18 new, 0 regressions, 0 fail)
+- All 6 AC satisfied (AC-1 through AC-6)
+- Module dispatch: TODD × 5 PASS / WALT PASS / DEAN PASS (delta 0) / ARCH/SETH/VERA PASS / 5 advisory annotations surfaced
+- 2 deviations logged above for UNIFY reconciliation (coupled hooks.test.ts bump; typecheck command absent)
+- PR #21 OPEN, Socket Security CI passing (informational)
 ---
 *STATE.md — Updated after every significant action*

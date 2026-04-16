@@ -5,15 +5,13 @@
  * Registers the `/coda` slash command and dispatches supported subcommands.
  */
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-coding-agent';
-import { createDefaultState, loadState, persistState } from '@coda/core';
-import type { Phase } from '@coda/core';
 import type { CodaConfig } from '../forge/types';
-import { assembleScanContext, detectBackdrop, getDefaultConfig, scaffoldCoda } from '../forge';
-import { codaAdvance, codaBack, codaCreate, codaKill, codaRead, codaStatus } from '../tools';
+import { getDefaultConfig } from '../forge';
+import { codaAdvance, codaBack, codaCreate, codaForge, codaKill, codaStatus } from '../tools';
 import type { AdvanceInput, StatusResult } from '../tools';
-import { createBranch, getBuildSequence } from '../workflow';
+import { focusIssue, getBuildSequence } from '../workflow';
 import { resolveGateMode } from '../workflow/gate-automation';
 import { handleAutonomousAdvanceTrigger } from './hooks';
 
@@ -68,36 +66,7 @@ async function handleCodaCommand(
     }
 
     case 'forge': {
-      const backdrop = detectBackdrop(projectRoot);
-
-      if (backdrop.type === 'existing') {
-        ctx.ui.notify('CODA is already initialized in this project. Use `/coda status` to see current state.');
-        return;
-      }
-
-      // Scaffold .coda/ for both greenfield and brownfield
-      scaffoldCoda(projectRoot);
-      if (backdrop.type === 'brownfield') {
-        const promptsDir = resolve(__dirname, '..', '..', '..', '..', 'modules', 'prompts');
-        const scanCtx = assembleScanContext(projectRoot, promptsDir);
-        const targetList = scanCtx.universalTargets.length > 0
-          ? scanCtx.universalTargets.join(', ')
-          : 'none detected';
-        ctx.ui.notify(
-          `✓ Brownfield project detected. \`.coda/\` directory created.\n\n` +
-          `**Detected:** ${targetList}` +
-          (scanCtx.sourceDir ? ` | Source: ${scanCtx.sourceDir}/` : '') +
-          `\n\n**Next: Brownfield SCAN**\n` +
-          `Read the detected files and run scan commands to gather evidence.\n` +
-          `Use \`coda_create\` to write evidence files to \`.coda/forge/initial/onboarding/\`.`
-        );
-        return;
-      }
-
-      // Greenfield (unchanged)
-      ctx.ui.notify(
-        '✓ Project scaffolded. `.coda/` directory created with default configuration.\n\nNext: Create an issue to describe what you want to build:\n  Use the `coda_create` tool to create an issue in `.coda/issues/`'
-      );
+      notifyForgeResult(ctx, codaForge({}, projectRoot));
       return;
     }
 
@@ -107,45 +76,7 @@ async function handleCodaCommand(
         ctx.ui.notify('Usage: /coda activate <issue-slug>', 'warning');
         return;
       }
-
-      const issuePath = join(codaRoot, 'issues', slug + '.md');
-      if (!existsSync(issuePath)) {
-        ctx.ui.notify(`Issue "${slug}" not found.`, 'error');
-        return;
-      }
-
-      const currentState = loadState(statePath);
-      if (currentState?.focus_issue === slug) {
-        ctx.ui.notify(`Issue "${slug}" is already focused.`, 'warning');
-        return;
-      }
-
-      const issueRecord = codaRead({ record: `issues/${slug}` }, codaRoot);
-      const issueType = typeof issueRecord.frontmatter.issue_type === 'string'
-        ? issueRecord.frontmatter.issue_type
-        : 'feature';
-      const issuePhase = typeof issueRecord.frontmatter.phase === 'string'
-        ? (issueRecord.frontmatter.phase as Phase)
-        : 'specify';
-
-      const state = currentState ?? createDefaultState();
-      state.focus_issue = slug;
-      state.phase = issuePhase;
-      state.current_task = null;
-      state.completed_tasks = [];
-      persistState(state, statePath);
-
-      let branchMsg = '';
-      try {
-        const branchResult = createBranch(projectRoot, slug, issueType);
-        branchMsg = branchResult.created
-          ? ` Branch ${branchResult.branch} created.`
-          : ` On branch ${branchResult.branch}.`;
-      } catch {
-        branchMsg = ' (VCS branch creation skipped — git error)';
-      }
-
-      ctx.ui.notify(`Activated issue "${slug}" at phase ${issuePhase}.${branchMsg}`);
+      notifyActivateResult(ctx, slug, focusIssue(codaRoot, projectRoot, slug, { createBranch: true }));
       return;
     }
     case 'new': {
@@ -279,6 +210,60 @@ async function handleCodaCommand(
       );
     }
   }
+}
+
+function notifyActivateResult(
+  ctx: ExtensionCommandContext,
+  slug: string,
+  result: ReturnType<typeof focusIssue>
+): void {
+  if (result.status === 'error') {
+    ctx.ui.notify(result.reason, 'error');
+    return;
+  }
+
+  if (result.status === 'already_focused') {
+    ctx.ui.notify(`Issue "${slug}" is already focused.`, 'warning');
+    return;
+  }
+
+  const branchMsg = result.branch_status === 'created'
+    ? ` Branch ${result.branch} created.`
+    : result.branch_status === 'existing'
+      ? ` On branch ${result.branch}.`
+      : result.reason === 'create_branch=false'
+        ? ''
+        : ' (VCS branch creation skipped — git error)';
+  ctx.ui.notify(`Activated issue "${slug}" at phase ${result.phase}.${branchMsg}`);
+}
+
+function notifyForgeResult(
+  ctx: ExtensionCommandContext,
+  result: ReturnType<typeof codaForge>
+): void {
+  if (result.status === 'already_initialized') {
+    ctx.ui.notify('CODA is already initialized in this project. Use `/coda status` to see current state.');
+    return;
+  }
+
+  if (result.backdrop === 'brownfield') {
+    const targetList = result.scan_context?.universalTargets.length
+      ? result.scan_context.universalTargets.join(', ')
+      : 'none detected';
+    ctx.ui.notify(
+      `✓ Brownfield project detected. \`.coda/\` directory created.\n\n` +
+      `**Detected:** ${targetList}` +
+      (result.scan_context?.sourceDir ? ` | Source: ${result.scan_context.sourceDir}/` : '') +
+      `\n\n**Next: Brownfield SCAN**\n` +
+      'Read the detected files and run scan commands to gather evidence.\n' +
+      'Use `coda_create` to write evidence files to `.coda/forge/initial/onboarding/`.'
+    );
+    return;
+  }
+
+  ctx.ui.notify(
+    '✓ Project scaffolded. `.coda/` directory created with default configuration.\n\nNext: Create an issue to describe what you want to build:\n  Use the `coda_create` tool to create an issue in `.coda/issues/`'
+  );
 }
 
 function formatCodaError(err: unknown): string {

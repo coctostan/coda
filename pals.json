@@ -33,7 +33,7 @@
     "ci_checks": false,
     "delete_branch_on_merge": true,
     "update_branch_when_behind": true,
-    "require_pr_before_next_phase": false,
+    "require_pr_before_next_phase": true,
     "require_reviews": false
   },
   "integrations": {

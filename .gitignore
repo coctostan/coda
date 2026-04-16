@@ -4,3 +4,5 @@ dist/
 *.tmp
 .codegraph/
 bun.lock
+# Pi prompt-assembler tool registry — per-machine state, not shared project config
+.pi/prompt-assembler/registry.json

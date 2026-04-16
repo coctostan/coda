@@ -15,6 +15,8 @@ import {
   codaConfig,
   codaCreate,
   codaEditBody,
+  codaFocus,
+  codaForge,
   codaQuery,
   codaRead,
   codaReportFindings,
@@ -74,6 +76,15 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: s
 
   const statusSchema = Type.Object({});
 
+  const focusSchema = Type.Object({
+    slug: Type.String(),
+    create_branch: Type.Optional(Type.Boolean()),
+  });
+
+  const forgeSchema = Type.Object({
+    project_root: Type.Optional(Type.String()),
+  });
+
   const configSchema = Type.Object({
     action: Type.Union([Type.Literal('get'), Type.Literal('set')]),
     key: Type.Optional(Type.String()),
@@ -104,6 +115,16 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: s
       topic: Type.Optional(Type.String()),
       status: Type.Optional(Type.String()),
     })),
+  });
+
+  pi.registerTool({
+    name: 'coda_forge',
+    label: 'Initialize CODA',
+    description: 'Initialize CODA in the project (greenfield scaffold or brownfield onboarding). Call this before coda_create. Idempotent — returns already_initialized if .coda/ exists.',
+    parameters: forgeSchema,
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      return executeWithCodaErrorHandling(() => codaForge(params, projectRoot));
+    },
   });
 
   pi.registerTool({
@@ -186,6 +207,16 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: s
     parameters: statusSchema,
     async execute(_toolCallId, _params, _signal, _onUpdate, _ctx) {
       return executeWithCodaErrorHandling(() => codaStatus(statePath, codaRoot));
+    },
+  });
+
+  pi.registerTool({
+    name: 'coda_focus',
+    label: 'Focus Issue',
+    description: 'Focus an issue to begin its lifecycle. Creates a feature branch by default (set create_branch: false to skip).',
+    parameters: focusSchema,
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      return executeWithCodaErrorHandling(() => codaFocus(params, codaRoot, projectRoot));
     },
   });
 

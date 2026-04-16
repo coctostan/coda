@@ -15,6 +15,23 @@ import type { AdvanceInput, AdvanceResult } from '../tools';
 import { getPhaseContext, runReviewRunner, runVerifyRunner } from '../workflow';
 import type { CodaExtensionState, StateProvider } from './types';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Pi mutation tool surface audit (Phase 53, 2026-04-16)
+//
+// Source: node_modules/@mariozechner/pi-coding-agent/dist/core/extensions/types.d.ts (lines 505–623).
+// Built-in tool types: bash, read, edit, write, grep, find, ls, custom.
+// Mutating built-ins: write, edit (both intercepted below).
+// No str_replace / apply_patch / multi_edit / create_file / patch in current Pi.
+//
+// Implication: tool-type perimeter is complete. The F7 regression documented
+// in docs/v0.8/E2E-COMPOUNDING-FINDINGS.md must be either
+//   (a) path-canonicalization gaps (./.coda/..., absolute paths) — covered by
+//       write-gate-integration.test.ts below, OR
+//   (b) extension-registered custom tools mutating via internal bypass — out
+//       of scope for Phase 53; see Phase 55 for deeper hardening.
+// When Pi adds new mutation tool types, extend the intercepts here and add
+// cases in write-gate-integration.test.ts.
+// ─────────────────────────────────────────────────────────────────────────────
 /**
  * Register all CODA lifecycle hooks with Pi.
  *
@@ -70,6 +87,7 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
   });
 
   pi.on('tool_call', async (event, ctx) => {
+    const debugCoda = typeof process !== 'undefined' && process.env.DEBUG?.includes('coda:');
     // Intercept bash commands targeting .coda/
     if (isToolCallEventType('bash', event)) {
       const cmd = event.input.command;
@@ -82,10 +100,18 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
       return {};
     }
     if (isToolCallEventType('write', event)) {
-      return evaluateWriteGate('write', event.input.path, codaRoot, ctx.cwd, stateProvider);
+      const result = evaluateWriteGate('write', event.input.path, codaRoot, ctx.cwd, stateProvider);
+      if (debugCoda && 'block' in result) {
+        logWriteGateDecision('write', event.input.path, result);
+      }
+      return result;
     }
     if (isToolCallEventType('edit', event)) {
-      return evaluateWriteGate('edit', event.input.path, codaRoot, ctx.cwd, stateProvider);
+      const result = evaluateWriteGate('edit', event.input.path, codaRoot, ctx.cwd, stateProvider);
+      if (debugCoda && 'block' in result) {
+        logWriteGateDecision('edit', event.input.path, result);
+      }
+      return result;
     }
     return {};
   });
@@ -275,6 +301,20 @@ function evaluateWriteGate(
     block: true,
     reason: gateResult.reason ?? 'TDD gate locked. Write a failing test first.',
   };
+}
+
+function logWriteGateDecision(
+  operation: 'write' | 'edit',
+  path: string,
+  result: { block?: boolean; reason?: string }
+): void {
+  console.log(JSON.stringify({
+    component: 'coda:write-gate',
+    operation,
+    path,
+    outcome: result.block ? 'block' : 'allow',
+    reason: result.reason,
+  }));
 }
 
 function queueAutonomousFollowUp(pi: ExtensionAPI, ctx: ExtensionContext, state: NonNullable<ReturnType<typeof loadState>>): boolean {

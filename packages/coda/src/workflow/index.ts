@@ -54,6 +54,16 @@ export { getPhaseContext } from './phase-runner';
 // UNIFY runner
 export { assembleUnifyContext, loadTopicMatchedRefDocs } from './unify-runner';
 
+// Issue activation
+export { focusIssue } from './issue-activation';
+export type {
+  FocusIssueOptions,
+  FocusIssueResult,
+  FocusIssueFocusedResult,
+  FocusIssueAlreadyFocusedResult,
+  FocusIssueErrorResult,
+} from './issue-activation';
+
 // Build loop
 export { buildTaskContext, getBuildSequence } from './build-loop';
 

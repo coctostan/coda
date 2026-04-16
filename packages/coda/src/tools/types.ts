@@ -6,6 +6,7 @@
  * All results extend ToolResult with success/error base fields.
  */
 
+import type { ScanContext } from '../forge';
 /** Base result type for all CODA tools. */
 export interface ToolResult {
   success: boolean;
@@ -111,6 +112,69 @@ export interface BackInput {
   /** Prior phase to rewind to. */
   target_phase: string;
 }
+
+/** Input for coda_focus — focus an issue and optionally create a branch. */
+export interface FocusInput {
+  /** Issue slug to focus. */
+  slug: string;
+  /** If false, skip feature branch creation. */
+  create_branch?: boolean;
+}
+
+/** Successful coda_focus result. */
+export interface FocusedOutput {
+  status: 'focused';
+  slug: string;
+  phase: string;
+  branch?: string;
+  branch_status: 'created' | 'existing' | 'skipped';
+  reason?: 'create_branch=false' | 'not a git repo' | 'git error';
+  next_action: string;
+}
+
+/** Idempotent coda_focus result when the issue is already focused. */
+export interface AlreadyFocusedOutput {
+  status: 'already_focused';
+  slug: string;
+  phase: string | null;
+  next_action: string;
+}
+
+/** Error coda_focus result. */
+export interface FocusErrorOutput {
+  status: 'error';
+  reason: string;
+  next_action: string;
+}
+
+/** Result from coda_focus. */
+export type FocusOutput = FocusedOutput | AlreadyFocusedOutput | FocusErrorOutput;
+
+/** Input for coda_forge — initialize CODA in a project. */
+export interface ForgeInput {
+  /** Optional project root override; defaults to the caller-provided cwd. */
+  project_root?: string;
+}
+
+/** Scaffold result for coda_forge. */
+export interface ForgeScaffoldedOutput {
+  status: 'scaffolded';
+  backdrop: 'greenfield' | 'brownfield';
+  coda_root: string;
+  next_action: string;
+  scan_context?: ScanContext;
+}
+
+/** Idempotent coda_forge result when .coda already exists. */
+export interface ForgeAlreadyInitializedOutput {
+  status: 'already_initialized';
+  backdrop: 'existing';
+  coda_root: string;
+  next_action: string;
+}
+
+/** Result from coda_forge. */
+export type ForgeOutput = ForgeScaffoldedOutput | ForgeAlreadyInitializedOutput;
 
 /** Result from coda_status. */
 export interface StatusResult extends ToolResult {

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -291,8 +291,20 @@ function createMockContext(cwd: string, idle: boolean = true): ExtensionContext 
 }
 
 const tempRoots: string[] = [];
+let previousDebugEnv: string | undefined;
+let originalConsoleLog: typeof console.log;
 
+beforeEach(() => {
+  previousDebugEnv = process.env.DEBUG;
+  originalConsoleLog = console.log;
+});
 afterEach(() => {
+  console.log = originalConsoleLog;
+  if (previousDebugEnv === undefined) {
+    delete process.env.DEBUG;
+  } else {
+    process.env.DEBUG = previousDebugEnv;
+  }
   while (tempRoots.length > 0) {
     const root = tempRoots.pop();
     if (root) {
@@ -435,6 +447,62 @@ describe('Pi Hooks', () => {
       block: true,
       reason: 'Use coda_* tools to modify .coda/ files',
     });
+  });
+
+  test('tool_call emits a DEBUG=coda:* diagnostic log for blocked .coda writes', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'unlocked' }));
+    const consoleLogs: unknown[][] = [];
+
+    registerHooks(pi, codaRoot);
+    process.env.DEBUG = 'coda:*';
+    console.log = (...args: unknown[]) => {
+      consoleLogs.push(args);
+    };
+
+    const toolCall = hooks.get('tool_call');
+    const result = await toolCall?.(
+      { type: 'tool_call', toolCallId: 'debug-1', toolName: 'write', input: { path: '.coda/state.json', content: '{}' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+
+    expect(result).toMatchObject({
+      block: true,
+      reason: 'Use coda_* tools to modify .coda/ files',
+    });
+    expect(consoleLogs).toHaveLength(1);
+    expect(consoleLogs[0]).toHaveLength(1);
+    expect(JSON.parse(String(consoleLogs[0]?.[0]))).toEqual({
+      component: 'coda:write-gate',
+      operation: 'write',
+      path: '.coda/state.json',
+      outcome: 'block',
+      reason: 'Use coda_* tools to modify .coda/ files',
+    });
+  });
+
+  test('tool_call does not emit write-gate diagnostics when DEBUG is unset', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ tdd_gate: 'unlocked' }));
+    const consoleLogs: unknown[][] = [];
+
+    registerHooks(pi, codaRoot);
+    delete process.env.DEBUG;
+    console.log = (...args: unknown[]) => {
+      consoleLogs.push(args);
+    };
+
+    const toolCall = hooks.get('tool_call');
+    const result = await toolCall?.(
+      { type: 'tool_call', toolCallId: 'debug-2', toolName: 'write', input: { path: '.coda/state.json', content: '{}' } },
+      createMockContext(projectRoot)
+    ) as ToolCallResult;
+
+    expect(result).toMatchObject({
+      block: true,
+      reason: 'Use coda_* tools to modify .coda/ files',
+    });
+    expect(consoleLogs).toHaveLength(0);
   });
 
   test('tool_call blocks non-test writes when tdd_gate is locked', async () => {
@@ -642,7 +710,7 @@ describe('Pi Extension Entry Point', () => {
     codaExtension(pi);
 
     expect(commands.length).toBe(1);
-    expect(tools.length).toBe(10);
+    expect(tools.length).toBe(12);
     expect(tools.some((tool) => tool.name === 'coda_report_findings')).toBe(true);
     expect(hooks.size).toBe(4);
   });
