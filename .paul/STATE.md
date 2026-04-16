@@ -6,18 +6,18 @@ Version: v0.10.0-dev
 **Current focus:** v0.10 Close the Agent Loop
 ## Current Position
 Milestone: v0.10 Close the Agent Loop
-Phase: 54 of 57 (UNIFY Actually Produces Artifacts) — Not started
-Plan: Not started
-Status: Ready to plan Phase 54
-Last activity: 2026-04-16 — Phase 53 complete (merged as 65a9df7 via PR #21); transitioned to Phase 54.
+Phase: 54 of 57 (UNIFY Actually Produces Artifacts) — Planning
+Plan: 54-01 created, awaiting approval
+Status: PLAN created, ready for APPLY
+Last activity: 2026-04-16 — Created .paul/phases/54-unify-produces-artifacts/54-01-PLAN.md (commit 273f2e3, pushed to origin).
 Progress:
 - v0.10 Close the Agent Loop: [██░░░░░░░░] 20% (1 of 5 phases complete; 54–57 remaining)
-- Phase 54: [░░░░░░░░░░] 0% (not started)
+- Phase 54: [█░░░░░░░░░] 10% (plan created, APPLY pending)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Phase 54 not started — run /paul:plan]
+  ✓        ○        ○     [Plan 54-01 created, awaiting approval]
 ```
 ## Accumulated Context
 ### Decisions
@@ -53,23 +53,18 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Plan verify commands reference typecheck/tsc that don't exist in this repo | bun test is the de-facto type check via Bun TS loader; no typecheck script or installed tsc | v0.10 P53 APPLY | Logged for UNIFY |
 | Pi mutation tool surface = {write, edit} only | Full audit of @mariozechner/pi-coding-agent/dist types: bash/read/edit/write/grep/find/ls/custom; only write + edit mutate. No str_replace/apply_patch/multi_edit exist | v0.10 P53 APPLY | Active |
 ### Git State
-Branch: main (phases/53-agent-entry-points merged and deleted)
+Branch: phases/54-unify-produces-artifacts (cut from main, pushed to origin)
 Remote: https://github.com/coctostan/coda.git
-Last commit: 65a9df7 (squash-merge of PR #21 on main)
-PR: #21 MERGED (https://github.com/coctostan/coda/pull/21) — branch deleted
-Last session: 2026-04-16 (Phase 53 UNIFY + merge complete)
-Stopped at: Phase 53 complete — loop closed, PR merged, branch cleaned, ready for Phase 54 PLAN
-Next action: /paul:plan (Phase 54 — UNIFY Actually Produces Artifacts / F5)
-Resume file: .paul/phases/53-agent-entry-points/53-01-SUMMARY.md
+Last commit: 273f2e3 plan: phase 54 — UNIFY Actually Produces Artifacts (tdd)
+PR: none yet — will open on first APPLY commit (guardrail: require_pr_before_next_phase=true)
+Last session: 2026-04-16 (Phase 54 PLAN created)
+Stopped at: Plan 54-01 created — ready for APPLY
+Next action: /paul:apply .paul/phases/54-unify-produces-artifacts/54-01-PLAN.md
+Resume file: .paul/phases/54-unify-produces-artifacts/54-01-PLAN.md
 Resume context:
-- Phase 53 APPLY: 3/3 tasks PASS with full TDD discipline (9 phase gates total)
-- Task 1 (2036e88): issue-activation helper + coda_focus tool + /coda activate refactor (8-line handler, byte-identical ctx.ui.notify)
-- Task 2 (2b4fac9): coda_forge tool + /coda forge refactor (2-line handler) + AC-5 bare-workspace E2E
-- Task 3 (3d352e5): Pi mutation tool surface audit (write + edit only) + F7 write-gate integration test (6 cases) + DEBUG=coda:* structured-JSON diagnostic
-- Tests 655 → 673 (+18 new, 0 regressions, 0 fail)
-- All 6 AC satisfied (AC-1 through AC-6)
-- Module dispatch: TODD × 5 PASS / WALT PASS / DEAN PASS (delta 0) / ARCH/SETH/VERA PASS / 5 advisory annotations surfaced
-- 2 deviations logged above for UNIFY reconciliation (coupled hooks.test.ts bump; typecheck command absent)
-- PR #21 OPEN, Socket Security CI passing (informational)
+- 3 TDD cycles planned: (1) core evidence gate + CompletionRecord/GateCheckData schema, (2) UNIFY runner prompt restructure with ceremony-aware exemption guidance, (3) 10-case e2e integration test.
+- Design decisions locked via posture probe (high collab + exploratory): evidence mechanism = hybrid self-report + disk verification (Q1=C); runner stays single-prompt with evidence requirement (Q2=A); exemption = ceremony + explicit opt-out (Q3=C); spec_delta mandatory when present (Q4=C); no migration needed for existing records (Q5=C); schema in prompt both summary + ACTION 5 (Q6=C); 3 tasks (Q7=C).
+- Self-caught layering fix during drafting: ceremony booleans computed in coda (gatherGateData), gate stays dumb — no core→coda import, no mirrored ceremony table, no drift test.
+- Pre-plan dispatch: ARCH/SETH/TODD/IRIS/DOCS/RUBY advisory — 0 blockers, RUBY flagged coda-advance.ts already 645L (plan caps growth ≤+40 LOC); DEAN enforcement PASS (delta 0).
 ---
 *STATE.md — Updated after every significant action*

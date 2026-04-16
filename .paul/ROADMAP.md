@@ -12,7 +12,7 @@ Theme: "The compounding engine actually compounds."
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 53 | Agent Entry Points | 1/1 | ✅ Complete | 2026-04-16 |
-| 54 | UNIFY Actually Produces Artifacts | 0/TBD | ⚪ Not started | — |
+| 54 | UNIFY Actually Produces Artifacts | 1/1 | 🟡 Planning | — |
 | 55 | Supporting Systems Repair | 0/TBD | ⚪ Not started | — |
 | 56 | Lifecycle-First Prompts | 0/TBD | ⚪ Not started | — |
 | 57 | E2E Re-Validation | 0/TBD | ⚪ Not started | — |
@@ -24,12 +24,12 @@ Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
 Plans: 1 — `.paul/phases/53-agent-entry-points/53-01-PLAN.md` → `53-01-SUMMARY.md`
 Outcome: 2 new agent-callable tools (`coda_forge`, `coda_focus`), shared `focusIssue()` helper, slash-command refactor (byte-identical notify strings), bare-workspace E2E, Pi mutation tool surface audit, F7 integration guard, `DEBUG=coda:*` diagnostic. Tests 655→673 (+18, 0 fail). Merged as squash `65a9df7` on main via PR #21.
 
-### Phase 54: UNIFY Actually Produces Artifacts
+### Phase 54: UNIFY Actually Produces Artifacts — 🟡 Planning
 Focus: Make UNIFY generate overlays and reference doc updates, not just completion records — the headline fix
 Addresses: F5 (UNIFY produces zero artifacts)
 Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
 Depends: Phase 53 (need focus tool to run UNIFY in a test)
-Plans: TBD (defined during /paul:plan)
+Plans: 1 — `.paul/phases/54-unify-produces-artifacts/54-01-PLAN.md` (tdd, 3 cycles, awaiting APPLY)
 
 ### Phase 55: Supporting Systems Repair
 Focus: Fix `coda_run_tests`, strengthen write gate, remove legacy `human_review_default` field
@@ -199,4 +199,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-16 — Phase 53 shipped; v0.10 at 1 of 5 phases complete*
+*Roadmap updated: 2026-04-16 — Phase 54 plan created; v0.10 at 1 of 5 phases complete, Phase 54 in planning*
