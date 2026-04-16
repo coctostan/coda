@@ -105,6 +105,41 @@ export interface GateCheckData {
   milestoneUpdated?: boolean;
   /** Current UNIFY review status from the completion record. */
   unifyReviewStatus?: string;
+  /**
+   * Artifacts the UNIFY agent claims to have produced. Gate verifies each
+   * declared path exists and has non-empty content. Paths are relative to
+   * `codaRoot`.
+   */
+  artifactsProduced?: {
+    overlays: string[];
+    reference_docs: string[];
+    decisions: string[];
+  };
+  /**
+   * Declared exemptions from artifact evidence, keyed by category.
+   * An empty string is rejected by the gate.
+   */
+  artifactExemptions?: {
+    overlays?: string;
+    reference_docs?: string;
+    system_spec?: string;
+  };
+  /**
+   * True when the issue has a declared spec_delta that MUST be reflected in
+   * a ref-doc update (or exemption). Computed by the caller from
+   * `issue.spec_delta` and ceremony.specDeltaRequired.
+   */
+  specDeltaPresent?: boolean;
+  /**
+   * True when this issue type requires at least one overlay or
+   * reference_doc (or exemption) per ceremony. Computed by the caller from
+   * ceremony.unifyFull.
+   */
+  artifactEvidenceRequired?: boolean;
+  /**
+   * Absolute or relative root — gate uses it to stat declared artifact paths.
+   */
+  codaRoot?: string;
 }
 
 /** Result of a phase transition attempt. */

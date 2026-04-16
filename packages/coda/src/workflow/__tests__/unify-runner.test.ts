@@ -292,6 +292,148 @@ describe('UNIFY review prompt and revision context', () => {
   });
 });
 
+describe('UNIFY prompt artifacts_produced schema', () => {
+  test('prompt contains the literal "artifacts_produced:" schema block', () => {
+    setupIssue();
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('artifacts_produced:');
+  });
+
+  test('prompt contains "overlays:" and "reference_docs:" as schema fields', () => {
+    setupIssue();
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('overlays:');
+    expect(result.systemPrompt).toContain('reference_docs:');
+  });
+
+  test('prompt contains the explicit path-collection instruction', () => {
+    setupIssue();
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain(
+      'list the paths of every overlay or reference doc you created or modified'
+    );
+  });
+
+  test('feature issue prompt contains strict-mode wording', () => {
+    setupIssue();
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('at least one artifact is required');
+  });
+
+  test('refactor issue prompt contains relaxed-mode wording and notes the exemption path', () => {
+    // Override issue_type to 'refactor'
+    const issueDir = join(codaRoot, 'issues');
+    mkdirSync(issueDir, { recursive: true });
+    writeRecord<IssueRecord>(join(issueDir, 'test-issue.md'), {
+      title: 'Test Issue',
+      issue_type: 'refactor',
+      status: 'active',
+      phase: 'unify',
+      priority: 3,
+      topics: ['state'],
+      acceptance_criteria: [{ id: 'AC-1', text: 'Gate enforces fields', status: 'met' }],
+      open_questions: [],
+      deferred_items: [],
+      human_review: false,
+    }, '## Description\nRefactor issue.\n');
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('relaxed UNIFY ceremony');
+    // No "strict" requirement for refactor
+    expect(result.systemPrompt).not.toContain('at least one artifact is required');
+  });
+
+  test('chore issue prompt mentions the issue is exempt from the evidence requirement', () => {
+    const issueDir = join(codaRoot, 'issues');
+    mkdirSync(issueDir, { recursive: true });
+    writeRecord<IssueRecord>(join(issueDir, 'test-issue.md'), {
+      title: 'Test Issue',
+      issue_type: 'chore',
+      status: 'active',
+      phase: 'unify',
+      priority: 3,
+      topics: [],
+      acceptance_criteria: [{ id: 'AC-1', text: 'Done', status: 'met' }],
+      open_questions: [],
+      deferred_items: [],
+      human_review: false,
+    }, '## Description\nChore.\n');
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('relaxed UNIFY ceremony');
+  });
+
+  test('spec_delta present surfaces explicit ref-system.md requirement', () => {
+    const issueDir = join(codaRoot, 'issues');
+    mkdirSync(issueDir, { recursive: true });
+    writeRecord<IssueRecord>(join(issueDir, 'test-issue.md'), {
+      title: 'Test Issue',
+      issue_type: 'feature',
+      status: 'active',
+      phase: 'unify',
+      priority: 3,
+      topics: ['state'],
+      acceptance_criteria: [{ id: 'AC-1', text: 'Met', status: 'met' }],
+      open_questions: [],
+      deferred_items: [],
+      human_review: false,
+      spec_delta: {
+        added: ['new-thing'],
+        modified: [],
+        removed: [],
+        delta_summary: 'Adds new-thing',
+      },
+    }, '## Description\nFeature with spec delta.\n');
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('spec_delta declared on issue');
+    expect(result.systemPrompt).toContain('ref-system.md');
+    expect(result.systemPrompt).toContain('exemptions.system_spec');
+  });
+
+  test('revision prompt path does NOT duplicate artifacts_produced schema instructions', () => {
+    setupIssue();
+    setupPlan();
+
+    // Write a completion record with changes-requested status to trigger revision path
+    const recordsDir = join(codaRoot, 'records');
+    mkdirSync(recordsDir, { recursive: true });
+    writeRecord<Record<string, unknown>>(join(recordsDir, 'test-issue-completion.md'), {
+      title: 'Completion Record',
+      issue: 'test-issue',
+      completed_at: '2026-04-14',
+      topics: ['state'],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'changes-requested',
+    }, '## Summary\nDone.\n\n## UNIFY Review\nStatus: changes-requested\n\nFeedback:\nMissing pattern doc.\n');
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('revising your UNIFY output');
+    expect(result.systemPrompt).not.toContain('artifacts_produced:');
+  });
+});
+
 describe('loadUnifyReviewFeedback', () => {
   test('returns feedback when completion record has changes-requested', () => {
     const recordsDir = join(codaRoot, 'records');

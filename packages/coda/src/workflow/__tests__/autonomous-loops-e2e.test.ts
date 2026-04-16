@@ -515,6 +515,10 @@ describe('UNIFY review gate E2E', () => {
       reference_docs_reviewed: true,
       milestone_updated: true,
       unify_review_status: 'pending',
+      exemptions: {
+        overlays: 'fixture: no patterns emerged',
+        reference_docs: 'fixture: no system change',
+      },
     }, '## Summary\nFeature completed.\n');
 
     // Step 1: Try to advance — should be blocked by UNIFY review pending
@@ -559,6 +563,10 @@ describe('UNIFY review gate E2E', () => {
       reference_docs_reviewed: true,
       milestone_updated: true,
       unify_review_status: 'pending',
+      exemptions: {
+        overlays: 'fixture: no patterns emerged',
+        reference_docs: 'fixture: no system change',
+      },
     }, '## Summary\nFeature completed.\n\n## Patterns\nNew gate pattern documented.\n');
 
     // Step 6: Approve the UNIFY review

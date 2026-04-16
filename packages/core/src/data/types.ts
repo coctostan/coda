@@ -101,6 +101,26 @@ export interface CompletionRecord {
   milestone_updated: boolean;
   /** UNIFY review status — tracks human approval of UNIFY output before advancing to DONE. */
   unify_review_status?: 'pending' | 'approved' | 'changes-requested';
+  /**
+   * Compounding artifacts actually produced during UNIFY.
+   * Each list holds paths relative to the `.coda/` directory. Paths are
+   * validated for existence and non-emptiness by the unify→done gate.
+   */
+  artifacts_produced?: {
+    overlays: string[];
+    reference_docs: string[];
+    decisions: string[];
+  };
+  /**
+   * Declared exemptions when no artifact was produced for a category.
+   * Each value is a human-readable reason. Empty strings are rejected by
+   * the gate — every exemption must carry a concrete reason.
+   */
+  exemptions?: {
+    overlays?: string;
+    reference_docs?: string;
+    system_spec?: string;
+  };
 }
 
 /**
