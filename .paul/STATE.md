@@ -57,7 +57,7 @@ PR: none yet (will open on first push)
 Last session: 2026-04-16 (paused after plan creation)
 Stopped at: Plan 53-01 created, committed, pushed; working tree clean; ready for APPLY
 Next action: /paul:resume → /paul:apply .paul/phases/53-agent-entry-points/53-01-PLAN.md
-Resume file: .paul/HANDOFF-2026-04-16-phase-53-planned.md
+Resume file: .paul/handoffs/archive/HANDOFF-2026-04-16-phase-53-planned.md (consumed 2026-04-16 on /paul:resume)
 Resume context:
 - Plan 53-01 is type: tdd with 3 formal TDD cycles, 9 phase gates total (492 lines, 6 AC)
 - Task 1: issue-activation helper + coda_focus tool + /coda activate refactor
