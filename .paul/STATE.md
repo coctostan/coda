@@ -8,16 +8,16 @@ Version: v0.9.0
 Milestone: v0.9 Live Compounding Validation
 Phase: 52 of 53 (Greenfield Compounding Test)
 Plan: 52-01 Greenfield Compounding Test (1/1)
-Status: Plan written, ready to apply
-Last activity: 2026-04-15 — Created 52-01-PLAN.md
+Status: APPLY in progress — paused after discovery findings
+Last activity: 2026-04-15 — Two CMUX attempts revealed critical design findings
 Progress:
-- v0.9 Live Compounding Validation: [░░░░░░░░░░] 0%
-- Phase 52: [██░░░░░░░░] 20% (planned)
+- v0.9 Live Compounding Validation: [█░░░░░░░░░] 10%
+- Phase 52: [███░░░░░░░] 30% (apply in progress, paused)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ○        ○     [Plan created, ready for APPLY]
+  ✓        ○        ○     [APPLY paused — restarting with corrected approach]
 ```
 ## Accumulated Context
 ### Decisions
@@ -46,11 +46,11 @@ PLAN ──▶ APPLY ──▶ UNIFY
 ### Git State
 Branch: phases/48-50-compounding-engine
 Remote: https://github.com/coctostan/coda.git
-Last commit: a8a0e22
+Last commit: f431fc3
 PR: https://github.com/coctostan/coda/pull/20 (OPEN)
 Last session: 2026-04-15
-Stopped at: Milestone v0.9 created, ready to plan
-Next action: /paul:plan for Phase 52
-Resume file: .paul/ROADMAP.md
+Stopped at: Phase 52 APPLY paused — two CMUX attempts produced discovery findings; restarting with corrected model
+Next action: Nuke test project, outer agent runs /coda forge + gate config, then inner agent does lifecycle
+Resume file: .paul/HANDOFF-2026-04-15-phase-52-greenfield.md
 ---
 *STATE.md — Updated after every significant action*
