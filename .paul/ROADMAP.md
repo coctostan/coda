@@ -4,25 +4,64 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-**v0.9 Live Compounding Validation** (v0.9.0)
+**v0.10 Close the Agent Loop** (v0.10.0)
 Status: 🚧 In Progress
-Started: 2026-04-15
+Started: 2026-04-16
+Theme: "The compounding engine actually compounds."
+
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 52 | Greenfield Compounding Test | 1/1 | ✅ Complete | 2026-04-16 |
-| 53 | Brownfield Onboarding Test | 0/TBD | ⚪ Not started | — |
+| 53 | Agent Entry Points | 0/TBD | 🟡 Planning | — |
+| 54 | UNIFY Actually Produces Artifacts | 0/TBD | ⚪ Not started | — |
+| 55 | Supporting Systems Repair | 0/TBD | ⚪ Not started | — |
+| 56 | Lifecycle-First Prompts | 0/TBD | ⚪ Not started | — |
+| 57 | E2E Re-Validation | 0/TBD | ⚪ Not started | — |
 
-### Phase 52: Greenfield Compounding Test
-Focus: Script A — URL shortener from scratch, 2-issue lifecycle, overlay compounding validation via CMUX
-Spec: cmux-v08-test-scripts.md (Script A)
-Plans: 1/1 complete
-
-### Phase 53: Brownfield Onboarding Test
-Focus: Script B — Existing project brownfield FORGE, 2-feature build, cross-feature compounding via CMUX
-Spec: cmux-v08-test-scripts.md (Script B)
-Depends: Phase 52 (run greenfield first)
+### Phase 53: Agent Entry Points
+Focus: Make FORGE and focus-issue agent-callable — add `coda_forge` and `coda_focus` tools; reinstate write gate
+Addresses: F1 (forge not agent-callable), F2 (no focus tool), F7 (write gate regression)
+Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
 Plans: TBD (defined during /paul:plan)
+
+### Phase 54: UNIFY Actually Produces Artifacts
+Focus: Make UNIFY generate overlays and reference doc updates, not just completion records — the headline fix
+Addresses: F5 (UNIFY produces zero artifacts)
+Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
+Depends: Phase 53 (need focus tool to run UNIFY in a test)
+Plans: TBD (defined during /paul:plan)
+
+### Phase 55: Supporting Systems Repair
+Focus: Fix `coda_run_tests`, strengthen write gate, remove legacy `human_review_default` field
+Addresses: F6, F7 (completion of Phase 53's write gate work), deferred item #1
+Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
+Depends: Can run parallel to Phase 54
+Plans: TBD (defined during /paul:plan)
+
+### Phase 56: Lifecycle-First Prompts
+Focus: Strengthen CODA-injected prompts so agent creates an issue before building; add tool manifest and lifecycle overview to session-start
+Addresses: F3 (agent builds first), F4 (agent reads source to understand tools)
+Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
+Depends: Phase 53 (prompts reference new tools)
+Plans: TBD (defined during /paul:plan)
+
+### Phase 57: E2E Re-Validation
+Focus: Re-run Script A with v0.10 code; prove compounding engine actually compounds
+Spec: `.paul/milestones/v0.10.0-ROADMAP.md`, `explorations/cmux-v08-test-scripts.md` (Script A)
+Depends: Phases 53–56
+Plans: TBD (defined during /paul:plan)
+
 ## Completed Milestones
+<details>
+<summary>v0.9 Live Compounding Validation — 2026-04-16 (1 phase shipped, 1 deferred)</summary>
+
+| Phase | Name | Plans | Completed |
+|-------|------|-------|-----------|
+| 52 | Greenfield Compounding Test | 1/1 | 2026-04-16 |
+| 53 | Brownfield Onboarding Test | — | Deferred to v0.11+ |
+
+Outcome: 8-finding E2E report (3 critical, 4 high, 1 medium) proving compounding engine does not compound in practice. Drives v0.10 scope.
+
+</details>
 <details>
 <summary>v0.8 The Compounding Engine — 2026-04-15 (5 phases, 5 plans)</summary>
 
@@ -154,7 +193,9 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - v0.6 archive: `.paul/milestones/v0.6.0-ROADMAP.md`
 - v0.7 archive: `.paul/milestones/v0.7.0-ROADMAP.md`
 - v0.8 archive: `.paul/milestones/v0.8.0-ROADMAP.md`
+- v0.9 archive: `.paul/milestones/v0.9.0-ROADMAP.md`
+- v0.10 vision: `.paul/milestones/v0.10.0-ROADMAP.md`
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-16 — Phase 52 complete, Phase 53 next*
+*Roadmap updated: 2026-04-16 — v0.9 closed (Phase 53 deferred); v0.10 "Close the Agent Loop" begins with phases 53–57*

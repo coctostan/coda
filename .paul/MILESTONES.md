@@ -12,9 +12,69 @@ Completed milestone log for this project.
 | v0.6 VCS & Workflow Gaps | 2026-04-03 | ~1.5 hours | 4 phases, 4 plans, 460 tests |
 | v0.7 Brownfield & Context | 2026-04-03 | ~6 hours | 11 phases, 11 plans, 573 tests |
 | v0.8 The Compounding Engine | 2026-04-15 | 2 days | 5 phases, 5 plans, 655 tests |
+| v0.9 Live Compounding Validation | 2026-04-16 | 1 day | 1 phase, 1 plan, 8 findings (3 critical, 4 high, 1 medium) |
 
 ---
 
+## ✅ v0.9 Live Compounding Validation
+
+**Completed:** 2026-04-16
+**Version:** v0.9.0
+**Duration:** 1 day (2026-04-15 to 2026-04-16)
+**Scope:** Scoped down — Phase 53 (Brownfield Onboarding Test) deferred to v0.11+
+
+### Stats
+
+| Metric | Value |
+|--------|-------|
+| Phases | 1 shipped (52), 1 deferred (53) |
+| Plans | 1 |
+| Tests | 655 passing (no change — validation-only milestone) |
+| New docs | `docs/v0.8/E2E-COMPOUNDING-FINDINGS.md` |
+| Sessions | 3 CMUX E2E sessions with GPT-5.4 |
+| Findings | 8 total (3 critical, 4 high, 1 medium) |
+
+### Key Accomplishments
+
+- Executed Script A E2E test across 3 CMUX sessions with GPT-5.4 inner agent
+- Confirmed corrected execution model: outer agent runs `/coda forge` + gate config, inner agent uses `coda_*` tools
+- Produced comprehensive 8-finding report with severity classifications and recommended fixes
+- Validated that GPT-5.4 builds high-quality functional code (7 tests, 19 assertions, clean TypeScript)
+- Identified 3 critical architecture gaps blocking autonomous compounding (forge tool, focus tool, UNIFY overlay generation)
+
+### Critical Findings (drove v0.10 milestone scope)
+
+| # | Finding | Severity |
+|---|---------|----------|
+| F1 | `/coda forge` not agent-callable | Critical |
+| F2 | No "focus issue" tool | Critical |
+| F5 | UNIFY produces zero overlays/reference docs | Critical |
+| F3 | Agent builds before CODA lifecycle | High |
+| F4 | Agent reads CODA source to understand tools | High |
+| F6 | `coda_run_tests` "Bun is not defined" | High |
+| F7 | Write gate doesn't block `.coda/` edits | High |
+| F8 | megapowers interference | Medium |
+
+### Key Decisions
+
+- Outer agent must run `/coda forge` (slash command) — inner agent cannot (architectural limitation)
+- 3-nudge bail-out policy enforced — document failure and proceed
+- Gates set to auto via direct file edit (outer agent, not inner)
+- Phase 53 (Brownfield) deferred — would hit same F1/F2/F5 blockers; revisit after v0.10 fixes
+
+### Conclusion
+
+The compounding engine does not compound in practice. While infrastructure exists (overlay format, prompt assembly, UNIFY runner), the end-to-end flow is broken at multiple points: entry gap (no agent tools), lifecycle gap (agent builds first), UNIFY gap (no overlays produced), compounding gap (nothing to inject).
+
+This milestone's findings directly drive the **v0.10 Close the Agent Loop** milestone.
+
+### Archive
+
+- Roadmap snapshot: `.paul/milestones/v0.9.0-ROADMAP.md`
+- Findings report: `docs/v0.8/E2E-COMPOUNDING-FINDINGS.md`
+- Phase 52 summary: `.paul/phases/52-greenfield-compounding-test/52-01-SUMMARY.md`
+
+---
 ## ✅ v0.8 The Compounding Engine
 
 **Completed:** 2026-04-15

@@ -1,17 +1,17 @@
 # Project State
 ## Project Reference
-See: .paul/PROJECT.md (updated 2026-04-15)
-Version: v0.9.0
+See: .paul/PROJECT.md (updated 2026-04-16)
+Version: v0.10.0-dev
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** v0.9 Live Compounding Validation
+**Current focus:** v0.10 Close the Agent Loop
 ## Current Position
-Milestone: v0.9 Live Compounding Validation
-Phase: 53 of 53 (Brownfield Onboarding Test)
+Milestone: v0.10 Close the Agent Loop
+Phase: 53 of 57 (Agent Entry Points)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-04-16 — Phase 52 complete, transitioned to Phase 53
+Last activity: 2026-04-16 — v0.9 closed (Phase 52 shipped, Phase 53 deferred); v0.10 "Close the Agent Loop" begins
 Progress:
-- v0.9 Live Compounding Validation: [█████░░░░░] 50%
+- v0.10 Close the Agent Loop: [░░░░░░░░░░] 0%
 - Phase 53: [░░░░░░░░░░] 0% (not started)
 ## Loop Position
 Current loop state:
@@ -43,14 +43,17 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Agent writes overlays via coda_edit_body | v0.8 P49 | Consistent with D3, no new tool |
 | 3-gate-point scope (not 5 from spec) | v0.8 P50 | specify_approval/spec_delta unimplemented; deferred |
 | unify_review auto mutates completion record | v0.8 P50 | Pre-transition mutation avoids new gate bypass paths |
+| Defer v0.9 Phase 53 (Brownfield); close v0.9 with just Phase 52 | Brownfield test would hit same F1/F2/F5 blockers as greenfield | 2026-04-16 | Active |
+| v0.10 "Close the Agent Loop" as full pivot | v0.8 compounding plumbing works but doesn't compound in practice; fix before more FORGE | 2026-04-16 | Active |
+| Plan-doc phases 52–56 → our phases 53–57 | 52 already used for v0.9 Greenfield validation | 2026-04-16 | Active |
 ### Git State
 Branch: phases/48-50-compounding-engine
 Remote: https://github.com/coctostan/coda.git
 Last commit: 972161e
 PR: https://github.com/coctostan/coda/pull/20 (OPEN)
 Last session: 2026-04-16
-Stopped at: Phase 52 complete, ready to plan Phase 53
+Stopped at: v0.9 closed, v0.10 kicked off; ready to plan Phase 53 (Agent Entry Points)
 Next action: /paul:plan for Phase 53
-Resume file: .paul/ROADMAP.md
+Resume file: .paul/milestones/v0.10.0-ROADMAP.md
 ---
 *STATE.md — Updated after every significant action*
