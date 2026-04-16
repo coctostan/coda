@@ -83,6 +83,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Phase 50 — Gate Automation: configurable gate modes (human/auto/auto-unless-block) for plan_review, build_review, unify_review transitions (Phase 50 — v0.8)
 - [x] Phase 51 — E2E Validation: 11 cross-feature E2E tests, gate-aware `/coda new`, review-runner, and coda-status (Phase 51 — v0.8)
 ### Planned
+- [x] Phase 52 — Greenfield Compounding Test: Script A E2E via CMUX, 8 findings (3 critical), compounding engine does not compound in practice (Phase 52 — v0.9)
 
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
@@ -148,4 +149,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-15 after Phase 51 E2E Validation — v0.8 milestone complete*
+*Last updated: 2026-04-16 after Phase 52 Greenfield Compounding Test — v0.9 validation in progress*

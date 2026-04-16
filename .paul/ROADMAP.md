@@ -9,13 +9,13 @@ Status: 🚧 In Progress
 Started: 2026-04-15
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 52 | Greenfield Compounding Test | 0/1 | 🟡 Planning | — |
+| 52 | Greenfield Compounding Test | 1/1 | ✅ Complete | 2026-04-16 |
 | 53 | Brownfield Onboarding Test | 0/TBD | ⚪ Not started | — |
 
 ### Phase 52: Greenfield Compounding Test
 Focus: Script A — URL shortener from scratch, 2-issue lifecycle, overlay compounding validation via CMUX
 Spec: cmux-v08-test-scripts.md (Script A)
-Plans: TBD (defined during /paul:plan)
+Plans: 1/1 complete
 
 ### Phase 53: Brownfield Onboarding Test
 Focus: Script B — Existing project brownfield FORGE, 2-feature build, cross-feature compounding via CMUX
@@ -157,4 +157,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-15 — v0.9 Live Compounding Validation started*
+*Roadmap updated: 2026-04-16 — Phase 52 complete, Phase 53 next*
