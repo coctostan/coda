@@ -11,17 +11,18 @@ Theme: "The compounding engine actually compounds."
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 53 | Agent Entry Points | 1/1 | 🟡 Plan created, awaiting APPLY | — |
+| 53 | Agent Entry Points | 1/1 | ✅ Complete | 2026-04-16 |
 | 54 | UNIFY Actually Produces Artifacts | 0/TBD | ⚪ Not started | — |
 | 55 | Supporting Systems Repair | 0/TBD | ⚪ Not started | — |
 | 56 | Lifecycle-First Prompts | 0/TBD | ⚪ Not started | — |
 | 57 | E2E Re-Validation | 0/TBD | ⚪ Not started | — |
 
-### Phase 53: Agent Entry Points
-Focus: Make FORGE and focus-issue agent-callable — add `coda_forge` and `coda_focus` tools; reinstate write gate
-Addresses: F1 (forge not agent-callable), F2 (no focus tool), F7 (write gate regression)
+### Phase 53: Agent Entry Points — ✅ Complete 2026-04-16
+Focus: Make FORGE and focus-issue agent-callable — `coda_forge` and `coda_focus` tools; F7 write-gate regression guard
+Addresses: F1 (forge not agent-callable), F2 (no focus tool), F7 (write-gate regression)
 Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
-Plans: TBD (defined during /paul:plan)
+Plans: 1 — `.paul/phases/53-agent-entry-points/53-01-PLAN.md` → `53-01-SUMMARY.md`
+Outcome: 2 new agent-callable tools (`coda_forge`, `coda_focus`), shared `focusIssue()` helper, slash-command refactor (byte-identical notify strings), bare-workspace E2E, Pi mutation tool surface audit, F7 integration guard, `DEBUG=coda:*` diagnostic. Tests 655→673 (+18, 0 fail). Merged as squash `65a9df7` on main via PR #21.
 
 ### Phase 54: UNIFY Actually Produces Artifacts
 Focus: Make UNIFY generate overlays and reference doc updates, not just completion records — the headline fix
@@ -198,4 +199,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-16 — v0.9 closed (Phase 53 deferred); v0.10 "Close the Agent Loop" begins with phases 53–57*
+*Roadmap updated: 2026-04-16 — Phase 53 shipped; v0.10 at 1 of 5 phases complete*

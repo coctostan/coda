@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.8 The Compounding Engine COMPLETE (51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean). v0.9 Live Compounding Validation COMPLETE (scoped down — Phase 52 shipped 8-finding E2E report, Phase 53 Brownfield deferred to v0.11+). v0.10 Close the Agent Loop in progress.
+- v0.8 The Compounding Engine COMPLETE (51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean). v0.9 Live Compounding Validation COMPLETE (scoped down — Phase 52 shipped 8-finding E2E report, Phase 53 Brownfield deferred to v0.11+). v0.10 Close the Agent Loop in progress — Phase 53 (Agent Entry Points) shipped 2026-04-16 (673 tests, 12 tools).
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
@@ -82,7 +82,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Phase 50 — Gate Automation: configurable gate modes (human/auto/auto-unless-block) for plan_review, build_review, unify_review transitions (Phase 50 — v0.8)
 - [x] Phase 51 — E2E Validation: 11 cross-feature E2E tests, gate-aware `/coda new`, review-runner, and coda-status (Phase 51 — v0.8)
 - [x] Phase 52 — Greenfield Compounding Test: Script A E2E via CMUX, 8 findings (3 critical), compounding engine does not compound in practice (Phase 52 — v0.9)
-- [ ] Phase 53 — Agent Entry Points: add `coda_forge` + `coda_focus` tools; reinstate write gate (F1, F2, F7) (Phase 53 — v0.10)
+- [x] Phase 53 — Agent Entry Points: `coda_forge` + `coda_focus` tools land (tool count 10→12), slash commands refactored to thin wrappers, F7 write-gate integration guard + `DEBUG=coda:*` diagnostic (Phase 53 — v0.10)
 - [ ] Phase 54 — UNIFY Actually Produces Artifacts: make UNIFY generate overlays + ref-doc updates (F5) (Phase 54 — v0.10)
 - [ ] Phase 55 — Supporting Systems Repair: fix `coda_run_tests`, strengthen write gate, remove `human_review_default` (F6, F7, deferred #1) (Phase 55 — v0.10)
 - [ ] Phase 56 — Lifecycle-First Prompts: strengthen CODA-injected prompts for lifecycle adherence (F3, F4) (Phase 56 — v0.10)
@@ -109,10 +109,10 @@ Enabling developers to build durable, maintainable software through disciplined 
 |--------|--------|---------|
 | Milestone v0.8 progress | 5 phases complete | 5 of 5 complete ✅ |
 | Milestone v0.9 progress | 1 phase shipped (1 deferred) | 1 of 1 complete ✅ (Phase 53 deferred to v0.11+) |
-| Milestone v0.10 progress | 5 phases (53-57) | 0 of 5 complete 🟡 |
-| Test suite | Green | 655 passing, 0 failing |
-| TypeScript | Clean build | `tsc --noEmit` clean |
-| Pi tools | 10 registered | 10/10 ✅ (v0.10 will add `coda_forge`, `coda_focus` → 12/12) |
+| Milestone v0.10 progress | 5 phases (53-57) | 1 of 5 complete 🟡 (Phase 53 shipped 2026-04-16) |
+| Test suite | Green | 673 passing, 0 failing |
+| TypeScript | Clean build | `bun test` green (de-facto type check via Bun TS loader; repo has no installed tsc) |
+| Pi tools | 12 registered | 12/12 ✅ (Phase 53 added `coda_forge` + `coda_focus`) |
 | Modules | 5 modules active + overlays | security, tdd, architecture, quality, knowledge + overlay infrastructure ✅ |
 | UNIFY runner | 5 mandatory actions wired | Phase 47 PASS ✅ (v0.10 Phase 54 will ensure all 5 actually execute) |
 | UNIFY review gate | Human approval before DONE | Phase 48 PASS ✅ |
@@ -152,7 +152,10 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Overlays seeded by agent via `coda_edit_body`, not programmatic write | Consistent with v0.8 D3; agent drives overlay creation during FORGE/UNIFY | 2026-04-14 | Active |
 | Close v0.9 after Phase 52, defer Phase 53 | Brownfield test would hit same F1/F2/F5 blockers; fix those first | 2026-04-16 | Active |
 | v0.10 "Close the Agent Loop" as full pivot from v0.9 | v0.8 compounding plumbing works in tests but doesn't compound in practice — fix end-to-end flow before more FORGE work | 2026-04-16 | Active |
-| Add `coda_forge` and `coda_focus` as agent tools | Slash-command-only entry points block autonomous agent workflows | 2026-04-16 | Active |
+| Add `coda_forge` and `coda_focus` as agent tools | Slash-command-only entry points block autonomous agent workflows | 2026-04-16 | Shipped (Phase 53) |
+| F7 reframed as integration gap, not logic bug | `checkWriteGate`/`evaluateWriteGate` already block `.coda/*` for write+edit; Pi perimeter and path variants are the real question | 2026-04-16 | Active |
+| Pi mutation tool surface = {write, edit} only | Audit of `@mariozechner/pi-coding-agent/dist/core/extensions/types.d.ts`: no `str_replace`/`apply_patch`/`multi_edit`/`create_file`/`patch` exist | 2026-04-16 | Active |
+| Write-gate deeper hardening (symlink, bash-redirect, custom-tool bypass) deferred to Phase 55 | Phase 53 scope stayed tight: audit + integration test + diagnostic | 2026-04-16 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -161,4 +164,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-16 — v0.9 closed (Phase 52 shipped, Phase 53 deferred); v0.10 "Close the Agent Loop" begins*
+*Last updated: 2026-04-16 — Phase 53 (Agent Entry Points) shipped; v0.10 at 1 of 5 phases complete*
