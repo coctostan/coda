@@ -6,18 +6,18 @@ Version: v0.10.0-dev
 **Current focus:** v0.10 Close the Agent Loop
 ## Current Position
 Milestone: v0.10 Close the Agent Loop
-Phase: 53 of 57 (Agent Entry Points)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-16 — v0.9 closed (Phase 52 shipped, Phase 53 deferred); v0.10 "Close the Agent Loop" begins
+Phase: 53 of 57 (Agent Entry Points) — Planning
+Plan: 53-01 created, awaiting approval
+Status: PLAN created, ready for APPLY
+Last activity: 2026-04-16 — Created 53-01-PLAN.md (high collab, direct-requirements); applied TODD suggestion → type: tdd with formal RED/GREEN/REFACTOR phase gates
 Progress:
 - v0.10 Close the Agent Loop: [░░░░░░░░░░] 0%
-- Phase 53: [░░░░░░░░░░] 0% (not started)
+- Phase 53: [█░░░░░░░░░] 10% (plan created)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [New phase — ready to plan]
+  ✓        ○        ○     [Plan created, awaiting approval]
 ```
 ## Accumulated Context
 ### Decisions
@@ -46,22 +46,23 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Defer v0.9 Phase 53 (Brownfield); close v0.9 with just Phase 52 | Brownfield test would hit same F1/F2/F5 blockers as greenfield | 2026-04-16 | Active |
 | v0.10 "Close the Agent Loop" as full pivot | v0.8 compounding plumbing works but doesn't compound in practice; fix before more FORGE | 2026-04-16 | Active |
 | Plan-doc phases 52–56 → our phases 53–57 | 52 already used for v0.9 Greenfield validation | 2026-04-16 | Active |
+| coda_focus keeps VCS branch creation (opt-out via create_branch=false) | Option C from posture probe — single-call ergonomics, escape hatch for non-git contexts | v0.10 P53 | Active |
+| F7 root cause = integration gap not logic bug | checkWriteGate blocks .coda/ edits in unit tests; regression is in Pi-hook perimeter (tool surface audit) | v0.10 P53 | Active |
+| Write-gate deeper hardening deferred to Phase 55 | Phase 53 scope = audit + regression test + diagnostic logging; Phase 55 handles new attack patterns | v0.10 P53 | Active |
 ### Git State
 Branch: phases/53-agent-entry-points
 Remote: https://github.com/coctostan/coda.git
 Last commit: 781be30
 PR: none yet (will open on first push)
 Last session: 2026-04-16
-Stopped at: Post-omnibus cleanup complete — PR #20 merged (v0.8 close + v0.9 + v0.10 kickoff), fresh branch for Phase 53, per-phase PR enforcement enabled
-Next action: /paul:plan for Phase 53
-Resume file: (none — consumed on 2026-04-16, archived to .paul/handoffs/archive/)
+Stopped at: Plan 53-01 created; awaiting approval before /paul:apply
+Next action: Review and approve plan, then run /paul:apply .paul/phases/53-agent-entry-points/53-01-PLAN.md
+Resume file: .paul/phases/53-agent-entry-points/53-01-PLAN.md
 Resume context:
-- PR #20 squash-merged as 9611ff0 on main (closed the multi-milestone omnibus)
-- Branch phases/53-agent-entry-points cut fresh from main for Phase 53 work
-- pals.json: require_pr_before_next_phase flipped true — every phase gets its own PR going forward
-- Phase 53 = Agent Entry Points: add coda_forge + coda_focus tools; reinstate write gate (F1, F2, F7)
-- Primary planning inputs: .paul/milestones/v0.10.0-ROADMAP.md + docs/v0.8/E2E-COMPOUNDING-FINDINGS.md
-- Open design Q for PLAN: should coda_focus also create the VCS branch, or split it?
-- Dirty working tree: .pi/prompt-assembler/registry.json (pre-existing uncommitted change, unrelated to phase work)
+- Plan structure: 3 tasks (TDD red→green), 6 AC, autonomous (no checkpoints)
+- Pre-plan dispatch: DEAN PASS (baseline matched), SETH/ARCH/IRIS PASS, TODD tdd_candidates registered, RUBY flagged for post-unify, DOCS deferred to milestone close
+- Posture: HIGH collab, direct-requirements, coda_focus Option C (keep branch creation with create_branch opt-out)
+- Phase 53 scope split: agent entry-points + F7 audit/integration test; Phase 55 handles deeper write-gate hardening
+- TODD suggestion accepted: plan type=tdd with formal phase gates (RED → verify failing → GREEN → verify passing → REFACTOR); 3 TDD cycles, 9 phase gates total
 ---
 *STATE.md — Updated after every significant action*

@@ -11,7 +11,7 @@ Theme: "The compounding engine actually compounds."
 
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 53 | Agent Entry Points | 0/TBD | 🟡 Planning | — |
+| 53 | Agent Entry Points | 1/1 | 🟡 Plan created, awaiting APPLY | — |
 | 54 | UNIFY Actually Produces Artifacts | 0/TBD | ⚪ Not started | — |
 | 55 | Supporting Systems Repair | 0/TBD | ⚪ Not started | — |
 | 56 | Lifecycle-First Prompts | 0/TBD | ⚪ Not started | — |
