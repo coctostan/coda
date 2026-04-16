@@ -6,18 +6,18 @@ Version: v0.10.0-dev
 **Current focus:** v0.10 Close the Agent Loop
 ## Current Position
 Milestone: v0.10 Close the Agent Loop
-Phase: 53 of 57 (Agent Entry Points) — Planning
-Plan: 53-01 created, awaiting approval
-Status: PLAN created, ready for APPLY
-Last activity: 2026-04-16 — Created 53-01-PLAN.md (high collab, direct-requirements); applied TODD suggestion → type: tdd with formal RED/GREEN/REFACTOR phase gates
+Phase: 53 of 57 (Agent Entry Points) — APPLY complete, ready for UNIFY
+Plan: 53-01 executed — 3/3 tasks PASS, 6/6 AC met
+Status: APPLY complete, ready for UNIFY
+Last activity: 2026-04-16 — APPLY complete. 3 TDD cycles × 3 phase gates each = 9 gates passed. Tests 655 → 673 (+18 new, 0 regressions, 0 fail). PR #21 open.
 Progress:
-- v0.10 Close the Agent Loop: [░░░░░░░░░░] 0%
-- Phase 53: [█░░░░░░░░░] 10% (plan created)
+- v0.10 Close the Agent Loop: [██░░░░░░░░] 20% (Phase 53 APPLY done, UNIFY pending)
+- Phase 53: [███████░░░] 67% (PLAN ✓, APPLY ✓, UNIFY ○)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ○        ○     [Plan created, awaiting approval]
+  ✓        ✓        ○     [APPLY complete, awaiting UNIFY]
 ```
 ## Accumulated Context
 ### Decisions
@@ -49,24 +49,27 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | coda_focus keeps VCS branch creation (opt-out via create_branch=false) | Option C from posture probe — single-call ergonomics, escape hatch for non-git contexts | v0.10 P53 | Active |
 | F7 root cause = integration gap not logic bug | checkWriteGate blocks .coda/ edits in unit tests; regression is in Pi-hook perimeter (tool surface audit) | v0.10 P53 | Active |
 | Write-gate deeper hardening deferred to Phase 55 | Phase 53 scope = audit + regression test + diagnostic logging; Phase 55 handles new attack patterns | v0.10 P53 | Active |
+| Task 1+2 scope expanded by 1 line each in hooks.test.ts | tools.length assertion mechanically coupled to Pi registration; plan <files> didn't anticipate | v0.10 P53 APPLY | Logged for UNIFY |
+| Plan verify commands reference typecheck/tsc that don't exist in this repo | bun test is the de-facto type check via Bun TS loader; no typecheck script or installed tsc | v0.10 P53 APPLY | Logged for UNIFY |
+| Pi mutation tool surface = {write, edit} only | Full audit of @mariozechner/pi-coding-agent/dist types: bash/read/edit/write/grep/find/ls/custom; only write + edit mutate. No str_replace/apply_patch/multi_edit exist | v0.10 P53 APPLY | Active |
 ### Git State
 Branch: phases/53-agent-entry-points
 Remote: https://github.com/coctostan/coda.git
-Last commit: 781be30
-PR: none yet (will open on first push)
-Last session: 2026-04-16 (paused after plan creation)
-Stopped at: Plan 53-01 created, committed, pushed; working tree clean; ready for APPLY
-Next action: /paul:resume → /paul:apply .paul/phases/53-agent-entry-points/53-01-PLAN.md
+Last commit: 3d352e5 (PR #21 open: https://github.com/coctostan/coda/pull/21)
+PR: #21 OPEN, CI Socket Security SUCCESS (ci_checks=false so informational)
+Last session: 2026-04-16 (APPLY complete)
+Stopped at: All 3 tasks GREEN, PR #21 open with CI passing, working tree clean, ready for UNIFY
+Next action: /paul:unify .paul/phases/53-agent-entry-points/53-01-PLAN.md
 Resume file: .paul/handoffs/archive/HANDOFF-2026-04-16-phase-53-planned.md (consumed 2026-04-16 on /paul:resume)
 Resume context:
-- Plan 53-01 is type: tdd with 3 formal TDD cycles, 9 phase gates total (492 lines, 6 AC)
-- Task 1: issue-activation helper + coda_focus tool + /coda activate refactor
-- Task 2: coda_forge tool + /coda forge refactor + AC-5 bare-workspace E2E
-- Task 3: Pi mutation-tool-surface audit + F7 regression integration test + DEBUG=coda:* logging
-- Pre-plan dispatch: DEAN PASS (baseline matched), SETH/ARCH/IRIS PASS, TODD tdd_candidates registered; RUBY/DOCS deferred
-- Posture: HIGH collab, direct-requirements; coda_focus Option C (branch-by-default with create_branch=false opt-out)
-- F7 reframed as integration gap (not logic bug); deeper hardening → Phase 55
-- Branch phases/53-agent-entry-points, 5 commits ahead of main, no PR yet (opens at first APPLY commit)
-- Guardrail: pals.json require_pr_before_next_phase=true enforced going forward
+- Phase 53 APPLY: 3/3 tasks PASS with full TDD discipline (9 phase gates total)
+- Task 1 (2036e88): issue-activation helper + coda_focus tool + /coda activate refactor (8-line handler, byte-identical ctx.ui.notify)
+- Task 2 (2b4fac9): coda_forge tool + /coda forge refactor (2-line handler) + AC-5 bare-workspace E2E
+- Task 3 (3d352e5): Pi mutation tool surface audit (write + edit only) + F7 write-gate integration test (6 cases) + DEBUG=coda:* structured-JSON diagnostic
+- Tests 655 → 673 (+18 new, 0 regressions, 0 fail)
+- All 6 AC satisfied (AC-1 through AC-6)
+- Module dispatch: TODD × 5 PASS / WALT PASS / DEAN PASS (delta 0) / ARCH/SETH/VERA PASS / 5 advisory annotations surfaced
+- 2 deviations logged above for UNIFY reconciliation (coupled hooks.test.ts bump; typecheck command absent)
+- PR #21 OPEN, Socket Security CI passing (informational)
 ---
 *STATE.md — Updated after every significant action*
