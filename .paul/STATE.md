@@ -6,18 +6,18 @@ Version: v0.10.0-dev
 **Current focus:** v0.10 Close the Agent Loop
 ## Current Position
 Milestone: v0.10 Close the Agent Loop
-Phase: 54 of 57 (UNIFY Actually Produces Artifacts) — APPLY complete
-Plan: 54-01 applied
-Status: APPLY complete, ready for UNIFY
-Last activity: 2026-04-16 — Applied 54-01: evidence-based unify→done gate + runner prompt restructure (commit 076b917, PR #22 open).
+Phase: 54 of 57 (UNIFY Actually Produces Artifacts) — Complete
+Plan: 54-01 complete
+Status: UNIFY complete; phase 54 ready for transition to phase 55
+Last activity: 2026-04-16 — Closed UNIFY for 54-01: SUMMARY written, F5 headline fix landed.
 Progress:
-- v0.10 Close the Agent Loop: [██░░░░░░░░] 20% (1 of 5 phases complete; 54 APPLY done, UNIFY pending)
-- Phase 54: [██████░░░░] 60% (PLAN + APPLY done; UNIFY pending)
+- v0.10 Close the Agent Loop: [████░░░░░░] 40% (2 of 5 phases complete: 53 + 54; 55–57 remaining)
+- Phase 54: [██████████] 100% (PLAN + APPLY + UNIFY complete)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ○     [APPLY complete for 54-01; ready for UNIFY]
+  ✓        ✓        ✓     [Loop complete for 54-01 — phase 54 ready for transition]
 ```
 ## Accumulated Context
 ### Decisions
