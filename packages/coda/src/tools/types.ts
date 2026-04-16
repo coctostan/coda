@@ -112,6 +112,43 @@ export interface BackInput {
   target_phase: string;
 }
 
+/** Input for coda_focus — focus an issue and optionally create a branch. */
+export interface FocusInput {
+  /** Issue slug to focus. */
+  slug: string;
+  /** If false, skip feature branch creation. */
+  create_branch?: boolean;
+}
+
+/** Successful coda_focus result. */
+export interface FocusedOutput {
+  status: 'focused';
+  slug: string;
+  phase: string;
+  branch?: string;
+  branch_status: 'created' | 'existing' | 'skipped';
+  reason?: 'create_branch=false' | 'not a git repo' | 'git error';
+  next_action: string;
+}
+
+/** Idempotent coda_focus result when the issue is already focused. */
+export interface AlreadyFocusedOutput {
+  status: 'already_focused';
+  slug: string;
+  phase: string | null;
+  next_action: string;
+}
+
+/** Error coda_focus result. */
+export interface FocusErrorOutput {
+  status: 'error';
+  reason: string;
+  next_action: string;
+}
+
+/** Result from coda_focus. */
+export type FocusOutput = FocusedOutput | AlreadyFocusedOutput | FocusErrorOutput;
+
 /** Result from coda_status. */
 export interface StatusResult extends ToolResult {
   /** Currently focused issue slug */

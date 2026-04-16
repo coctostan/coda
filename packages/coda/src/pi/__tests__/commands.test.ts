@@ -630,13 +630,47 @@ describe('Pi Commands', () => {
       rmSync(tempDir, { recursive: true, force: true });
     }
   });
+
+  test('activate in a non-git workspace keeps the current generic git-error message', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'coda-activate-'));
+    const codaRoot = join(tempDir, '.coda');
+    const { pi, commands } = createMockPi();
+    const { ctx, notifications } = createMockCommandContext();
+
+    try {
+      writeRecord(join(codaRoot, 'issues', 'my-feature.md'), {
+        title: 'My Feature',
+        issue_type: 'feature',
+        status: 'active',
+        phase: 'specify',
+        priority: 3,
+        topics: [],
+        acceptance_criteria: [],
+        open_questions: [],
+        deferred_items: [],
+        human_review: false,
+      } as IssueRecord, '## Description\nNon-git activation.\n');
+      persistState(createDefaultState(), join(codaRoot, 'state.json'));
+
+      registerCommands(pi, codaRoot, tempDir);
+      await commands[0]?.options.handler('activate my-feature', ctx as never);
+
+      expect(notifications[notifications.length - 1]?.message).toBe(
+        'Activated issue "my-feature" at phase specify. (VCS branch creation skipped — git error)'
+      );
+      expect(notifications[notifications.length - 1]?.level).toBeUndefined();
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
 });
 
 describe('Pi Tools', () => {
-  test('registerTools registers 9 tools', () => {
+  test('registerTools registers 11 tools', () => {
     const { pi, tools } = createMockPi();
     registerTools(pi, '/tmp/test/.coda');
-    expect(tools.length).toBe(10);
+    expect(tools.length).toBe(11);
   });
 
   test('registered tools include all coda_* tool names', () => {
@@ -650,6 +684,7 @@ describe('Pi Tools', () => {
     expect(names).toContain('coda_edit_body');
     expect(names).toContain('coda_advance');
     expect(names).toContain('coda_status');
+    expect(names).toContain('coda_focus');
     expect(names).toContain('coda_run_tests');
   });
 

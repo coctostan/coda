@@ -7,13 +7,11 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-coding-agent';
-import { createDefaultState, loadState, persistState } from '@coda/core';
-import type { Phase } from '@coda/core';
 import type { CodaConfig } from '../forge/types';
 import { assembleScanContext, detectBackdrop, getDefaultConfig, scaffoldCoda } from '../forge';
-import { codaAdvance, codaBack, codaCreate, codaKill, codaRead, codaStatus } from '../tools';
+import { codaAdvance, codaBack, codaCreate, codaKill, codaStatus } from '../tools';
 import type { AdvanceInput, StatusResult } from '../tools';
-import { createBranch, getBuildSequence } from '../workflow';
+import { focusIssue, getBuildSequence } from '../workflow';
 import { resolveGateMode } from '../workflow/gate-automation';
 import { handleAutonomousAdvanceTrigger } from './hooks';
 
@@ -107,45 +105,7 @@ async function handleCodaCommand(
         ctx.ui.notify('Usage: /coda activate <issue-slug>', 'warning');
         return;
       }
-
-      const issuePath = join(codaRoot, 'issues', slug + '.md');
-      if (!existsSync(issuePath)) {
-        ctx.ui.notify(`Issue "${slug}" not found.`, 'error');
-        return;
-      }
-
-      const currentState = loadState(statePath);
-      if (currentState?.focus_issue === slug) {
-        ctx.ui.notify(`Issue "${slug}" is already focused.`, 'warning');
-        return;
-      }
-
-      const issueRecord = codaRead({ record: `issues/${slug}` }, codaRoot);
-      const issueType = typeof issueRecord.frontmatter.issue_type === 'string'
-        ? issueRecord.frontmatter.issue_type
-        : 'feature';
-      const issuePhase = typeof issueRecord.frontmatter.phase === 'string'
-        ? (issueRecord.frontmatter.phase as Phase)
-        : 'specify';
-
-      const state = currentState ?? createDefaultState();
-      state.focus_issue = slug;
-      state.phase = issuePhase;
-      state.current_task = null;
-      state.completed_tasks = [];
-      persistState(state, statePath);
-
-      let branchMsg = '';
-      try {
-        const branchResult = createBranch(projectRoot, slug, issueType);
-        branchMsg = branchResult.created
-          ? ` Branch ${branchResult.branch} created.`
-          : ` On branch ${branchResult.branch}.`;
-      } catch {
-        branchMsg = ' (VCS branch creation skipped — git error)';
-      }
-
-      ctx.ui.notify(`Activated issue "${slug}" at phase ${issuePhase}.${branchMsg}`);
+      notifyActivateResult(ctx, slug, focusIssue(codaRoot, projectRoot, slug, { createBranch: true }));
       return;
     }
     case 'new': {
@@ -279,6 +239,31 @@ async function handleCodaCommand(
       );
     }
   }
+}
+
+function notifyActivateResult(
+  ctx: ExtensionCommandContext,
+  slug: string,
+  result: ReturnType<typeof focusIssue>
+): void {
+  if (result.status === 'error') {
+    ctx.ui.notify(result.reason, 'error');
+    return;
+  }
+
+  if (result.status === 'already_focused') {
+    ctx.ui.notify(`Issue "${slug}" is already focused.`, 'warning');
+    return;
+  }
+
+  const branchMsg = result.branch_status === 'created'
+    ? ` Branch ${result.branch} created.`
+    : result.branch_status === 'existing'
+      ? ` On branch ${result.branch}.`
+      : result.reason === 'create_branch=false'
+        ? ''
+        : ' (VCS branch creation skipped — git error)';
+  ctx.ui.notify(`Activated issue "${slug}" at phase ${result.phase}.${branchMsg}`);
 }
 
 function formatCodaError(err: unknown): string {

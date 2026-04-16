@@ -15,6 +15,7 @@ import {
   codaConfig,
   codaCreate,
   codaEditBody,
+  codaFocus,
   codaQuery,
   codaRead,
   codaReportFindings,
@@ -73,6 +74,11 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: s
   });
 
   const statusSchema = Type.Object({});
+
+  const focusSchema = Type.Object({
+    slug: Type.String(),
+    create_branch: Type.Optional(Type.Boolean()),
+  });
 
   const configSchema = Type.Object({
     action: Type.Union([Type.Literal('get'), Type.Literal('set')]),
@@ -186,6 +192,16 @@ export function registerTools(pi: ExtensionAPI, codaRoot: string, projectRoot: s
     parameters: statusSchema,
     async execute(_toolCallId, _params, _signal, _onUpdate, _ctx) {
       return executeWithCodaErrorHandling(() => codaStatus(statePath, codaRoot));
+    },
+  });
+
+  pi.registerTool({
+    name: 'coda_focus',
+    label: 'Focus Issue',
+    description: 'Focus an issue to begin its lifecycle. Creates a feature branch by default (set create_branch: false to skip).',
+    parameters: focusSchema,
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+      return executeWithCodaErrorHandling(() => codaFocus(params, codaRoot, projectRoot));
     },
   });
 
