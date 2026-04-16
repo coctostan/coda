@@ -12,8 +12,8 @@ Theme: "The compounding engine actually compounds."
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 53 | Agent Entry Points | 1/1 | ✅ Complete | 2026-04-16 |
-| 54 | UNIFY Actually Produces Artifacts | 1/1 | 🟡 Planning | — |
-| 55 | Supporting Systems Repair | 0/TBD | ⚪ Not started | — |
+| 54 | UNIFY Actually Produces Artifacts | 1/1 | ✅ Complete | 2026-04-16 |
+| 55 | Supporting Systems Repair | 0/TBD | 🔵 Ready to plan | — |
 | 56 | Lifecycle-First Prompts | 0/TBD | ⚪ Not started | — |
 | 57 | E2E Re-Validation | 0/TBD | ⚪ Not started | — |
 
@@ -24,18 +24,19 @@ Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
 Plans: 1 — `.paul/phases/53-agent-entry-points/53-01-PLAN.md` → `53-01-SUMMARY.md`
 Outcome: 2 new agent-callable tools (`coda_forge`, `coda_focus`), shared `focusIssue()` helper, slash-command refactor (byte-identical notify strings), bare-workspace E2E, Pi mutation tool surface audit, F7 integration guard, `DEBUG=coda:*` diagnostic. Tests 655→673 (+18, 0 fail). Merged as squash `65a9df7` on main via PR #21.
 
-### Phase 54: UNIFY Actually Produces Artifacts — 🟡 Planning
-Focus: Make UNIFY generate overlays and reference doc updates, not just completion records — the headline fix
+### Phase 54: UNIFY Actually Produces Artifacts — ✅ Complete 2026-04-16
+Focus: Make UNIFY generate overlays and reference doc updates, not just completion records — the headline F5 fix
 Addresses: F5 (UNIFY produces zero artifacts)
 Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
 Depends: Phase 53 (need focus tool to run UNIFY in a test)
-Plans: 1 — `.paul/phases/54-unify-produces-artifacts/54-01-PLAN.md` (tdd, 3 cycles, awaiting APPLY)
+Plans: 1 — `.paul/phases/54-unify-produces-artifacts/54-01-PLAN.md` → `54-01-SUMMARY.md`
+Outcome: Evidence-based `unify→done` gate — `CompletionRecord` gains `artifacts_produced` + `exemptions`; gate verifies declared paths exist on disk with non-empty content; ceremony-aware relaxation for `refactor`/`chore`/`docs`; spec_delta enforcement ceremony-independent. UNIFY runner prompt carries `artifacts_produced` YAML schema + explicit path-collection instruction + ceremony-aware strict/relaxed wording. New 10-case integration test (`unify-artifacts-e2e.test.ts`). Tests 673→708 (+35, 0 fail). Merged as squash `e67d012` on main via PR #22. **F5 headline fix landed.**
 
-### Phase 55: Supporting Systems Repair
+### Phase 55: Supporting Systems Repair — 🔵 Ready to plan
 Focus: Fix `coda_run_tests`, strengthen write gate, remove legacy `human_review_default` field
 Addresses: F6, F7 (completion of Phase 53's write gate work), deferred item #1
 Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
-Depends: Can run parallel to Phase 54
+Depends: Phase 53 shipped; Phase 54 shipped
 Plans: TBD (defined during /paul:plan)
 
 ### Phase 56: Lifecycle-First Prompts
@@ -199,4 +200,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-16 — Phase 54 plan created; v0.10 at 1 of 5 phases complete, Phase 54 in planning*
+*Roadmap updated: 2026-04-16 — Phase 54 shipped (F5 headline fix landed); v0.10 at 2 of 5 phases complete, Phase 55 ready to plan*

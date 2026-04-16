@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.8 The Compounding Engine COMPLETE (51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean). v0.9 Live Compounding Validation COMPLETE (scoped down — Phase 52 shipped 8-finding E2E report, Phase 53 Brownfield deferred to v0.11+). v0.10 Close the Agent Loop in progress — Phase 53 (Agent Entry Points) shipped 2026-04-16 (673 tests, 12 tools).
+- v0.8 The Compounding Engine COMPLETE (51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean). v0.9 Live Compounding Validation COMPLETE (scoped down — Phase 52 shipped 8-finding E2E report, Phase 53 Brownfield deferred to v0.11+). v0.10 Close the Agent Loop in progress — Phases 53 (Agent Entry Points) + 54 (UNIFY Produces Artifacts) shipped 2026-04-16 (708 tests, 12 tools; F5 headline fix landed).
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
@@ -9,7 +9,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Attribute | Value |
 |-----------|-------|
 | Version | 0.10.0-dev |
-| Status | v0.10 Close the Agent Loop — in progress |
+| Status | v0.10 Close the Agent Loop — in progress (2 of 5 phases complete) |
 | Last Updated | 2026-04-16 |
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
@@ -23,6 +23,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 - Gate Automation shipped in Phase 50: configurable gate modes (human/auto/auto-unless-block) for 3 lifecycle transitions, per-issue-type overrides, backward compat with `human_review_default`
 - E2E Validation shipped in Phase 51: 11 cross-feature E2E tests proving v0.8 features compose correctly, `/coda new`/review-runner/coda-status aligned with gate automation
 - 655 tests passing, TypeScript strict clean, no `any` types in source, zero external deps in core
+- Phase 53 (Agent Entry Points) shipped 2026-04-16: `coda_forge` + `coda_focus` as agent tools (tool count 10→12), slash commands refactored to thin wrappers, F7 write-gate integration guard + `DEBUG=coda:*` diagnostic
+- Phase 54 (UNIFY Produces Artifacts) shipped 2026-04-16: evidence-based `unify→done` gate with `artifacts_produced` schema on `CompletionRecord`, ceremony-aware relaxation for `refactor`/`chore`/`docs`, spec-delta enforcement regardless of ceremony, UNIFY runner prompt restructured to emit artifacts_produced YAML schema + explicit path-collection instruction (708 tests)
 
 ## Scope Snapshot
 ### Validated
@@ -83,7 +85,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Phase 51 — E2E Validation: 11 cross-feature E2E tests, gate-aware `/coda new`, review-runner, and coda-status (Phase 51 — v0.8)
 - [x] Phase 52 — Greenfield Compounding Test: Script A E2E via CMUX, 8 findings (3 critical), compounding engine does not compound in practice (Phase 52 — v0.9)
 - [x] Phase 53 — Agent Entry Points: `coda_forge` + `coda_focus` tools land (tool count 10→12), slash commands refactored to thin wrappers, F7 write-gate integration guard + `DEBUG=coda:*` diagnostic (Phase 53 — v0.10)
-- [ ] Phase 54 — UNIFY Actually Produces Artifacts: make UNIFY generate overlays + ref-doc updates (F5) (Phase 54 — v0.10)
+- [x] Phase 54 — UNIFY Actually Produces Artifacts: evidence-based `unify→done` gate blocks empty-artifact UNIFY; CompletionRecord gains `artifacts_produced` + `exemptions`; runner prompt carries schema + ceremony-aware guidance (Phase 54 — v0.10, F5 headline fix)
 - [ ] Phase 55 — Supporting Systems Repair: fix `coda_run_tests`, strengthen write gate, remove `human_review_default` (F6, F7, deferred #1) (Phase 55 — v0.10)
 - [ ] Phase 56 — Lifecycle-First Prompts: strengthen CODA-injected prompts for lifecycle adherence (F3, F4) (Phase 56 — v0.10)
 - [ ] Phase 57 — E2E Re-Validation: re-run Script A, prove compounding actually compounds (Phase 57 — v0.10)
@@ -109,14 +111,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 |--------|--------|---------|
 | Milestone v0.8 progress | 5 phases complete | 5 of 5 complete ✅ |
 | Milestone v0.9 progress | 1 phase shipped (1 deferred) | 1 of 1 complete ✅ (Phase 53 deferred to v0.11+) |
-| Milestone v0.10 progress | 5 phases (53-57) | 1 of 5 complete 🟡 (Phase 53 shipped 2026-04-16) |
-| Test suite | Green | 673 passing, 0 failing |
+| Milestone v0.10 progress | 5 phases (53-57) | 2 of 5 complete 🟡 (Phases 53 + 54 shipped 2026-04-16) |
+| Test suite | Green | 708 passing, 0 failing |
 | TypeScript | Clean build | `bun test` green (de-facto type check via Bun TS loader; repo has no installed tsc) |
 | Pi tools | 12 registered | 12/12 ✅ (Phase 53 added `coda_forge` + `coda_focus`) |
 | Modules | 5 modules active + overlays | security, tdd, architecture, quality, knowledge + overlay infrastructure ✅ |
-| UNIFY runner | 5 mandatory actions wired | Phase 47 PASS ✅ (v0.10 Phase 54 will ensure all 5 actually execute) |
+| UNIFY runner | 5 mandatory actions wired | Phase 47 PASS ✅; Phase 54 made artifact production evidence-based (F5 fixed) ✅ |
 | UNIFY review gate | Human approval before DONE | Phase 48 PASS ✅ |
-| Module overlays | Two-layer prompt model | Phase 49 PASS ✅ (v0.10 Phase 54 will ensure overlays are generated) |
+| Module overlays | Two-layer prompt model | Phase 49 PASS ✅; Phase 54 ensures overlays have real content via evidence gate ✅ |
 | Gate automation | Configurable gate modes | Phase 50 PASS ✅ |
 | E2E validation | Cross-feature composition | Phase 51 PASS ✅ |
 | Live E2E (v0.9) | Compounding proven in practice | ❌ Not proven — drives v0.10 |
@@ -156,6 +158,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 | F7 reframed as integration gap, not logic bug | `checkWriteGate`/`evaluateWriteGate` already block `.coda/*` for write+edit; Pi perimeter and path variants are the real question | 2026-04-16 | Active |
 | Pi mutation tool surface = {write, edit} only | Audit of `@mariozechner/pi-coding-agent/dist/core/extensions/types.d.ts`: no `str_replace`/`apply_patch`/`multi_edit`/`create_file`/`patch` exist | 2026-04-16 | Active |
 | Write-gate deeper hardening (symlink, bash-redirect, custom-tool bypass) deferred to Phase 55 | Phase 53 scope stayed tight: audit + integration test + diagnostic | 2026-04-16 | Active |
+| Evidence mechanism for unify→done: hybrid self-report + disk verification | Agent declares `artifacts_produced` paths; gate verifies existence + non-empty content. Pure disk scan can't know intent; pure self-report failed F5 in v0.8 live test | 2026-04-16 | Shipped (Phase 54, DEC-54-1) |
+| Ceremony knowledge stays in coda; gate stays layering-clean | `gatherGateData` in coda L4 calls `getCeremonyRules` and hands gate two pre-computed booleans; gate never imports from coda, no ceremony mirror in core | 2026-04-16 | Shipped (Phase 54, DEC-54-2) |
+| Spec-delta enforcement is ceremony-independent | Ceremony relaxation covers empty artifacts; spec-delta enforcement honors explicit issue intent regardless of issue type | 2026-04-16 | Shipped (Phase 54, DEC-54-3) |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -164,4 +169,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-16 — Phase 53 (Agent Entry Points) shipped; v0.10 at 1 of 5 phases complete*
+*Last updated: 2026-04-16 — Phase 54 (UNIFY Produces Artifacts) shipped; v0.10 at 2 of 5 phases complete; F5 headline fix landed*

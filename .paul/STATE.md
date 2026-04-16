@@ -6,18 +6,18 @@ Version: v0.10.0-dev
 **Current focus:** v0.10 Close the Agent Loop
 ## Current Position
 Milestone: v0.10 Close the Agent Loop
-Phase: 54 of 57 (UNIFY Actually Produces Artifacts) — Complete
-Plan: 54-01 complete
-Status: UNIFY complete; phase 54 ready for transition to phase 55
-Last activity: 2026-04-16 — Closed UNIFY for 54-01: SUMMARY written, F5 headline fix landed.
+Phase: 55 of 57 (Supporting Systems Repair) — Not started
+Plan: not started
+Status: Ready to plan Phase 55 (F6, F7 deeper hardening, deferred #1: remove human_review_default)
+Last activity: 2026-04-16 — Phase 54 complete, transitioned to Phase 55.
 Progress:
 - v0.10 Close the Agent Loop: [████░░░░░░] 40% (2 of 5 phases complete: 53 + 54; 55–57 remaining)
-- Phase 54: [██████████] 100% (PLAN + APPLY + UNIFY complete)
+- Phase 55: [░░░░░░░░░░] 0% (not started)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Loop complete for 54-01 — phase 54 ready for transition]
+  ○        ○        ○     [Ready to plan Phase 55]
 ```
 ## Accumulated Context
 ### Decisions
@@ -49,26 +49,29 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | coda_focus keeps VCS branch creation (opt-out via create_branch=false) | Option C from posture probe — single-call ergonomics, escape hatch for non-git contexts | v0.10 P53 | Active |
 | F7 root cause = integration gap not logic bug | checkWriteGate blocks .coda/ edits in unit tests; regression is in Pi-hook perimeter (tool surface audit) | v0.10 P53 | Active |
 | Write-gate deeper hardening deferred to Phase 55 | Phase 53 scope = audit + regression test + diagnostic logging; Phase 55 handles new attack patterns | v0.10 P53 | Active |
-| Task 1+2 scope expanded by 1 line each in hooks.test.ts | tools.length assertion mechanically coupled to Pi registration; plan <files> didn't anticipate | v0.10 P53 APPLY | Logged for UNIFY |
-| Plan verify commands reference typecheck/tsc that don't exist in this repo | bun test is the de-facto type check via Bun TS loader; no typecheck script or installed tsc | v0.10 P53 APPLY | Logged for UNIFY |
-| Pi mutation tool surface = {write, edit} only | Full audit of @mariozechner/pi-coding-agent/dist types: bash/read/edit/write/grep/find/ls/custom; only write + edit mutate. No str_replace/apply_patch/multi_edit exist | v0.10 P53 APPLY | Active |
-| 3 integration-test fixtures updated to declare exemptions | gate-automation-integration, v08-e2e, autonomous-loops-e2e had feature-issue completion records with empty artifacts; new evidence gate correctly flags them. Fix is mechanical (add exemption stubs) rather than weakening the gate | v0.10 P54 APPLY | Logged for UNIFY |
-| Inline overlay-parser in gates.ts rather than importing overlay.ts | Avoids L3→L2 dep cycle; ~15 lines of heading/bullet parsing duplicated by design. Keeps core self-contained | v0.10 P54 APPLY | Active |
+| Pi mutation tool surface = {write, edit} only | Full audit of @mariozechner/pi-coding-agent/dist types | v0.10 P53 | Active |
+| DEC-54-1: Evidence mechanism = hybrid self-report + disk verification | artifacts_produced declared by agent; gate verifies existence + non-empty content; fake paths and empty exemptions rejected | v0.10 P54 | Shipped |
+| DEC-54-2: Ceremony knowledge stays in coda; gate stays layering-clean | gatherGateData computes artifactEvidenceRequired + specDeltaPresent from getCeremonyRules; gate never imports coda | v0.10 P54 | Shipped |
+| DEC-54-3: Spec-delta enforcement is ceremony-independent | Relaxation covers empty artifacts only; declared spec_delta always enforces ref-system.md update or exemption | v0.10 P54 | Shipped |
+| Inline overlay-parser in gates.ts | Avoids L3→L2 dep cycle; ~30 lines duplicated by design | v0.10 P54 | Active |
+| 3 integration test fixtures updated to declare exemptions | New evidence gate correctly flagged feature-issue fixtures with empty artifacts; fix = add exemption stubs, not weaken gate | v0.10 P54 | Logged |
+
+### Active Blockers / Follow-ups
+- `docs/coda-spec-v7.md` needs a section documenting `artifacts_produced` schema + evidence gate (deferred from P54 per plan; carry to milestone close).
+- `coda-advance.ts` at 681L exceeds 500L critical threshold (RUBY); candidate refactor = extract `handleUnifyReviewDecision` + `handleHumanReviewDecision` into a sibling file (Phase 55+).
+- Phase 55 scope reminder: F6 (coda_run_tests), F7 write-gate deeper hardening (symlink, bash-redirect, custom-tool bypass), and remove `human_review_default` in favor of gate automation (deferred #1).
 ### Git State
-Branch: phases/54-unify-produces-artifacts
+Branch: main
 Remote: https://github.com/coctostan/coda.git
-Last commit: 076b917 feat(54-unify-produces-artifacts): evidence-based unify→done gate + runner prompt restructure (pushed)
-PR: #22 open — https://github.com/coctostan/coda/pull/22 (ci_checks=false)
-Last session: 2026-04-16 (Phase 54 APPLY completed)
-Stopped at: APPLY complete, 708 tests pass, ready for UNIFY
-Next action: /paul:unify .paul/phases/54-unify-produces-artifacts/54-01-PLAN.md
-Resume context:
-- 3 TDD cycles completed: evidence gate + schema (Task 1), runner prompt restructure (Task 2), 10-case e2e integration test (Task 3). All GREEN.
-- Test baseline: 673 → 708 pass (+35 new, 0 regressions, 2092 expect calls).
-- LOC: coda-advance.ts grew 645→681 (+36, under RUBY ceiling of +40). gates.ts 114→267. unify-runner.ts 274→323.
-- DEAN: delta 0 vs baseline (2 high basic-ftp advisories unchanged).
-- Deviations logged for UNIFY: (1) 3 integration test fixtures expanded to declare exemptions (mechanical fix, not scope creep); (2) inline overlay-parser in gates.ts rather than importing overlay.ts (L3→L2 cycle avoidance, ~15 lines duplicated by design).
-- DOCS flagged: docs/coda-spec-v7.md should document artifacts_produced schema — plan explicitly deferred to milestone close; carry into UNIFY SUMMARY as a known follow-up.
-- Module dispatch: IRIS 0 annotations, DOCS 1 drift deferred, RUBY 1 WARN (coda-advance.ts still 681L — consider extraction in Phase 55+ if growth continues), SKIP 2 decisions queued. All enforcement (WALT/DEAN/TODD) PASS.
+Last commit: e67d012 feat(54-unify-produces-artifacts): evidence-based unify→done gate + runner prompt restructure (#22) (squash merged)
+PR: #22 MERGED — https://github.com/coctostan/coda/pull/22
+Feature branches merged: phases/54-unify-produces-artifacts (auto-deleted)
+Test baseline: 708 pass / 0 fail / 2092 expect / 55 files (post-P54 merge).
+
+## Session Continuity
+Last session: 2026-04-16 (Phase 54 shipped; merged to main)
+Stopped at: Phase 54 complete, transitioned; ready to plan Phase 55
+Next action: /paul:plan for Phase 55 (Supporting Systems Repair)
+Resume file: .paul/ROADMAP.md
 ---
 *STATE.md — Updated after every significant action*
