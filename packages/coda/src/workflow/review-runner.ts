@@ -8,12 +8,15 @@ import {
   writeRecord,
 } from '@coda/core';
 import type { CodaState, PlanRecord, TaskRecord } from '@coda/core';
+import type { CodaConfig } from '../forge/types';
+import { getDefaultConfig } from '../forge';
 import type { LoopIterationConfig } from '../../../core/src/state/types';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync } from 'fs';
 import { join } from 'path';
 import { isLoopExhausted, transitionSubmode } from '../../../core/src/state/machine';
 import { loadIssue, loadPlan, loadTasks } from './context-builder';
 import { sortByNumericSuffix } from '../tools/sort-utils';
+import { resolveGateMode } from './gate-automation';
 
 /** A deterministic review issue emitted by structural checks or injected review feedback. */
 export interface ReviewIssue {
@@ -234,9 +237,11 @@ function approvePlan(codaRoot: string, issueSlug: string): void {
   }
 
   const issue = loadIssue(codaRoot, issueSlug);
-  const humanReviewStatus: PlanRecord['human_review_status'] = issue?.frontmatter.human_review === true
-    ? 'pending'
-    : 'not-required';
+  const issueType = issue?.frontmatter.issue_type ?? 'feature';
+  const planReviewMode = resolveGateMode('plan_review', issueType, loadCodaConfig(codaRoot) ?? getDefaultConfig());
+  const humanReviewStatus: PlanRecord['human_review_status'] = planReviewMode === 'auto'
+    ? 'not-required'
+    : 'pending';
 
   updateFrontmatter<PlanRecord>(planPath, {
     status: 'approved',
@@ -325,4 +330,17 @@ function readRevisionIssues(revisionInstructionsPath: string): ReviewIssue[] {
 
 function getRevisionInstructionsPath(codaRoot: string, issueSlug: string): string {
   return join(codaRoot, 'issues', issueSlug, 'revision-instructions.md');
+}
+
+function loadCodaConfig(codaRoot: string): CodaConfig | null {
+  const configPath = join(codaRoot, 'coda.json');
+  if (!existsSync(configPath)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(readFileSync(configPath, 'utf-8')) as CodaConfig;
+  } catch {
+    return null;
+  }
 }

@@ -1,16 +1,16 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.8 The Compounding Engine in progress: Phase 49 complete (Module Overlay Infrastructure), 626 tests, 10 tools, 5 modules + init-scan + overlays, tsc clean
+- v0.8 The Compounding Engine COMPLETE (51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean). v0.9 Live Compounding Validation COMPLETE (scoped down — Phase 52 shipped 8-finding E2E report, Phase 53 Brownfield deferred to v0.11+). v0.10 Close the Agent Loop in progress.
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
 ## Current State
 | Attribute | Value |
 |-----------|-------|
-| Version | 0.8.0 |
-| Status | Milestone v0.8 in progress |
-| Last Updated | 2026-04-14 |
+| Version | 0.10.0-dev |
+| Status | v0.10 Close the Agent Loop — in progress |
+| Last Updated | 2026-04-16 |
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
 - `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, topic-based section retrieval, and dependency-aware carry-forward primitives
@@ -20,7 +20,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 - UNIFY Runner Core shipped in Phase 47: 5-action UNIFY prompt, expanded `unify→done` gate, and completion-record-backed gate data
 - UNIFY Review Gate shipped in Phase 48: human review/approval mechanism for UNIFY output, `unify_review_status` on completion record, revision-aware UNIFY context, shared `findCompletionRecordPath()` helper
 - Module Overlay Infrastructure shipped in Phase 49: two-layer prompt model (default + `.coda/modules/*.local.md` overlay), overlay-aware dispatcher, UNIFY compounding instruction (ACTION 3b), FORGE overlay seeding in SYNTHESIZE context
-- 626 tests passing, TypeScript strict clean, no `any` types in source, zero external deps in core
+- Gate Automation shipped in Phase 50: configurable gate modes (human/auto/auto-unless-block) for 3 lifecycle transitions, per-issue-type overrides, backward compat with `human_review_default`
+- E2E Validation shipped in Phase 51: 11 cross-feature E2E tests proving v0.8 features compose correctly, `/coda new`/review-runner/coda-status aligned with gate automation
+- 655 tests passing, TypeScript strict clean, no `any` types in source, zero external deps in core
 
 ## Scope Snapshot
 ### Validated
@@ -75,16 +77,18 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Wire brownfield into /coda forge — detectBackdrop routing, brownfield scan context in command (Phase 45 — v0.7)
 - [x] E2E brownfield validation — 4 E2E tests covering full pipeline + context features + hooks + persistence (Phase 46 — v0.7)
 - [x] UNIFY Runner Core - structured 5-action UNIFY context, expanded `unify→done` gate, completion-record-backed gate data (Phase 47 - v0.8)
-### Active
 - [x] Phase 48 — UNIFY Review Gate: human review/approval of autonomous UNIFY output before DONE (Phase 48 — v0.8)
 - [x] Phase 49 — Module Overlay Infrastructure: two-layer prompt model, overlay-aware dispatcher, UNIFY compounding, FORGE seeding (Phase 49 — v0.8)
-- [ ] Resolve the temporary `@coda/core` symlink used by jiti during Pi extension loading
-- [ ] Decide whether the repo-root `modules.yaml` symlink remains a local workspace fix or becomes a portable bootstrap step
-- [ ] Align `docs/v0.1/07-pi-integration.md` with the shipped real-`ExtensionAPI` implementation
-- [ ] Refresh the canonical v0.2 CMUX runbook to match the current cmux CLI syntax
+- [x] Phase 50 — Gate Automation: configurable gate modes (human/auto/auto-unless-block) for plan_review, build_review, unify_review transitions (Phase 50 — v0.8)
+- [x] Phase 51 — E2E Validation: 11 cross-feature E2E tests, gate-aware `/coda new`, review-runner, and coda-status (Phase 51 — v0.8)
+- [x] Phase 52 — Greenfield Compounding Test: Script A E2E via CMUX, 8 findings (3 critical), compounding engine does not compound in practice (Phase 52 — v0.9)
+- [ ] Phase 53 — Agent Entry Points: add `coda_forge` + `coda_focus` tools; reinstate write gate (F1, F2, F7) (Phase 53 — v0.10)
+- [ ] Phase 54 — UNIFY Actually Produces Artifacts: make UNIFY generate overlays + ref-doc updates (F5) (Phase 54 — v0.10)
+- [ ] Phase 55 — Supporting Systems Repair: fix `coda_run_tests`, strengthen write gate, remove `human_review_default` (F6, F7, deferred #1) (Phase 55 — v0.10)
+- [ ] Phase 56 — Lifecycle-First Prompts: strengthen CODA-injected prompts for lifecycle adherence (F3, F4) (Phase 56 — v0.10)
+- [ ] Phase 57 — E2E Re-Validation: re-run Script A, prove compounding actually compounds (Phase 57 — v0.10)
 ### Planned
-- [ ] Phase 50 — Gate automation configuration
-- [ ] Phase 51 — v0.8 end-to-end validation
+- Phase 58+ (v0.11): Brownfield Onboarding Test (deferred from v0.9 Phase 53); Transformative FORGE (deferred from original v0.9 plan)
 
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
@@ -103,14 +107,20 @@ Enabling developers to build durable, maintainable software through disciplined 
 ## Success Metrics
 | Metric | Target | Current |
 |--------|--------|---------|
-| Milestone v0.8 progress | 5 phases complete | 3 of 5 complete ✅ |
-| Test suite | Green | 626 passing, 0 failing |
+| Milestone v0.8 progress | 5 phases complete | 5 of 5 complete ✅ |
+| Milestone v0.9 progress | 1 phase shipped (1 deferred) | 1 of 1 complete ✅ (Phase 53 deferred to v0.11+) |
+| Milestone v0.10 progress | 5 phases (53-57) | 0 of 5 complete 🟡 |
+| Test suite | Green | 655 passing, 0 failing |
 | TypeScript | Clean build | `tsc --noEmit` clean |
-| Pi tools | 10 registered | 10/10 ✅ |
+| Pi tools | 10 registered | 10/10 ✅ (v0.10 will add `coda_forge`, `coda_focus` → 12/12) |
 | Modules | 5 modules active + overlays | security, tdd, architecture, quality, knowledge + overlay infrastructure ✅ |
-| UNIFY runner | 5 mandatory actions wired | Phase 47 PASS ✅ |
+| UNIFY runner | 5 mandatory actions wired | Phase 47 PASS ✅ (v0.10 Phase 54 will ensure all 5 actually execute) |
 | UNIFY review gate | Human approval before DONE | Phase 48 PASS ✅ |
-| Module overlays | Two-layer prompt model | Phase 49 PASS ✅ |
+| Module overlays | Two-layer prompt model | Phase 49 PASS ✅ (v0.10 Phase 54 will ensure overlays are generated) |
+| Gate automation | Configurable gate modes | Phase 50 PASS ✅ |
+| E2E validation | Cross-feature composition | Phase 51 PASS ✅ |
+| Live E2E (v0.9) | Compounding proven in practice | ❌ Not proven — drives v0.10 |
+| Live E2E (v0.10) | Compounding proven in practice | 🟡 Target for Phase 57 |
 ## Key Decisions
 | Decision | Rationale | Date | Status |
 |----------|-----------|------|--------|
@@ -140,6 +150,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Shared `findCompletionRecordPath()` helper | 3 call sites (gate data, advance handler, UNIFY runner) share lookup | 2026-04-14 | Active |
 | Overlay merge is append-only (default + project context) | Keep merge deterministic; overlay body appended after `## Project-Specific Context` header | 2026-04-14 | Active |
 | Overlays seeded by agent via `coda_edit_body`, not programmatic write | Consistent with v0.8 D3; agent drives overlay creation during FORGE/UNIFY | 2026-04-14 | Active |
+| Close v0.9 after Phase 52, defer Phase 53 | Brownfield test would hit same F1/F2/F5 blockers; fix those first | 2026-04-16 | Active |
+| v0.10 "Close the Agent Loop" as full pivot from v0.9 | v0.8 compounding plumbing works in tests but doesn't compound in practice — fix end-to-end flow before more FORGE work | 2026-04-16 | Active |
+| Add `coda_forge` and `coda_focus` as agent tools | Slash-command-only entry points block autonomous agent workflows | 2026-04-16 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -148,4 +161,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-14 after Phase 49 Module Overlay Infrastructure completion*
+*Last updated: 2026-04-16 — v0.9 closed (Phase 52 shipped, Phase 53 deferred); v0.10 "Close the Agent Loop" begins*

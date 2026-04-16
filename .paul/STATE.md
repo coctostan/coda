@@ -1,28 +1,28 @@
 # Project State
 ## Project Reference
-See: .paul/PROJECT.md (updated 2026-04-14)
-Version: v0.8.0
+See: .paul/PROJECT.md (updated 2026-04-16)
+Version: v0.10.0-dev
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** v0.8 The Compounding Engine
+**Current focus:** v0.10 Close the Agent Loop
 ## Current Position
-Milestone: v0.8 The Compounding Engine
-Phase: 50 of 51 (Gate Automation)
-Plan: 50-01 Gate Automation (1/1)
-Status: Applied, ready to unify
-Last activity: 2026-04-15T00:00:00Z — Phase 50 APPLY complete
+Milestone: v0.10 Close the Agent Loop
+Phase: 53 of 57 (Agent Entry Points)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-04-16 — v0.9 closed (Phase 52 shipped, Phase 53 deferred); v0.10 "Close the Agent Loop" begins
 Progress:
-- v0.8 The Compounding Engine: [███████░░░] 70%
-- Phase 50: [████████░░] 80% (applied, ready to unify)
+- v0.10 Close the Agent Loop: [░░░░░░░░░░] 0%
+- Phase 53: [░░░░░░░░░░] 0% (not started)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ○     [APPLY complete — ready for UNIFY]
+  ○        ○        ○     [New phase — ready to plan]
 ```
 ## Accumulated Context
 ### Decisions
 | Decision | Phase | Impact |
-|----------|-------|--------|
+|----------|-------|---------|
 | blockThreshold: FindingSeverity \| 'none' | v0.3 D1 | Advisory-only modules |
 | assemblePrompts() + parseAndCheckFindings() | v0.3 D2 | Two-method API |
 | Only security + tdd in v0.3 | v0.3 D3 | No half-registered modules |
@@ -41,23 +41,25 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Completion record carries unify_review_status | v0.8 D7 | Disk-based signal for revision detection |
 | Overlay merge is append-only (default + project context) | v0.8 P49 | Deterministic merge; no interleaving |
 | Agent writes overlays via coda_edit_body | v0.8 P49 | Consistent with D3, no new tool |
-Branch: main
+| 3-gate-point scope (not 5 from spec) | v0.8 P50 | specify_approval/spec_delta unimplemented; deferred |
+| unify_review auto mutates completion record | v0.8 P50 | Pre-transition mutation avoids new gate bypass paths |
+| Defer v0.9 Phase 53 (Brownfield); close v0.9 with just Phase 52 | Brownfield test would hit same F1/F2/F5 blockers as greenfield | 2026-04-16 | Active |
+| v0.10 "Close the Agent Loop" as full pivot | v0.8 compounding plumbing works but doesn't compound in practice; fix before more FORGE | 2026-04-16 | Active |
+| Plan-doc phases 52–56 → our phases 53–57 | 52 already used for v0.9 Greenfield validation | 2026-04-16 | Active |
+### Git State
+Branch: phases/48-50-compounding-engine
 Remote: https://github.com/coctostan/coda.git
-Last session: 2026-04-14T16:30:00Z
-Stopped at: Phase 50 APPLY complete, ready for UNIFY
-Next action: /paul:unify for Phase 50
-Resume file: .paul/HANDOFF-2026-04-14.md
+Last commit: c1c801d
+PR: https://github.com/coctostan/coda/pull/20 (OPEN)
+Last session: 2026-04-16
+Stopped at: Milestone transition complete — v0.9 closed, v0.10 kicked off; ready to plan Phase 53 (Agent Entry Points)
+Next action: /paul:plan for Phase 53
+Resume file: .paul/HANDOFF-2026-04-16-v0.10-kickoff.md
 Resume context:
-- Phase 50 (Gate Automation) APPLY complete
-- D1: gate-automation.ts — types (GateMode, GatePoint, GateAutomation, GateOverrides) + resolveGateMode() + shouldRequireHuman() + DEFAULT_GATE_MODES
-- D2: CodaConfig updated with gates? and gate_overrides? fields
-- D3: getDefaultConfig() includes gates field with correct defaults
-- D4: coda-advance threads gate modes into plan_review, build_review, unify_review transitions
-- D5: coda_config validates gates/gate_overrides keys and GateMode values
-- D6: Skipped (optional ceremony integration)
-- 18 new tests (11 unit + 7 integration), 644 total passing
-- TypeScript strict clean, no any types
-- All 9 acceptance criteria met
-
+- v0.9 Live Compounding Validation closed (Phase 52 shipped, Phase 53 Brownfield deferred)
+- v0.10 "Close the Agent Loop" opened with phases 53-57 addressing 7 critical/high findings
+- Phase 53 = Agent Entry Points: add coda_forge + coda_focus tools; reinstate write gate
+- Primary planning inputs: .paul/milestones/v0.10.0-ROADMAP.md + docs/v0.8/E2E-COMPOUNDING-FINDINGS.md
+- Branch is 1 behind main / 17 ahead — consider rebase + PR #20 merge before next phase ships
 ---
 *STATE.md — Updated after every significant action*

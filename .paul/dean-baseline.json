@@ -1,0 +1,10 @@
+{
+  "created": "2026-04-15T18:00:00-04:00",
+  "acknowledged_by": "user override during plan-phase (v0.9 validation milestone — no dependency changes)",
+  "staleness_days": 30,
+  "severity": { "critical": 0, "high": 2, "moderate": 0, "low": 0 },
+  "packages": [
+    { "name": "basic-ftp", "version": "<=5.2.1", "advisory": "GHSA-6v7q-wjvx-w8wg" },
+    { "name": "basic-ftp", "version": "=5.2.0", "advisory": "GHSA-chqc-8p9q-pq6q" }
+  ]
+}
