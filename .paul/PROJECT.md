@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.8 The Compounding Engine COMPLETE (51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean). v0.9 Live Compounding Validation COMPLETE (scoped down — Phase 52 shipped 8-finding E2E report, Phase 53 Brownfield deferred to v0.11+). v0.10 Close the Agent Loop in progress — Phases 53 (Agent Entry Points) + 54 (UNIFY Produces Artifacts) shipped 2026-04-16 (708 tests, 12 tools; F5 headline fix landed).
+- v0.8 The Compounding Engine COMPLETE (51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean). v0.9 Live Compounding Validation COMPLETE (scoped down — Phase 52 shipped 8-finding E2E report, Phase 53 Brownfield deferred to v0.11+). v0.10 Close the Agent Loop in progress — Phases 53 (Agent Entry Points) + 54 (UNIFY Produces Artifacts) + 55 (Supporting Systems Repair) shipped 2026-04-16 (720 tests, 12 tools; F5 headline fix + F6/F7/deferred-#1 cleanup all landed).
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
@@ -9,7 +9,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Attribute | Value |
 |-----------|-------|
 | Version | 0.10.0-dev |
-| Status | v0.10 Close the Agent Loop — in progress (2 of 5 phases complete) |
+| Status | v0.10 Close the Agent Loop — in progress (3 of 5 phases complete) |
 | Last Updated | 2026-04-16 |
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
@@ -86,7 +86,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Phase 52 — Greenfield Compounding Test: Script A E2E via CMUX, 8 findings (3 critical), compounding engine does not compound in practice (Phase 52 — v0.9)
 - [x] Phase 53 — Agent Entry Points: `coda_forge` + `coda_focus` tools land (tool count 10→12), slash commands refactored to thin wrappers, F7 write-gate integration guard + `DEBUG=coda:*` diagnostic (Phase 53 — v0.10)
 - [x] Phase 54 — UNIFY Actually Produces Artifacts: evidence-based `unify→done` gate blocks empty-artifact UNIFY; CompletionRecord gains `artifacts_produced` + `exemptions`; runner prompt carries schema + ceremony-aware guidance (Phase 54 — v0.10, F5 headline fix)
-- [ ] Phase 55 — Supporting Systems Repair: fix `coda_run_tests`, strengthen write gate, remove `human_review_default` (F6, F7, deferred #1) (Phase 55 — v0.10)
+- [x] Phase 55 — Supporting Systems Repair: runtime-agnostic `coda_run_tests` via injectable `SpawnImpl`; write-gate hardened against symlink/bash-compound/custom-tool bypass (parent-realpath + `coda_*` allow-list); `human_review_default` removed from `CodaConfig` with idempotent legacy→`gates` migration at load time; 4 duplicate `loadCodaConfig` helpers consolidated to one shared export (Phase 55 — v0.10)
 - [ ] Phase 56 — Lifecycle-First Prompts: strengthen CODA-injected prompts for lifecycle adherence (F3, F4) (Phase 56 — v0.10)
 - [ ] Phase 57 — E2E Re-Validation: re-run Script A, prove compounding actually compounds (Phase 57 — v0.10)
 ### Planned
@@ -111,8 +111,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 |--------|--------|---------|
 | Milestone v0.8 progress | 5 phases complete | 5 of 5 complete ✅ |
 | Milestone v0.9 progress | 1 phase shipped (1 deferred) | 1 of 1 complete ✅ (Phase 53 deferred to v0.11+) |
-| Milestone v0.10 progress | 5 phases (53-57) | 2 of 5 complete 🟡 (Phases 53 + 54 shipped 2026-04-16) |
-| Test suite | Green | 708 passing, 0 failing |
+| Milestone v0.10 progress | 5 phases (53-57) | 3 of 5 complete 🟡 (Phases 53 + 54 + 55 shipped 2026-04-16) |
+| Test suite | Green | 720 passing, 0 failing (1 todo documented) |
 | TypeScript | Clean build | `bun test` green (de-facto type check via Bun TS loader; repo has no installed tsc) |
 | Pi tools | 12 registered | 12/12 ✅ (Phase 53 added `coda_forge` + `coda_focus`) |
 | Modules | 5 modules active + overlays | security, tdd, architecture, quality, knowledge + overlay infrastructure ✅ |
@@ -161,6 +161,12 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Evidence mechanism for unify→done: hybrid self-report + disk verification | Agent declares `artifacts_produced` paths; gate verifies existence + non-empty content. Pure disk scan can't know intent; pure self-report failed F5 in v0.8 live test | 2026-04-16 | Shipped (Phase 54, DEC-54-1) |
 | Ceremony knowledge stays in coda; gate stays layering-clean | `gatherGateData` in coda L4 calls `getCeremonyRules` and hands gate two pre-computed booleans; gate never imports from coda, no ceremony mirror in core | 2026-04-16 | Shipped (Phase 54, DEC-54-2) |
 | Spec-delta enforcement is ceremony-independent | Ceremony relaxation covers empty artifacts; spec-delta enforcement honors explicit issue intent regardless of issue type | 2026-04-16 | Shipped (Phase 54, DEC-54-3) |
+| Injectable SpawnImpl for runtime-portable child-process functions | codaRunTests adds test-only 4th arg; Bun fast-path + Node fallback selected by detectDefaultSpawn at call time; no globalThis masking needed | 2026-04-16 | Shipped (Phase 55, DEC-55-1) |
+| Custom-tool default-deny with coda_* prefix allow-list | Pi extension authors may register mutation tools whose shape we don't know; explicit intent (coda_*) beats coincidental absence of `.coda/` in input | 2026-04-16 | Shipped (Phase 55, DEC-55-2) |
+| Parent-directory realpath for symlink-safe `.coda/` protection | Write targets don't typically exist pre-write; leaf realpath throws ENOENT; parent-realpath is the sound invariant | 2026-04-16 | Shipped (Phase 55, DEC-55-3) |
+| Legacy human_review_default → gates migration uses coarse DEFAULT_GATE_MODES seed | Shapes aren't 1:1 isomorphic (per-type boolean vs per-gate-point mode); operators add gate_overrides post-migration for legacy per-type semantics | 2026-04-16 | Shipped (Phase 55, DEC-55-4) |
+| Shared loadCodaConfig consolidates 4 duplicate file-private helpers | Dedupe is the forcing function for introducing cross-cutting behavior (here: on-load migration); narrower pi/tools.ts loader intentionally stays put | 2026-04-16 | Shipped (Phase 55, DEC-55-5) |
+| Perimeter detectors extracted to pi/write-gate-perimeter.ts | Refines Phase 53 perimeter-vs-pure-gate split into: pure gate (write-gate.ts) / Pi lifecycle glue (hooks.ts) / stateless detectors (write-gate-perimeter.ts) | 2026-04-16 | Shipped (Phase 55, DEC-55-6) |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -169,4 +175,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-16 — Phase 54 (UNIFY Produces Artifacts) shipped; v0.10 at 2 of 5 phases complete; F5 headline fix landed*
+*Last updated: 2026-04-16 — Phase 55 (Supporting Systems Repair) shipped; v0.10 at 3 of 5 phases complete; F6 + F7 deeper hardening + deferred-#1 landed*

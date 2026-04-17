@@ -13,8 +13,8 @@ Theme: "The compounding engine actually compounds."
 |-------|------|-------|--------|-----------|
 | 53 | Agent Entry Points | 1/1 | ✅ Complete | 2026-04-16 |
 | 54 | UNIFY Actually Produces Artifacts | 1/1 | ✅ Complete | 2026-04-16 |
-| 55 | Supporting Systems Repair | 0/1 | 🟡 Planning (55-01 awaiting approval) | — |
-| 56 | Lifecycle-First Prompts | 0/TBD | ⚪ Not started | — |
+| 55 | Supporting Systems Repair | 1/1 | ✅ Complete | 2026-04-16 |
+| 56 | Lifecycle-First Prompts | 0/TBD | 🔵 Ready to plan | — |
 | 57 | E2E Re-Validation | 0/TBD | ⚪ Not started | — |
 
 ### Phase 53: Agent Entry Points — ✅ Complete 2026-04-16
@@ -32,12 +32,13 @@ Depends: Phase 53 (need focus tool to run UNIFY in a test)
 Plans: 1 — `.paul/phases/54-unify-produces-artifacts/54-01-PLAN.md` → `54-01-SUMMARY.md`
 Outcome: Evidence-based `unify→done` gate — `CompletionRecord` gains `artifacts_produced` + `exemptions`; gate verifies declared paths exist on disk with non-empty content; ceremony-aware relaxation for `refactor`/`chore`/`docs`; spec_delta enforcement ceremony-independent. UNIFY runner prompt carries `artifacts_produced` YAML schema + explicit path-collection instruction + ceremony-aware strict/relaxed wording. New 10-case integration test (`unify-artifacts-e2e.test.ts`). Tests 673→708 (+35, 0 fail). Merged as squash `e67d012` on main via PR #22. **F5 headline fix landed.**
 
-### Phase 55: Supporting Systems Repair — 🟡 Planning
+### Phase 55: Supporting Systems Repair — ✅ Complete 2026-04-16
 Focus: Fix `coda_run_tests`, strengthen write gate, remove legacy `human_review_default` field
-Addresses: F6, F7 (completion of Phase 53's write gate work), deferred item #1
+Addresses: F6, F7 (deeper write-gate hardening beyond Phase 53), deferred item #1
 Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
 Depends: Phase 53 shipped; Phase 54 shipped
-Plans: 1 — `.paul/phases/55-supporting-systems-repair/55-01-PLAN.md` (awaiting approval)
+Plans: 1 — `.paul/phases/55-supporting-systems-repair/55-01-PLAN.md` → `55-01-SUMMARY.md`
+Outcome: Runtime-portable `coda_run_tests` (injectable `SpawnImpl` + Bun-fast-path-preserved `detectDefaultSpawn`); F7 deeper hardening closed three bypass vectors (parent-dir realpath for symlinks, bash compound/subshell/here-doc + `sh -c`/`bash -c` wrappers, custom-tool default-deny with `coda_*` allow-list); `human_review_default` removed from `CodaConfig` with on-load idempotent migration to `gates`; 4 duplicate `loadCodaConfig` helpers consolidated to one shared export. `pi/write-gate-perimeter.ts` extracted during REFACTOR (hooks.ts 474L→458L). Tests 708→720 (+12, 0 fail, 1 todo). Merged as squash `0199f27` on main via PR #23.
 
 ### Phase 56: Lifecycle-First Prompts
 Focus: Strengthen CODA-injected prompts so agent creates an issue before building; add tool manifest and lifecycle overview to session-start
@@ -200,4 +201,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-16 — Phase 55 plan 55-01 drafted (F6 runtime-agnostic coda_run_tests, F7 symlink+bash-compound+custom-tool hardening, remove human_review_default); awaiting APPLY approval*
+*Roadmap updated: 2026-04-16 — Phase 55 shipped (F6 + F7 deeper hardening + deferred-#1 removal); v0.10 at 3 of 5 phases complete, Phase 56 (Lifecycle-First Prompts) ready to plan*
