@@ -1,23 +1,23 @@
 # Project State
 ## Project Reference
-See: .paul/PROJECT.md (updated 2026-04-16)
+See: .paul/PROJECT.md (updated 2026-04-17)
 Version: v0.10.0-dev
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
 **Current focus:** v0.10 Close the Agent Loop
 ## Current Position
 Milestone: v0.10 Close the Agent Loop
-Phase: 56 of 57 (Lifecycle-First Prompts) — Complete
-Plan: 56-01 unified; awaiting phase transition
-Status: UNIFY complete, merge gate / transition pending
-Last activity: 2026-04-17T01:29:10Z — Reconciled APPLY results into .paul/phases/56-lifecycle-first-prompts/56-01-SUMMARY.md
+Phase: 57 of 57 (E2E Re-Validation) — Not started
+Plan: not started
+Status: Ready to plan Phase 57 (prove the compounding engine actually compounds)
+Last activity: 2026-04-17 — Phase 56 complete (PR #24 squash-merged as 3e1f2cb); transitioned to Phase 57
 Progress:
 - v0.10 Close the Agent Loop: [████████░░] 80% (4 of 5 phases complete: 53 + 54 + 55 + 56; 57 remaining)
-- Phase 56: [██████████] 100% (unify complete)
+- Phase 57: [░░░░░░░░░░] 0% (not started)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Loop complete - phase transition pending]
+  ○        ○        ○     [Phase 56 closed; ready to plan Phase 57]
 ```
 ## Accumulated Context
 ### Decisions
@@ -62,28 +62,32 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | DEC-55-5: Shared loadCodaConfig lives in tools/coda-config.ts; 4 duplicate helpers deduped | workflow → tools direction already established; migration fires on every config read path | v0.10 P55 | Shipped |
 | DEC-55-6: Perimeter detectors extracted to pi/write-gate-perimeter.ts | Refined Phase 53's perimeter-vs-pure-gate split into dispatcher (hooks.ts) / detectors (write-gate-perimeter.ts) / pure gate (write-gate.ts) | v0.10 P55 | Shipped |
 | DEAN baseline established: 1 critical, 3 high acknowledged | User override during Phase 56 planning after bun audit surfaced new protobufjs critical + basic-ftp high; future plans compare against refreshed baseline dated 2026-04-17 | v0.10 P56 | Active |
+| Keep lifecycle guidance inside existing prompt surfaces | v0.10 P56 | Steering failures were fixed by strengthening existing bootstrap/phase/build/next_action prompts instead of adding new infrastructure |
+| before_agent_start bootstraps unfocused sessions | v0.10 P56 | Unfocused agent starts now receive forge/create/focus guidance before production-code work begins |
+| next_action strings must name concrete CODA tools | v0.10 P56 | Status/focus/forge handoffs now reinforce one consistent issue-first lifecycle path |
 
 ### Active Blockers / Follow-ups
 - `docs/coda-spec-v7.md` needs a section documenting `artifacts_produced` schema + evidence gate AND a refresh removing legacy `human_review_default` references (deferred from P54/P55 per plan; carry to milestone close).
 - `coda-advance.ts` at 669L (down from 681L after P55 dedupe) still exceeds 500L soft RUBY threshold; candidate refactor = extract `handleUnifyReviewDecision` + `handleHumanReviewDecision` into a sibling file (v0.11).
 - `codaRunTests` runtime-detection via `globalThis.Bun` masking is retained as `test.todo` (Bun global is readonly in the Bun test harness); future non-Bun test harness or integration test can promote it.
 - Custom-tool default-deny is conservative by design (DEC-55-2); if operators report false positives with third-party Pi extensions, consider adding a config-driven allow-list as a v0.11 follow-up.
+- `README.md` drift remains after Phase 56 lifecycle-guidance changes; DOCS flagged it during APPLY and it stays deferred outside the current code-focused phase scope.
 ### Git State
 Branch: main
 Remote: https://github.com/coctostan/coda.git
-Last commit: 0199f27 feat(55-supporting-systems-repair): F6 + F7 + remove human_review_default (Phase 55 / v0.10) (#23) (squash merged)
-PR: #23 MERGED — https://github.com/coctostan/coda/pull/23
-Feature branches merged: phases/55-supporting-systems-repair (auto-deleted)
-Test baseline (post-P55 merge): 720 pass / 1 todo / 0 fail / 2140 expect / 55 files.
+Last commit: 3e1f2cb feat(56-lifecycle-first-prompts): strengthen lifecycle-first prompts (#24) (squash merged)
+PR: #24 MERGED — https://github.com/coctostan/coda/pull/24
+Feature branches merged: feature/56-lifecycle-first-prompts (squash-merged via PR #24; local branch deleted after sync)
+Test baseline (post-P56 merge): 722 pass / 1 todo / 0 fail / 2185 expect / 55 files.
 
 ## Session Continuity
-Last session: 2026-04-17T01:29:10Z
-Stopped at: Phase 56 UNIFY reconciliation complete; merge gate and phase transition pending
-Next action: Complete merge gate for PR #24, then transition to Phase 57
-Resume file: .paul/phases/56-lifecycle-first-prompts/56-01-SUMMARY.md
+Last session: 2026-04-17 (Phase 56 shipped; merged to main)
+Stopped at: Phase 56 complete, transitioned; ready to plan Phase 57
+Next action: /paul:plan for Phase 57 (E2E Re-Validation)
+Resume file: .paul/ROADMAP.md
 Resume context:
-- Phase 56 summary drafted at `.paul/phases/56-lifecycle-first-prompts/56-01-SUMMARY.md` with AC reconciliation and verification evidence.
-- PR #24 is open for `feature/56-lifecycle-first-prompts` and current PR checks are passing.
-- Post-unify module hooks and phase-transition updates are the remaining lifecycle work.
+- Phase 56 changes are merged on `main` via PR #24 (`3e1f2cb`) and summarized in `.paul/phases/56-lifecycle-first-prompts/56-01-SUMMARY.md`.
+- Phase 57 should plan the final Script A re-validation against the stronger forge/create/focus/bootstrap guidance.
+- Follow-ups carried forward: README drift, milestone-close spec sweep, acknowledged DEAN baseline (1 critical / 3 high).
 ---
 *STATE.md — Updated after every significant action*
