@@ -57,9 +57,11 @@ describe('Workflow Build Loop', () => {
       expect(ctx.context).toContain('## Task Completion Protocol');
       expect(ctx.context).toContain('1. Mark the task complete with coda_update (set status: "complete")');
       expect(ctx.context).toContain('2. Add a Summary section to the task with coda_edit_body');
-      expect(ctx.context).toContain('3. Call coda_status to check for the next pending task');
+      expect(ctx.context).toContain('3. Call coda_status to confirm the next pending task and current lifecycle state');
       expect(ctx.context).toContain('4. If there are more pending tasks, read the next task with coda_read and begin it immediately');
       expect(ctx.context).toContain('5. If all tasks are complete, call coda_advance to move to the verify phase');
+      expect(ctx.context).toContain('Trust the injected workflow guidance and tool descriptions before reading CODA source to infer workflow mechanics.');
+      expect(ctx.context).toContain('3. Call coda_status to confirm the next pending task and current lifecycle state');
     });
 
     test('includes post-task module analysis for the most recently completed task', () => {
@@ -79,6 +81,7 @@ describe('Workflow Build Loop', () => {
     test('systemPrompt references the task', () => {
       const ctx = buildTaskContext(codaRoot, 'my-feature', 2, [1]);
       expect(ctx.systemPrompt).toContain('task');
+      expect(ctx.systemPrompt).toContain('Stay inside the task protocol.');
     });
 
     test('does not include task completion protocol for correction tasks', () => {

@@ -11,7 +11,7 @@ export function codaForge(params: ForgeInput, defaultProjectRoot: string): Forge
       status: 'already_initialized',
       backdrop: 'existing',
       coda_root: join(projectRoot, '.coda'),
-      next_action: 'Use coda_status to see current state',
+      next_action: 'Use coda_create to create the next issue, then coda_focus to begin its lifecycle.',
     };
   }
 
@@ -23,7 +23,7 @@ export function codaForge(params: ForgeInput, defaultProjectRoot: string): Forge
       status: 'scaffolded',
       backdrop: 'brownfield',
       coda_root: codaRoot,
-      next_action: 'Review scan_context, then gather evidence',
+      next_action: 'Review scan_context, then use coda_create to create the onboarding issue and coda_focus to begin it.',
       scan_context: assembleScanContext(projectRoot, promptsDir),
     };
   }
@@ -32,6 +32,6 @@ export function codaForge(params: ForgeInput, defaultProjectRoot: string): Forge
     status: 'scaffolded',
     backdrop: 'greenfield',
     coda_root: codaRoot,
-    next_action: 'Use coda_create to create your first issue',
+    next_action: 'Use coda_create to create your first issue, then coda_focus to begin its lifecycle.',
   };
 }

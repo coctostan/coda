@@ -68,6 +68,8 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.context).toContain('My Feature');
     expect(ctx.context).toContain('manages tasks');
     expect(ctx.context).toContain('Developers who need');
+    expect(ctx.systemPrompt).toContain('Do not start production-code implementation yet.');
+    expect(ctx.systemPrompt).toContain('use coda_advance to move into plan');
   });
 
   test('plan context includes issue + ref-system', () => {
@@ -75,6 +77,8 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.systemPrompt).toContain('plan');
     expect(ctx.context).toContain('My Feature');
     expect(ctx.context).toContain('manages tasks');
+    expect(ctx.systemPrompt).toContain('Do not start production-code implementation yet.');
+    expect(ctx.systemPrompt).toContain('use coda_advance to move into review');
   });
 
   test('review context includes issue + plan + tasks', () => {
@@ -83,6 +87,7 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.context).toContain('My Feature');
     expect(ctx.context).toContain('Step by step');
     expect(ctx.context).toContain('Setup');
+    expect(ctx.systemPrompt).toContain('use coda_advance to move into build');
   });
 
   test('review context includes revision history on later iterations', () => {
@@ -153,6 +158,7 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.systemPrompt).toContain('task');
     expect(ctx.context).toContain('Implement');
     expect(ctx.context).toContain('RED-GREEN');
+    expect(ctx.systemPrompt).toContain('Stay inside the task protocol.');
   });
 
   test('verify context includes issue + task summaries', () => {
@@ -166,6 +172,7 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.systemPrompt).toContain('verif');
     expect(ctx.context).toContain('My Feature');
     expect(ctx.context).toContain('Setup');
+    expect(ctx.systemPrompt).toContain('use coda_advance to move into unify');
   });
 
 

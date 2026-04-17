@@ -60,8 +60,9 @@ describe('focusIssue', () => {
       phase: 'specify',
       branch: 'feat/my-feature',
       branch_status: 'created',
-      next_action: 'Define acceptance criteria, then advance to plan',
     });
+    expect(result.next_action).toContain('coda_advance');
+    expect(result.next_action.toLowerCase()).toContain('acceptance criteria');
 
     const state = loadState(statePath);
     expect(state).toMatchObject({
@@ -105,6 +106,11 @@ describe('focusIssue', () => {
     const result = focusIssue(codaRoot, projectRoot, 'my-feature');
 
     expect(result).toMatchObject({ status: 'already_focused', slug: 'my-feature', phase: 'build' });
+    if (result.status !== 'already_focused') {
+      throw new Error(`Expected already_focused result, received ${result.status}`);
+    }
+    expect(result.next_action).toContain('coda_status');
+    expect(result.next_action).toContain('coda_advance');
     expect(loadState(statePath)).toEqual(before);
   });
 
@@ -121,6 +127,10 @@ describe('focusIssue', () => {
       branch_status: 'skipped',
       reason: 'create_branch=false',
     });
+    if (result.status !== 'focused') {
+      throw new Error(`Expected focused result, received ${result.status}`);
+    }
+    expect(result.next_action).toContain('coda_advance');
     expect(execSync('git branch --list feat/my-feature', {
       cwd: projectRoot,
       encoding: 'utf-8',

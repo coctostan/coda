@@ -18,6 +18,9 @@ import { DEFAULT_CARRY_FORWARD } from './types';
 
 type BuildTaskRecord = ReturnType<typeof loadTasks>[number];
 
+const BUILD_PROTOCOL_REMINDER = 'Trust the injected workflow guidance and tool descriptions before reading CODA source to infer workflow mechanics.';
+const BUILD_NEXT_ACTION_REMINDER = 'Use coda_status and coda_advance for lifecycle next steps.';
+
 /**
  * Build the context for a specific task in the BUILD phase.
  *
@@ -102,10 +105,11 @@ export function buildTaskContext(
   if (task?.frontmatter.kind !== 'correction') {
     contextParts.push([
       '## Task Completion Protocol',
+      BUILD_PROTOCOL_REMINDER,
       'After completing this task:',
       '1. Mark the task complete with coda_update (set status: "complete")',
       '2. Add a Summary section to the task with coda_edit_body',
-      '3. Call coda_status to check for the next pending task',
+      '3. Call coda_status to confirm the next pending task and current lifecycle state',
       '4. If there are more pending tasks, read the next task with coda_read and begin it immediately',
       '5. If all tasks are complete, call coda_advance to move to the verify phase',
     ].join('\n'));
@@ -124,8 +128,8 @@ export function buildTaskContext(
   }
 
   const systemPrompt = task?.frontmatter.kind === 'correction' && task.frontmatter.fix_for_ac
-    ? `You are fixing a verification failure for ${task.frontmatter.fix_for_ac}. Follow TDD and stay narrowly focused on the unmet acceptance criterion.`
-    : `You are executing task ${String(taskId)}: ${taskTitle}. Follow TDD.`;
+    ? `You are fixing a verification failure for ${task.frontmatter.fix_for_ac}. Follow TDD and stay narrowly focused on the unmet acceptance criterion. Stay inside the task protocol. ${BUILD_NEXT_ACTION_REMINDER} ${BUILD_PROTOCOL_REMINDER}`
+    : `You are executing task ${String(taskId)}: ${taskTitle}. Follow TDD. Stay inside the task protocol. ${BUILD_NEXT_ACTION_REMINDER} ${BUILD_PROTOCOL_REMINDER}`;
 
   return {
     taskId,

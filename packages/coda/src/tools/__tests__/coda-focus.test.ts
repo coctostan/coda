@@ -60,8 +60,9 @@ describe('codaFocus', () => {
       phase: 'plan',
       branch: 'feat/my-feature',
       branch_status: 'created',
-      next_action: 'Create a plan, then advance to review',
     });
+    expect(result.next_action).toContain('coda_advance');
+    expect(result.next_action.toLowerCase()).toContain('plan');
     expect(loadState(statePath)).toMatchObject({
       focus_issue: 'my-feature',
       phase: 'plan',
