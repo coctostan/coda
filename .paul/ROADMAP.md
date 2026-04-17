@@ -14,7 +14,7 @@ Theme: "The compounding engine actually compounds."
 | 53 | Agent Entry Points | 1/1 | ✅ Complete | 2026-04-16 |
 | 54 | UNIFY Actually Produces Artifacts | 1/1 | ✅ Complete | 2026-04-16 |
 | 55 | Supporting Systems Repair | 1/1 | ✅ Complete | 2026-04-16 |
-| 56 | Lifecycle-First Prompts | 0/TBD | 🔵 Ready to plan | — |
+| 56 | Lifecycle-First Prompts | 1/1 | 🟠 APPLY complete | — |
 | 57 | E2E Re-Validation | 0/TBD | ⚪ Not started | — |
 
 ### Phase 53: Agent Entry Points — ✅ Complete 2026-04-16
@@ -40,12 +40,13 @@ Depends: Phase 53 shipped; Phase 54 shipped
 Plans: 1 — `.paul/phases/55-supporting-systems-repair/55-01-PLAN.md` → `55-01-SUMMARY.md`
 Outcome: Runtime-portable `coda_run_tests` (injectable `SpawnImpl` + Bun-fast-path-preserved `detectDefaultSpawn`); F7 deeper hardening closed three bypass vectors (parent-dir realpath for symlinks, bash compound/subshell/here-doc + `sh -c`/`bash -c` wrappers, custom-tool default-deny with `coda_*` allow-list); `human_review_default` removed from `CodaConfig` with on-load idempotent migration to `gates`; 4 duplicate `loadCodaConfig` helpers consolidated to one shared export. `pi/write-gate-perimeter.ts` extracted during REFACTOR (hooks.ts 474L→458L). Tests 708→720 (+12, 0 fail, 1 todo). Merged as squash `0199f27` on main via PR #23.
 
-### Phase 56: Lifecycle-First Prompts
+### Phase 56: Lifecycle-First Prompts — 🟠 APPLY complete
 Focus: Strengthen CODA-injected prompts so agent creates an issue before building; add tool manifest and lifecycle overview to session-start
 Addresses: F3 (agent builds first), F4 (agent reads source to understand tools)
 Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
 Depends: Phase 53 (prompts reference new tools)
-Plans: TBD (defined during /paul:plan)
+Plans: 1 — `.paul/phases/56-lifecycle-first-prompts/56-01-PLAN.md`
+Status: APPLY complete; UNIFY pending.
 
 ### Phase 57: E2E Re-Validation
 Focus: Re-run Script A with v0.10 code; prove compounding engine actually compounds
@@ -201,4 +202,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-16 — Phase 55 shipped (F6 + F7 deeper hardening + deferred-#1 removal); v0.10 at 3 of 5 phases complete, Phase 56 (Lifecycle-First Prompts) ready to plan*
+*Roadmap updated: 2026-04-17 — Phase 56 APPLY completed against `56-01-PLAN.md`; v0.10 remains 3 of 5 phases complete, awaiting UNIFY for Lifecycle-First Prompts*

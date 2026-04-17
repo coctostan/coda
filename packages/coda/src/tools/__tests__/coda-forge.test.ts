@@ -29,7 +29,8 @@ describe('codaForge', () => {
       backdrop: 'greenfield',
       coda_root: join(cwd, '.coda'),
     });
-    expect(result.next_action.length).toBeGreaterThan(0);
+    expect(result.next_action).toContain('coda_create');
+    expect(result.next_action).toContain('coda_focus');
     expect(existsSync(join(projectRoot, '.coda'))).toBe(true);
 
     const config = JSON.parse(readFileSync(join(projectRoot, '.coda', 'coda.json'), 'utf-8')) as {
@@ -75,7 +76,7 @@ describe('codaForge', () => {
       status: 'already_initialized',
       backdrop: 'existing',
       coda_root: join(projectRoot, '.coda'),
-      next_action: 'Use coda_status to see current state',
+      next_action: 'Use coda_create to create the next issue, then coda_focus to begin its lifecycle.',
     });
     expect(existsSync(join(projectRoot, '.coda', 'sentinel.txt'))).toBe(true);
     expect(existsSync(join(projectRoot, '.coda', 'coda.json'))).toBe(false);

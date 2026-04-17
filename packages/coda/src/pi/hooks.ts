@@ -7,7 +7,7 @@
  */
 
 import { basename, dirname, join, resolve, sep } from 'node:path';
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { loadState, persistState } from '@coda/core';
 import { isToolCallEventType } from '@mariozechner/pi-coding-agent';
 import type { ExtensionAPI, ExtensionContext, ToolResultEvent } from '@mariozechner/pi-coding-agent';
@@ -79,7 +79,22 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
     try {
       const state = stateProvider.refreshState();
       if (!state?.focus_issue || !state.phase) {
-        return {};
+        const bootstrap = buildBootstrapContext({ hasStateFile: existsSync(statePath) });
+        return {
+          systemPrompt: bootstrap.systemPrompt,
+          message: {
+            customType: 'coda-context',
+            content: bootstrap.context,
+            display: true,
+            details: {
+              focusIssue: state?.focus_issue ?? undefined,
+              phase: state?.phase ?? undefined,
+              submode: state?.submode ?? undefined,
+              loopIteration: state?.loop_iteration ?? undefined,
+              currentTask: state?.current_task ?? undefined,
+            },
+          },
+        };
       }
     const phaseContext = getPhaseContext(state.phase, codaRoot, state.focus_issue, state);
       return {
@@ -186,6 +201,18 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
       return {};
     }
   });
+}
+
+function buildBootstrapContext(options: { hasStateFile: boolean }): { systemPrompt: string; context: string } {
+  const entryLine = options.hasStateFile
+    ? 'Create the requested issue with coda_create, then focus it with coda_focus before changing production code.'
+    : 'If CODA is not initialized, run coda_forge first. Then create the requested issue with coda_create and focus it with coda_focus before changing production code.';
+  const lifecycleRule = 'Do not build code before an issue exists and is focused.'; const sourceRule = 'Do not read CODA source unless the injected guidance is insufficient.';
+  const toolManifest = 'Tool manifest: coda_forge, coda_create, coda_focus, coda_status.'; const example = 'Example: "add X" → coda_create(...) → coda_focus(...).';
+  return {
+    systemPrompt: ['You are entering CODA from an unfocused workspace.', entryLine, lifecycleRule, toolManifest, 'Use coda_status whenever you need to confirm the next lifecycle step.', sourceRule, example].join(' '),
+    context: ['## CODA Bootstrap', entryLine, toolManifest, 'Lifecycle overview: initialize CODA if needed, create the issue, focus it, then follow the prompted lifecycle phase before writing production code.', example, lifecycleRule, sourceRule].join('\n'),
+  };
 }
 
 /**

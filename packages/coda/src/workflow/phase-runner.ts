@@ -21,6 +21,20 @@ import { buildTaskContext } from './build-loop';
 import { getModulePromptForHook } from './module-integration';
 import { assembleUnifyContext } from './unify-runner';
 
+const NO_PROD_IMPLEMENTATION_YET = 'Do not start production-code implementation yet.';
+
+function withLifecyclePrompt(
+  base: string,
+  nextAction: string,
+  options: { blockImplementation?: boolean } = {}
+): string {
+  return [
+    base,
+    options.blockImplementation ? NO_PROD_IMPLEMENTATION_YET : '',
+    nextAction,
+  ].filter(Boolean).join(' ');
+}
+
 /**
  * Get the context object for a given lifecycle phase.
  *
@@ -48,7 +62,7 @@ export function getPhaseContext(
     case 'specify': {
       const refs = loadRefDocs(codaRoot);
       return withMetadata({
-        systemPrompt: 'You are specifying an issue. Help the user define requirements and acceptance criteria.',
+        systemPrompt: withLifecyclePrompt('You are specifying an issue. Help the user define requirements and acceptance criteria.', 'When the issue scope and acceptance criteria are ready, use coda_advance to move into plan.', { blockImplementation: true }),
         context: [
           issueContext,
           refs.system ? `## System Reference\n${refs.system}` : '',
@@ -61,7 +75,7 @@ export function getPhaseContext(
       const refs = loadRefDocs(codaRoot);
       const modulePrompt = getModulePromptForHook('pre-plan', issueSlug, 'plan', { codaRoot });
       return withMetadata({
-        systemPrompt: 'You are planning tasks for this issue. Design an implementation approach.',
+        systemPrompt: withLifecyclePrompt('You are planning tasks for this issue. Design an implementation approach.', 'When the plan and task breakdown are ready, use coda_advance to move into review.', { blockImplementation: true }),
         context: [
           issueContext,
           refs.system ? `## System Reference\n${refs.system}` : '',
@@ -81,7 +95,7 @@ export function getPhaseContext(
       if (state?.submode === 'revise') {
         const revisionInstructions = loadRevisionInstructions(codaRoot, issueSlug);
         return withMetadata({
-          systemPrompt: 'You are revising a development plan based on review feedback. Address each issue in the revision instructions without broadening scope.',
+          systemPrompt: withLifecyclePrompt('You are revising a development plan based on review feedback. Address each issue in the revision instructions without broadening scope.', 'When the revised plan is ready, use coda_advance to return to review.', { blockImplementation: true }),
           context: [
             issueContext,
             planContext,
@@ -96,7 +110,7 @@ export function getPhaseContext(
         : '';
 
       return withMetadata({
-        systemPrompt: 'You are reviewing the plan. Check AC coverage, task ordering, and scope.',
+        systemPrompt: withLifecyclePrompt('You are reviewing the plan. Check AC coverage, task ordering, and scope.', 'When the plan is approved, use coda_advance to move into build.'),
         context: [
           issueContext,
           planContext,
@@ -128,7 +142,7 @@ export function getPhaseContext(
       const plan = loadPlan(codaRoot, issueSlug);
       const findingsSummary = loadModuleFindingsSummary(codaRoot, issueSlug);
       return withMetadata({
-        systemPrompt: 'You are verifying acceptance criteria against built artifacts.',
+        systemPrompt: withLifecyclePrompt('You are verifying acceptance criteria against built artifacts.', 'When the acceptance criteria are satisfied, use coda_advance to move into unify.'),
         context: [
           issueContext,
           plan ? `## Plan\n${plan.body}` : '',

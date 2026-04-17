@@ -1,10 +1,33 @@
 {
-  "created": "2026-04-15T18:00:00-04:00",
-  "acknowledged_by": "user override during plan-phase (v0.9 validation milestone — no dependency changes)",
+  "created": "2026-04-17T00:54:41Z",
+  "acknowledged_by": "user override during plan-phase",
   "staleness_days": 30,
-  "severity": { "critical": 0, "high": 2, "moderate": 0, "low": 0 },
+  "severity": {
+    "critical": 1,
+    "high": 3,
+    "moderate": 0,
+    "low": 0
+  },
   "packages": [
-    { "name": "basic-ftp", "version": "<=5.2.1", "advisory": "GHSA-6v7q-wjvx-w8wg" },
-    { "name": "basic-ftp", "version": "=5.2.0", "advisory": "GHSA-chqc-8p9q-pq6q" }
+    {
+      "name": "protobufjs",
+      "version": "<7.5.5",
+      "advisory": "GHSA-xq3m-2v4x-88gg"
+    },
+    {
+      "name": "basic-ftp",
+      "version": "<=5.2.1",
+      "advisory": "GHSA-6v7q-wjvx-w8wg"
+    },
+    {
+      "name": "basic-ftp",
+      "version": "=5.2.0",
+      "advisory": "GHSA-chqc-8p9q-pq6q"
+    },
+    {
+      "name": "basic-ftp",
+      "version": "<=5.2.2",
+      "advisory": "GHSA-rp42-5vxx-qpwr"
+    }
   ]
 }

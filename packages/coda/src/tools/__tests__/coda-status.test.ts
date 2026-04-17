@@ -229,11 +229,20 @@ describe('codaStatus', () => {
 
   test('returns null fields when no state exists', () => {
     const result = codaStatus(join(tempDir, 'nonexistent.json'));
+    expect(result.success).toBe(true);
+    expect(result.focus_issue).toBeNull();
+    expect(result.phase).toBeNull();
+    expect(result.next_action.startsWith('coda_forge')).toBe(true);
+  });
+  test('returns create-then-focus guidance when no issue is focused', () => {
+    persistState(createDefaultState(), statePath);
+    const result = codaStatus(statePath);
 
     expect(result.success).toBe(true);
     expect(result.focus_issue).toBeNull();
     expect(result.phase).toBeNull();
-    expect(result.next_action).toContain('initialize');
+    expect(result.next_action).toContain('coda_create');
+    expect(result.next_action).toContain('coda_focus');
   });
 
   test('next_action suggests appropriate action for specify phase', () => {
@@ -241,6 +250,7 @@ describe('codaStatus', () => {
     persistState(state, statePath);
 
     const result = codaStatus(statePath);
+    expect(result.next_action).toContain('coda_advance');
     expect(result.next_action.toLowerCase()).toContain('acceptance criteria');
   });
 
@@ -249,15 +259,16 @@ describe('codaStatus', () => {
     persistState(state, statePath);
 
     const result = codaStatus(statePath);
-    expect(result.next_action.toLowerCase()).toContain('task');
+    expect(result.next_action).toContain('coda_status');
+    expect(result.next_action).toContain('coda_advance');
   });
-
   test('next_action for done phase', () => {
     const state: CodaState = { ...createDefaultState(), focus_issue: 'x', phase: 'done' };
     persistState(state, statePath);
 
     const result = codaStatus(statePath);
-    expect(result.next_action.toLowerCase()).toContain('complete');
+    expect(result.next_action).toContain('coda_create');
+    expect(result.next_action).toContain('coda_focus');
   });
 
   test('surfaces human-review-specific guidance while approval is pending', () => {
@@ -270,6 +281,7 @@ describe('codaStatus', () => {
     expect(result.human_review_status).toBe('pending');
     expect(result.next_action.toLowerCase()).toContain('approve');
     expect(result.next_action.toLowerCase()).toContain('feedback');
+    expect(result.next_action).toContain('coda_advance');
   });
 
   test('returns submode metadata and revise guidance for revise flows', () => {
@@ -306,15 +318,15 @@ describe('codaStatus', () => {
 
   test('returns correction-specific guidance for correct submode', () => {
     writeCorrectVerifyState();
-
     const result = codaStatus(statePath, codaRoot);
-
     expect(result.submode).toBe('correct');
     expect(result.loop_iteration).toBe(1);
     expect(result.current_task).toBe(3);
     expect(result.next_action.toLowerCase()).toContain('correction');
-    expect(result.next_action.toLowerCase()).toContain('verify');
-  });
+    expect(result.next_action).toContain('coda_read');
+    expect(result.next_action).toContain('coda_advance');
+});
+
 });
 
 describe('codaStatus UNIFY review', () => {
@@ -361,6 +373,7 @@ describe('codaStatus UNIFY review', () => {
     expect(result.unify_review_status).toBe('pending');
     expect(result.next_action).toContain('UNIFY review pending');
     expect(result.next_action).toContain('approve');
+    expect(result.next_action).toContain('coda_advance');
   });
 
   test('reports unify_review_status as changes-requested', () => {

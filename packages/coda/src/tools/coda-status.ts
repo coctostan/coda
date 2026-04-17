@@ -19,15 +19,17 @@ import { resolveGateMode } from '../workflow/gate-automation';
 import { sortByNumericSuffix } from './sort-utils';
 import { findCompletionRecordPath } from './coda-advance';
 
+const NO_STATE_ACTION = 'coda_forge — initialize CODA in this workspace before doing any lifecycle work.';
+const UNFOCUSED_ACTION = 'coda_create — create the next issue, then coda_focus to begin its lifecycle before building code.';
 /** Phase-specific next action suggestions. */
 const NEXT_ACTIONS: Record<string, string> = {
-  specify: 'Define acceptance criteria, then advance to plan',
-  plan: 'Create a plan, then advance to review',
-  review: 'Review and approve the plan, then advance to build',
-  build: 'Complete tasks, then advance to verify',
-  verify: 'Verify all ACs met, then advance to unify',
-  unify: 'UNIFY — The Compounding Step (5 mandatory actions): 1. Merge spec delta into ref-system.md, 2. Review and update other reference docs, 3. Capture knowledge for compounding, 4. Update milestone progress, 5. Write completion record. All 5 actions must complete before advancing to DONE. The completion record must have: system_spec_updated, reference_docs_reviewed, milestone_updated all set to true.',
-  done: 'Issue complete',
+  specify: 'Use coda_update / coda_edit_body to define the focused issue and acceptance criteria, then coda_advance to move into plan.',
+  plan: 'Use coda_create / coda_edit_body to finish the plan and task breakdown, then coda_advance to move into review.',
+  review: 'Use coda_read to inspect the plan and tasks, revise with coda_edit_body if needed, then coda_advance to move into build.',
+  build: 'Use coda_read to inspect the active task, coda_update / coda_edit_body to complete it, coda_status between tasks, and coda_advance when build is complete.',
+  verify: 'Use coda_read to inspect the issue, plan, and task summaries, verify each acceptance criterion, and coda_advance to move into unify when all ACs pass.',
+  unify: 'UNIFY — The Compounding Step (5 mandatory actions): 1. Merge spec delta into ref-system.md, 2. Review and update other reference docs, 3. Capture knowledge for compounding, 4. Update milestone progress, 5. Write completion record. All 5 actions must complete before using coda_advance to move into DONE. The completion record must have: system_spec_updated, reference_docs_reviewed, milestone_updated all set to true.',
+  done: 'Issue complete — use coda_create to start the next issue, then coda_focus to enter its lifecycle.',
 };
 
 /**
@@ -58,7 +60,7 @@ export function codaStatus(statePath: string, codaRoot?: string): StatusResult {
       human_review_required: null,
       human_review_status: null,
       gate_mode: null,
-      next_action: 'No state found — run coda forge to initialize',
+      next_action: NO_STATE_ACTION,
     };
   }
 
@@ -99,42 +101,35 @@ function getNextAction(
   unifyReviewStatus?: CompletionRecord['unify_review_status'] | null
 ): string {
   if (exhausted && state.phase === 'review') {
-    return 'Review loop exhausted — provide guidance, approve to enter build, or kill the issue';
+    return 'Review loop exhausted — provide guidance, approve with coda_advance to enter build, or kill the issue.';
   }
-
   if (exhausted && state.phase === 'verify') {
-    return 'Verify loop exhausted — provide manual guidance, use /coda back specify to rescope, or kill the issue';
+    return 'Verify loop exhausted — provide manual guidance, use /coda back specify to rescope, or kill the issue.';
   }
-
   if (state.phase === 'review' && state.submode === 'revise') {
-    return 'Revision loop active — apply the revision instructions, then return to review';
+    return 'Revision loop active — use coda_read to inspect the revision instructions, update the plan/tasks with coda_edit_body / coda_update, then coda_advance to return to review.';
   }
-
   if (state.phase === 'verify' && state.submode === 'correct') {
-    return 'Correction loop active — complete the correction task, then return to verify';
+    return 'Correction loop active — use coda_read to inspect the correction task and failure artifact, complete the fix, then coda_advance to return to verify.';
   }
-
   if (state.phase === 'review' && reviewState?.required === true) {
     if (reviewState.status === 'pending') {
-      return 'Human review required — approve the plan to advance or request changes with feedback';
+      return 'Human review required — approve the plan with coda_advance, or request changes with feedback.';
     }
     if (reviewState.status === 'changes-requested') {
-      return 'Human changes requested — revise the plan using the recorded feedback before re-review';
+      return 'Human changes requested — revise the plan with coda_edit_body / coda_update, then coda_advance to return to review.';
     }
   }
-
   if (state.phase === 'unify' && unifyReviewStatus === 'pending') {
-    return 'UNIFY review pending — approve to finalize or request changes with /coda advance changes <feedback>';
+    return 'UNIFY review pending — approve with coda_advance, or request changes with coda_advance changes <feedback>.';
   }
-
   if (state.phase === 'unify' && unifyReviewStatus === 'changes-requested') {
-    return 'UNIFY review changes requested — address the feedback on the completion record, then reset unify_review_status to pending';
+    return 'UNIFY review changes requested — address the completion-record feedback with coda_edit_body, then reset unify_review_status to pending.';
   }
 
-  if (!state.phase) {
-    return 'Focus an issue to begin';
+  if (!state.focus_issue || !state.phase) {
+    return UNFOCUSED_ACTION;
   }
-
   return NEXT_ACTIONS[state.phase] ?? 'Unknown phase';
 }
 

@@ -393,7 +393,33 @@ describe('Pi Hooks', () => {
     });
   });
 
-  test('before_agent_start returns empty when no issue is focused', async () => {
+  test('before_agent_start returns bootstrap guidance when CODA is not initialized', async () => {
+    const { pi, hooks } = createMockPi();
+    const { projectRoot, codaRoot } = createTempCodaRoot();
+    registerHooks(pi, codaRoot);
+
+    const beforeAgentStart = hooks.get('before_agent_start');
+    const result = await beforeAgentStart?.(
+      { type: 'before_agent_start', prompt: 'help', systemPrompt: 'base prompt' },
+      createMockContext(projectRoot)
+    ) as BeforeAgentStartResult;
+    const combinedText = `${result.systemPrompt ?? ''}\n${result.message?.content ?? ''}`;
+
+    expect(result.systemPrompt).toBeTruthy();
+    expect(result.message).toMatchObject({
+      customType: 'coda-context',
+      display: true,
+    });
+    expect(combinedText).toContain('If CODA is not initialized, run coda_forge first.');
+    expect(combinedText).toContain('coda_create');
+    expect(combinedText).toContain('coda_focus');
+    expect(combinedText).toContain('coda_status');
+    expect(combinedText).toContain('Do not build code before an issue exists and is focused.');
+    expect(combinedText).toContain('Do not read CODA source unless the injected guidance is insufficient.');
+    expect(combinedText).toContain('"add X" → coda_create(...) → coda_focus(...)');
+  });
+
+  test('before_agent_start returns issue-first bootstrap guidance when CODA exists but no issue is focused', async () => {
     const { pi, hooks } = createMockPi();
     const { projectRoot, codaRoot } = createTempCodaRoot(makeState({ focus_issue: null }));
     registerHooks(pi, codaRoot);
@@ -403,8 +429,19 @@ describe('Pi Hooks', () => {
       { type: 'before_agent_start', prompt: 'help', systemPrompt: 'base prompt' },
       createMockContext(projectRoot)
     ) as BeforeAgentStartResult;
+    const combinedText = `${result.systemPrompt ?? ''}\n${result.message?.content ?? ''}`;
 
-    expect(result).toEqual({});
+    expect(result.systemPrompt).toBeTruthy();
+    expect(result.message).toMatchObject({
+      customType: 'coda-context',
+      display: true,
+    });
+    expect(combinedText).toContain('coda_create');
+    expect(combinedText).toContain('coda_focus');
+    expect(combinedText).toContain('coda_status');
+    expect(combinedText).toContain('Do not build code before an issue exists and is focused.');
+    expect(combinedText).toContain('Do not read CODA source unless the injected guidance is insufficient.');
+    expect(combinedText).not.toContain('If CODA is not initialized, run coda_forge first.');
   });
 
   test('before_agent_start returns empty context when state loading fails', async () => {

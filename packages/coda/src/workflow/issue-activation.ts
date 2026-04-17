@@ -4,14 +4,15 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createBranch } from './vcs';
 
+const UNFOCUSED_ACTION = 'coda_create — create the next issue, then coda_focus to begin its lifecycle before building code.';
 const NEXT_ACTIONS: Record<Phase, string> = {
-  specify: 'Define acceptance criteria, then advance to plan',
-  plan: 'Create a plan, then advance to review',
-  review: 'Review and approve the plan, then advance to build',
-  build: 'Complete tasks, then advance to verify',
-  verify: 'Verify all ACs met, then advance to unify',
-  unify: 'UNIFY — The Compounding Step (5 mandatory actions): 1. Merge spec delta into ref-system.md, 2. Review and update other reference docs, 3. Capture knowledge for compounding, 4. Update milestone progress, 5. Write completion record. All 5 actions must complete before advancing to DONE. The completion record must have: system_spec_updated, reference_docs_reviewed, milestone_updated all set to true.',
-  done: 'Issue complete',
+  specify: 'Use coda_update / coda_edit_body to define the focused issue and acceptance criteria, then coda_advance to move into plan.',
+  plan: 'Use coda_create / coda_edit_body to finish the plan and task breakdown, then coda_advance to move into review.',
+  review: 'Use coda_read to inspect the plan and tasks, revise with coda_edit_body if needed, then coda_advance to move into build.',
+  build: 'Use coda_read to inspect the active task, coda_update / coda_edit_body to complete it, coda_status between tasks, and coda_advance when build is complete.',
+  verify: 'Use coda_read to inspect the issue, plan, and task summaries, verify each acceptance criterion, and coda_advance to move into unify when all ACs pass.',
+  unify: 'UNIFY — The Compounding Step (5 mandatory actions): finish the completion work, then use coda_advance to move into DONE.',
+  done: 'Issue complete — use coda_create to start the next issue, then coda_focus to enter its lifecycle.',
 };
 
 export interface FocusIssueOptions {
@@ -57,7 +58,7 @@ export function focusIssue(
       return {
         status: 'error',
         reason: `Issue "${slug}" not found.`,
-        next_action: 'Create the issue first with coda_create.',
+        next_action: 'Create the issue first with coda_create, then use coda_focus once it exists.',
       };
     }
 
@@ -136,7 +137,7 @@ export function focusIssue(
 
 function getNextAction(phase: Phase | null): string {
   if (!phase) {
-    return 'Focus an issue to begin';
+    return UNFOCUSED_ACTION;
   }
 
   return NEXT_ACTIONS[phase];
