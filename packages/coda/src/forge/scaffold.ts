@@ -63,13 +63,6 @@ export function getDefaultConfig(): CodaConfig {
       chore: false,
       docs: false,
     },
-    human_review_default: {
-      feature: true,
-      bugfix: true,
-      refactor: false,
-      chore: false,
-      docs: false,
-    },
     modules: {
       security: { enabled: true, blockThreshold: 'critical' },
       tdd: { enabled: true, blockThreshold: 'high' },

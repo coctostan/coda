@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import type {
@@ -58,18 +58,33 @@ function writeConfig(transform?: (config: CodaConfig) => CodaConfig): CodaConfig
   return nextConfig;
 }
 
+/**
+ * Write a coda.json in the LEGACY v0.8 shape that carries `human_review_default`
+ * but no `gates` field. The shared loader will migrate this on first read.
+ */
 function writeLegacyHumanReviewConfig(overrides: Partial<GateConfig>): void {
-  const config = getDefaultConfig();
-  const legacyConfig = (config as CodaConfig & { human_review_default: GateConfig }).human_review_default;
-  const merged: CodaConfig & { human_review_default: GateConfig } = {
-    ...config,
-    human_review_default: {
-      ...legacyConfig,
-      ...overrides,
+  const legacyGate: GateConfig = {
+    feature: true,
+    bugfix: true,
+    refactor: false,
+    chore: false,
+    docs: false,
+    ...overrides,
+  };
+  const legacyConfig: Record<string, unknown> = {
+    tdd_test_command: null,
+    full_suite_command: null,
+    verification_commands: [],
+    max_review_iterations: 3,
+    max_verify_iterations: 3,
+    tdd_gate: { feature: true, bugfix: true, refactor: true, chore: false, docs: false },
+    human_review_default: legacyGate,
+    modules: {
+      security: { enabled: true, blockThreshold: 'critical' },
+      tdd: { enabled: true, blockThreshold: 'high' },
     },
   };
-  delete (merged as CodaConfig & { gates?: CodaConfig['gates'] }).gates;
-  writeFileSync(join(codaRoot, 'coda.json'), JSON.stringify(merged, null, 2));
+  writeFileSync(join(codaRoot, 'coda.json'), JSON.stringify(legacyConfig, null, 2));
 }
 
 function writeState(overrides: Partial<CodaState>): CodaState {
@@ -433,19 +448,20 @@ describe('v0.8 compounding engine end-to-end', () => {
     expect(plan.frontmatter.human_review_status).toBe('pending');
   });
 
-  test('E3b: backward compatibility keeps chore review automatic when gates are absent', () => {
+  test('E3b: legacy config migrates to gates; chore review honors migrated gate (now human)', () => {
+    // After Phase 55, legacy configs migrate to `gates: DEFAULT_GATE_MODES` on first load.
+    // Default plan_review is 'human' for all issue types — chore behavior changes from legacy.
+    // Operators who relied on per-issue-type legacy semantics should add gate_overrides.chore.plan_review: 'auto'.
     writeLegacyHumanReviewConfig({ feature: true, chore: false });
-    setupReviewFlow('legacy-chore', { issueType: 'chore', humanReview: false });
-
+    setupReviewFlow('legacy-chore', { issueType: 'chore', humanReview: true });
     const state = loadState(statePath);
     if (!state) throw new Error('Expected review state');
     const reviewResult = runReviewRunner(codaRoot, 'legacy-chore', state, {
       reviewResult: { approved: true },
     });
     expect(reviewResult.outcome).toBe('approved');
-
     const plan = readRecord<PlanRecord>(join(codaRoot, 'issues', 'legacy-chore', 'plan-v1.md'));
-    expect(plan.frontmatter.human_review_status).toBe('not-required');
+    expect(plan.frontmatter.human_review_status).toBe('pending');
   });
 
   test('E4a: /coda new with plan_review auto writes human_review false', async () => {
@@ -480,11 +496,30 @@ describe('v0.8 compounding engine end-to-end', () => {
     expect(issue.frontmatter.human_review).toBe(true);
   });
 
-  test('E4c: /coda new falls back to human_review_default when gates are absent', async () => {
+  test('E4c: loadCodaConfig migrates legacy human_review_default to gates on first load', async () => {
+    // Legacy v0.8 shape: human_review_default present, no gates. Migration should
+    // populate gates with DEFAULT_GATE_MODES and strip human_review_default on disk.
     writeLegacyHumanReviewConfig({ feature: true });
+    const configPath = join(codaRoot, 'coda.json');
+    const beforeRaw = readFileSync(configPath, 'utf-8');
+    expect(beforeRaw).toContain('human_review_default');
+    expect(beforeRaw).not.toContain('"gates"');
 
+    // Triggering a command reads the config via the shared loader — migration fires.
     await runCodaCommand('new feature Legacy Gate Issue');
+    const afterRaw = readFileSync(configPath, 'utf-8');
+    const afterParsed = JSON.parse(afterRaw) as Record<string, unknown>;
+    expect(afterParsed).not.toHaveProperty('human_review_default');
+    expect(afterParsed).toHaveProperty('gates');
+    expect((afterParsed.gates as Record<string, string>).plan_review).toBe('human');
 
+    // Idempotence: a second load must not touch the file.
+    const afterFirstLoadMtime = statSync(configPath).mtimeMs;
+    await runCodaCommand('status');
+    const afterSecondLoadMtime = statSync(configPath).mtimeMs;
+    expect(afterSecondLoadMtime).toBe(afterFirstLoadMtime);
+
+    // The issue created post-migration should still reflect the migrated gate.
     const issue = readRecord<IssueRecord>(join(codaRoot, 'issues', 'legacy-gate-issue.md'));
     expect(issue.frontmatter.human_review).toBe(true);
   });

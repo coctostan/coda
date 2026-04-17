@@ -9,6 +9,7 @@ import {
 } from '@coda/core';
 import type { CodaState, PlanRecord, TaskRecord } from '@coda/core';
 import type { CodaConfig } from '../forge/types';
+import { loadCodaConfig } from '../tools/coda-config';
 import { getDefaultConfig } from '../forge';
 import type { LoopIterationConfig } from '../../../core/src/state/types';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync } from 'fs';
@@ -332,15 +333,4 @@ function getRevisionInstructionsPath(codaRoot: string, issueSlug: string): strin
   return join(codaRoot, 'issues', issueSlug, 'revision-instructions.md');
 }
 
-function loadCodaConfig(codaRoot: string): CodaConfig | null {
-  const configPath = join(codaRoot, 'coda.json');
-  if (!existsSync(configPath)) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(readFileSync(configPath, 'utf-8')) as CodaConfig;
-  } catch {
-    return null;
-  }
-}
+// `loadCodaConfig` is imported from `../tools/coda-config` (Phase 55 dedupe).

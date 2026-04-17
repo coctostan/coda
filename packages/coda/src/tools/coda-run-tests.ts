@@ -8,8 +8,23 @@
  */
 
 import { loadState, persistState } from '@coda/core';
+import { spawnSync as nodeSpawnSync } from 'node:child_process';
 import { dirname, resolve } from 'path';
 import type { RunTestsInput, RunTestsResult } from './types';
+/** Subset of child_process.spawnSync return shape used by codaRunTests. */
+export interface SpawnResult {
+  status: number | null;
+  stdout: Buffer | Uint8Array<ArrayBufferLike>;
+  stderr: Buffer | Uint8Array<ArrayBufferLike>;
+  error?: Error & { code?: string };
+}
+
+/** Swappable spawn interface — enables test injection without mocking module globals. */
+export type SpawnImpl = (
+  cmd: string,
+  args: string[],
+  opts: { cwd: string; timeout: number }
+) => SpawnResult;
 
 /** Maximum output length to capture (characters). */
 const MAX_OUTPUT_LENGTH = 2000;
@@ -99,8 +114,56 @@ function splitCommand(command: string): string[] {
  * @param output - Buffered subprocess stream
  * @returns UTF-8 decoded output text
  */
-function decodeOutput(output: Uint8Array<ArrayBufferLike>): string {
+function decodeOutput(output: Buffer | Uint8Array<ArrayBufferLike>): string {
   return textDecoder.decode(output);
+}
+
+/**
+ * Detect the default spawn implementation for the current runtime.
+ *
+ * - Under Bun (`typeof Bun !== 'undefined'`): use `Bun.spawnSync` — the pre-Phase-55 fast path.
+ *   Preserves the observed test latency and existing behavior when CODA is hosted by a Bun-based Pi.
+ * - Otherwise: use `node:child_process.spawnSync`. The SpawnImpl adapter maps both return shapes
+ *   onto our SpawnResult contract. The spawn takes `stdin: 'ignore'` under Node to match Bun's default.
+ *
+ * Tests may bypass detection entirely by passing `overrides.spawnImpl` to codaRunTests.
+ */
+function detectDefaultSpawn(): SpawnImpl {
+  const bunGlobal = (globalThis as Record<string, unknown>)['Bun'] as
+    | { spawnSync?: (opts: Record<string, unknown>) => { stdout: Uint8Array; stderr: Uint8Array; exitCode: number } }
+    | undefined;
+
+  if (bunGlobal && typeof bunGlobal.spawnSync === 'function') {
+    return (cmd, args, opts) => {
+      const result = bunGlobal.spawnSync!({
+        cmd: [cmd, ...args],
+        cwd: opts.cwd,
+        stdout: 'pipe',
+        stderr: 'pipe',
+        timeout: opts.timeout,
+      });
+      return {
+        status: result.exitCode,
+        stdout: result.stdout,
+        stderr: result.stderr,
+      };
+    };
+  }
+
+  return (cmd, args, opts) => {
+    const result = nodeSpawnSync(cmd, args, {
+      cwd: opts.cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: opts.timeout,
+      encoding: 'buffer',
+    });
+    return {
+      status: result.status,
+      stdout: result.stdout ?? Buffer.from(''),
+      stderr: result.stderr ?? Buffer.from(''),
+      error: result.error as (Error & { code?: string }) | undefined,
+    };
+  };
 }
 
 /**
@@ -118,7 +181,8 @@ function decodeOutput(output: Uint8Array<ArrayBufferLike>): string {
 export function codaRunTests(
   input: RunTestsInput,
   statePath: string,
-  config: { tdd_test_command?: string; full_suite_command?: string }
+  config: { tdd_test_command?: string; full_suite_command?: string },
+  overrides?: { spawnImpl?: SpawnImpl }
 ): RunTestsResult {
   const command = input.mode === 'tdd'
     ? config.tdd_test_command
@@ -160,27 +224,37 @@ export function codaRunTests(
   let stderr = '';
   let exitCode = -1;
 
+  const spawn = overrides?.spawnImpl ?? detectDefaultSpawn();
+
+  let spawnErrorMessage: string | null = null;
   try {
-    const result = Bun.spawnSync({
-      cmd,
+    const result = spawn(cmd[0]!, cmd.slice(1), {
       cwd: projectRoot,
-      stdout: 'pipe',
-      stderr: 'pipe',
       timeout: COMMAND_TIMEOUT_MS,
     });
 
-    stdout = decodeOutput(result.stdout);
-    stderr = decodeOutput(result.stderr);
-    exitCode = result.exitCode;
+    if (result.error) {
+      spawnErrorMessage = result.error.message;
+    } else if (result.status === null) {
+      spawnErrorMessage = 'Test command exited without a status code (signal or timeout)';
+    } else {
+      stdout = decodeOutput(result.stdout);
+      stderr = decodeOutput(result.stderr);
+      exitCode = result.status;
+    }
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    spawnErrorMessage = err instanceof Error ? err.message : String(err);
+  }
+
+  // Spawn failure path: state MUST NOT be mutated.
+  if (spawnErrorMessage !== null) {
     return {
       success: false,
       exit_code: -1,
       passed: false,
-      output: message.slice(0, MAX_OUTPUT_LENGTH),
+      output: spawnErrorMessage.slice(0, MAX_OUTPUT_LENGTH),
       command: displayCommand,
-      error: message,
+      error: spawnErrorMessage,
     };
   }
 

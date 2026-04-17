@@ -6,13 +6,15 @@
  * and `.coda/` write protection.
  */
 
-import { join, resolve, sep } from 'node:path';
+import { basename, dirname, join, resolve, sep } from 'node:path';
+import { realpathSync } from 'node:fs';
 import { loadState, persistState } from '@coda/core';
 import { isToolCallEventType } from '@mariozechner/pi-coding-agent';
 import type { ExtensionAPI, ExtensionContext, ToolResultEvent } from '@mariozechner/pi-coding-agent';
 import { checkWriteGate } from '../tools';
 import type { AdvanceInput, AdvanceResult } from '../tools';
 import { getPhaseContext, runReviewRunner, runVerifyRunner } from '../workflow';
+import { inputReferencesCoda, isBashWriteToCoda } from './write-gate-perimeter';
 import type { CodaExtensionState, StateProvider } from './types';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,7 +33,23 @@ import type { CodaExtensionState, StateProvider } from './types';
 //       of scope for Phase 53; see Phase 55 for deeper hardening.
 // When Pi adds new mutation tool types, extend the intercepts here and add
 // cases in write-gate-integration.test.ts.
-// ─────────────────────────────────────────────────────────────────────────────
+//
+// Phase 55 hardening:
+//   (a) `isProtectedCodaPath` resolves the PARENT directory via `realpathSync`
+//       (not the leaf) so parent-dir symlinks (`link-dir/→.coda/`) are caught
+//       even when the target file does not exist yet. Leaf realpath would
+//       throw ENOENT on pre-write paths; parent-dir realpath is the sound
+//       invariant because the parent MUST exist for the write to succeed.
+//   (b) `isBashWriteToCoda` now detects compound (`cd .coda && …`), subshell
+//       (`(cd .coda && …)`), and here-doc (`cat > .coda/x <<EOF`) redirects,
+//       plus `sh -c`/`bash -c` wrappers (one level deep).
+//   (c) Custom (non-built-in) tool_calls default-deny when their input payload
+//       references `.coda/`; `coda_*` toolNames are allow-listed because
+//       coda_* IS the approved mutation path. Rationale: Pi extension authors
+//       may register mutation tools whose shape we don't know. Conservative
+//       default-deny with an explicit allow-list enforces "the gate trusts
+//       explicit intent, not coincidental absence".
+// ──────────────────────────────────────────────────────────────────────────
 /**
  * Register all CODA lifecycle hooks with Pi.
  *
@@ -112,6 +130,25 @@ export function registerHooks(pi: ExtensionAPI, codaRoot: string): void {
         logWriteGateDecision('edit', event.input.path, result);
       }
       return result;
+    }
+
+    // Non-built-in tool_calls (read/grep/find/ls/custom) reach this branch.
+    // Built-in non-mutating tools (read/grep/find/ls) pass through naturally
+    // because they do not match the `.coda/` pattern in their input payload.
+    // Custom (extension-registered) tools default-deny if their input mentions `.coda/`,
+    // with `coda_*` allow-listed because coda_* IS the approved mutation path.
+    const toolName = event.toolName;
+    if (typeof toolName === 'string' && !toolName.startsWith('coda_')) {
+      if (inputReferencesCoda(event.input)) {
+        const blockResult = {
+          block: true as const,
+          reason: 'Use coda_* tools to modify .coda/ files',
+        };
+        if (debugCoda) {
+          logWriteGateDecision('custom', JSON.stringify(event.input).slice(0, 200), blockResult);
+        }
+        return blockResult;
+      }
     }
     return {};
   });
@@ -304,7 +341,7 @@ function evaluateWriteGate(
 }
 
 function logWriteGateDecision(
-  operation: 'write' | 'edit',
+  operation: 'write' | 'edit' | 'custom',
   path: string,
   result: { block?: boolean; reason?: string }
 ): void {
@@ -361,15 +398,55 @@ function isSuccessfulAdvanceToolResult(event: ToolResultEvent): event is ToolRes
   return details.success === true;
 }
 
-/** Return whether a write targets `.coda/` directly or by absolute path. */
+/**
+ * Return whether a write targets `.coda/` directly, by absolute path, OR via
+ * a symlinked parent directory.
+ *
+ * Resolution strategy:
+ * 1. Lexical pre-check catches obvious `.coda/` prefixes without filesystem IO.
+ * 2. Parent-directory realpath catches parent-dir symlinks (`link-dir/→.coda/`)
+ *    even when the target file does not exist yet. Leaf realpath would throw
+ *    ENOENT on pre-write paths; parent-dir realpath is the sound invariant
+ *    because the parent MUST exist for the write to succeed.
+ * 3. TOCTOU boundary: Pi's `tool_call` fires at write time, so a symlink
+ *    created after this check can only be exploited on a subsequent
+ *    `tool_call`, which re-runs the check. Not our problem.
+ */
 function isProtectedCodaPath(path: string, codaRoot: string, cwd: string): boolean {
   if (path.startsWith('.coda/') || path.startsWith('.coda\\')) {
     return true;
   }
 
-  const absolutePath = resolve(cwd, path);
-  const absoluteCodaRoot = resolve(codaRoot);
-  return absolutePath === absoluteCodaRoot || absolutePath.startsWith(`${absoluteCodaRoot}${sep}`);
+  const absolute = resolve(cwd, path);
+  // Strategy:
+  //   Resolve the LEAF first (realpath on the full path). If it exists and is a
+  //   symlink, this catches the leaf-symlink case (`link-to-state.json → .coda/state.json`).
+  //   If the leaf doesn't exist (typical pre-write case), fall back to resolving
+  //   the PARENT and rejoin the basename — this catches parent-dir symlinks
+  //   (`link-dir/state.json` where `link-dir → .coda`).
+  let effectivePath: string;
+  try {
+    effectivePath = realpathSync(absolute);
+  } catch {
+    const absoluteParent = dirname(absolute);
+    let resolvedParent: string;
+    try {
+      resolvedParent = realpathSync(absoluteParent);
+    } catch {
+      resolvedParent = absoluteParent;
+    }
+    effectivePath = join(resolvedParent, basename(absolute));
+  }
+
+  let resolvedCodaRoot: string;
+  try {
+    resolvedCodaRoot = realpathSync(resolve(codaRoot));
+  } catch {
+    resolvedCodaRoot = resolve(codaRoot);
+  }
+
+  return effectivePath === resolvedCodaRoot
+    || effectivePath.startsWith(`${resolvedCodaRoot}${sep}`);
 }
 
 function formatCodaError(err: unknown): string {
@@ -377,98 +454,5 @@ function formatCodaError(err: unknown): string {
   return `CODA error: ${message}`;
 }
 
-function tokenizeShellCommand(command: string): string[] {
-  return command.match(/"[^"]*"|'[^']*'|`[^`]*`|[^\s]+/g) ?? [];
-}
-
-function normalizeShellToken(token: string): string {
-  let normalized = token.trim();
-  if (
-    (normalized.startsWith('"') && normalized.endsWith('"'))
-    || (normalized.startsWith("'") && normalized.endsWith("'"))
-    || (normalized.startsWith('`') && normalized.endsWith('`'))
-  ) {
-    normalized = normalized.slice(1, -1);
-  }
-  return normalized.replace(/[;|&]+$/g, '');
-}
-
-function tokenTargetsCodaPath(token: string): boolean {
-  return /(^|[\\/])\.coda(?:[\\/]|$)/.test(normalizeShellToken(token));
-}
-
-function findTargetPathToken(commandName: string, args: string[]): string | null {
-  const normalizedArgs = args.map((arg) => normalizeShellToken(arg));
-  const targetDirFlagIndex = normalizedArgs.findIndex((arg) => arg === '-t' || arg === '--target-directory');
-  if (targetDirFlagIndex >= 0) {
-    return normalizedArgs[targetDirFlagIndex + 1] ?? null;
-  }
-
-  if (commandName === 'cp' || commandName === 'mv' || commandName === 'install' || commandName === 'ln') {
-    for (let index = normalizedArgs.length - 1; index >= 0; index -= 1) {
-      const token = normalizedArgs[index];
-      if (!token || token === '--') {
-        continue;
-      }
-      if (token.startsWith('-')) {
-        continue;
-      }
-      return token;
-    }
-  }
-
-  return null;
-}
-
-function hasRedirectWriteToCoda(command: string): boolean {
-  return /(?:^|[^\w])(?:1>>?|>>?)\s*['"]?(?:[^\s'"`]*[\\/])?\.coda(?:[\\/]|$)/.test(command);
-}
-
-/**
- * Detect bash commands that write to `.coda/` via redirection or common write patterns.
- *
- * Catches: `> .coda/`, `>> .coda/`, `1> .coda/`, `tee .coda/`, `cp ... .coda/`,
- * `mv ... .coda/`, `touch .coda/`, `mkdir .coda/`, `printf ... > .coda/`,
- * interpreter stdout redirects like `python -c ... > .coda/` or `node -e ... > .coda/`,
- * `sed -i .coda/`, `perl -i .coda/`, `truncate .coda/`, `chmod .coda/`,
- * `chown .coda/`, `ln ... .coda/`, and `install ... .coda/`.
- */
-  function isBashWriteToCoda(command: string): boolean {
-  if (hasRedirectWriteToCoda(command)) {
-    return true;
-  }
-  if (/\btee\b[\s\S]*\.coda(?:[\\/]|$)/.test(command)) {
-    return true;
-  }
-  if (/\bsed\b[\s\S]*\s-i(?:\s|$|['".]|[^a-zA-Z])[\s\S]*\.coda(?:[\\/]|$)/.test(command)) {
-    return true;
-  }
-  if (/\bperl\b[\s\S]*\s-i(?:\S*)?(?:\s|$)[\s\S]*\.coda(?:[\\/]|$)/.test(command)) {
-    return true;
-  }
-  const tokens = tokenizeShellCommand(command);
-  const commandName = normalizeShellToken(tokens[0] ?? '');
-  const args = tokens.slice(1);
-  if (commandName === 'tee') {
-    return args.some((arg) => tokenTargetsCodaPath(arg));
-  }
-  if (commandName === 'cp' || commandName === 'mv' || commandName === 'install' || commandName === 'ln') {
-    const targetPath = findTargetPathToken(commandName, args);
-    return targetPath !== null && tokenTargetsCodaPath(targetPath);
-  }
-  if (commandName === 'touch' || commandName === 'mkdir') {
-    return args
-      .filter((arg) => !normalizeShellToken(arg).startsWith('-'))
-      .some((arg) => tokenTargetsCodaPath(arg));
-  }
-
-  if (
-    commandName === 'rm'
-    || commandName === 'truncate'
-    || commandName === 'chmod'
-    || commandName === 'chown'
-  ) {
-    return args.some((arg) => tokenTargetsCodaPath(arg));
-  }
-  return false;
-}
+// `isBashWriteToCoda` and `inputReferencesCoda` are imported from `./write-gate-perimeter`
+// (extracted to keep this file under the RUBY soft threshold).

@@ -75,7 +75,8 @@ describe('FORGE Scaffold', () => {
       expect(config).toHaveProperty('full_suite_command');
       expect(config).toHaveProperty('verification_commands');
       expect(config).toHaveProperty('tdd_gate');
-      expect(config).toHaveProperty('human_review_default');
+      expect(config).not.toHaveProperty('human_review_default');
+      expect(config).toHaveProperty('gates');
       expect(config).toHaveProperty('max_review_iterations');
       expect(config).toHaveProperty('max_verify_iterations');
     });
@@ -111,17 +112,15 @@ describe('FORGE Scaffold', () => {
       });
     });
 
-    test('coda.json human_review_default has correct boolean flags', () => {
+    test('coda.json gates has correct modes', () => {
       scaffoldCoda(tempDir);
       const config: CodaConfig = JSON.parse(
         readFileSync(join(tempDir, '.coda', 'coda.json'), 'utf-8')
       );
-      expect(config.human_review_default).toEqual({
-        feature: true,
-        bugfix: true,
-        refactor: false,
-        chore: false,
-        docs: false,
+      expect(config.gates).toEqual({
+        plan_review: 'human',
+        build_review: 'auto-unless-block',
+        unify_review: 'human',
       });
     });
 
@@ -155,7 +154,7 @@ describe('FORGE Scaffold', () => {
       expect(config.full_suite_command).toBeNull();
       expect(config.verification_commands).toEqual([]);
       expect(config.tdd_gate.feature).toBe(true);
-      expect(config.human_review_default.refactor).toBe(false);
+      expect(config.gates?.plan_review).toBe('human');
       expect(config.max_review_iterations).toBe(3);
       expect(config.max_verify_iterations).toBe(3);
     });
