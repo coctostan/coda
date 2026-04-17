@@ -6,6 +6,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { CodaConfig } from '../forge/types';
+import { DEFAULT_GATE_MODES } from '../workflow/gate-automation';
 
 const VALID_CONFIG_KEYS = [
   'tdd_test_command',
@@ -14,7 +15,6 @@ const VALID_CONFIG_KEYS = [
   'max_review_iterations',
   'max_verify_iterations',
   'tdd_gate',
-  'human_review_default',
   'modules',
   'gates',
   'gate_overrides',
@@ -139,30 +139,88 @@ export function codaConfig(input: ConfigInput, codaRoot: string): ConfigResult {
   }
 }
 
+/**
+ * Shared loader for `.coda/coda.json`. Handles:
+ *   - Missing file → null (caller decides on defaults).
+ *   - Malformed JSON → null (fail-closed; caller decides).
+ *   - Legacy `human_review_default` → migrate once to `gates`, rewrite file, return migrated.
+ *
+ * Idempotent: subsequent calls on an already-migrated file do NOT rewrite.
+ *
+ * This is the **single source of truth** for config loading across the codebase.
+ * Previously duplicated across `coda-advance.ts`, `coda-status.ts`, `pi/commands.ts`,
+ * and `workflow/review-runner.ts`. The narrower loader in `pi/tools.ts` (which
+ * returns only test-command fields for `coda_run_tests`) intentionally stays put.
+ */
+export function loadCodaConfig(codaRoot: string): CodaConfig | null {
+  const configPath = join(codaRoot, 'coda.json');
+  if (!existsSync(configPath)) {
+    return null;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(configPath, 'utf-8'));
+  } catch {
+    return null;
+  }
+
+  const migrated = migrateLegacyHumanReviewDefault(parsed, configPath);
+  return migrated as CodaConfig;
+}
+
+/**
+ * Migrate a legacy v0.8 config (carrying `human_review_default`) to the Phase 50+
+ * shape (`gates`). The legacy field is always stripped from disk; `gates` is seeded
+ * from `DEFAULT_GATE_MODES` only when absent (existing `gates` wins).
+ *
+ * The mapping is deliberately coarse: `human_review_default` was per-issue-type
+ * (feature/bugfix/refactor/chore/docs → true/false), while `gates` is per-gate-point
+ * (plan_review/build_review/unify_review → human/auto/auto-unless-block). These are
+ * not 1:1 isomorphic. Seed with defaults; operators who relied on legacy per-type
+ * semantics should add `gate_overrides.<type>.<gate>` post-migration.
+ *
+ * Rewrites the file only when a mutation occurred (guards idempotence).
+ */
+function migrateLegacyHumanReviewDefault(parsed: unknown, configPath: string): unknown {
+  if (!isRecord(parsed) || !('human_review_default' in parsed)) {
+    return parsed;
+  }
+
+  let didMutate = false;
+
+  if (!parsed['gates']) {
+    parsed['gates'] = { ...DEFAULT_GATE_MODES };
+    didMutate = true;
+  }
+
+  delete parsed['human_review_default'];
+  didMutate = true;
+
+  if (didMutate) {
+    writeFileSync(configPath, JSON.stringify(parsed, null, 2), 'utf-8');
+  }
+
+  return parsed;
+}
 function loadConfig(codaRoot: string):
   | { success: true; config: CodaConfig; configPath: string }
   | ConfigErrorResult {
   const configPath = join(codaRoot, 'coda.json');
-  if (!existsSync(configPath)) {
+  const config = loadCodaConfig(codaRoot);
+  if (config === null) {
+    if (!existsSync(configPath)) {
+      return {
+        success: false,
+        error: `coda.json not found at ${configPath}`,
+      };
+    }
     return {
       success: false,
-      error: `coda.json not found at ${configPath}`,
+      error: `Failed to read coda.json at ${configPath}`,
     };
   }
-
-  try {
-    return {
-      success: true,
-      config: JSON.parse(readFileSync(configPath, 'utf-8')) as CodaConfig,
-      configPath,
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return {
-      success: false,
-      error: `Failed to read coda.json: ${message}`,
-    };
-  }
+  return { success: true, config, configPath };
 }
 
 function normalizeKeyPath(key?: string): string | undefined {

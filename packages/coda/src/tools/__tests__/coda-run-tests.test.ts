@@ -136,3 +136,70 @@ describe('codaRunTests', () => {
     expect(runDetails.args).toEqual(['$(touch injected.txt)']);
   });
 });
+
+describe('codaRunTests runtime portability', () => {
+  test('runs successfully against an injected Node spawn (Bun-free path)', () => {
+    persistState(createDefaultState(), statePath);
+
+    let capturedCall: { cmd: string; args: string[]; cwd: string } | null = null;
+    const fakeSpawn = (cmd: string, args: string[], opts: { cwd: string; timeout: number }) => {
+      capturedCall = { cmd, args, cwd: opts.cwd };
+      return {
+        status: 0,
+        stdout: Buffer.from('42\n'),
+        stderr: Buffer.from(''),
+      };
+    };
+
+    const result = codaRunTests(
+      { mode: 'suite' },
+      statePath,
+      { full_suite_command: 'anything.ts' },
+      { spawnImpl: fakeSpawn }
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.exit_code).toBe(0);
+    expect(result.passed).toBe(true);
+    expect(result.output).toContain('42');
+    expect(capturedCall).not.toBeNull();
+    expect(capturedCall!.cmd).toBe('anything.ts');
+    // cwd should resolve to the project root (parent of .coda)
+    expect(realpathSync(capturedCall!.cwd)).toBe(realpathSync(tempProjectDir));
+  });
+
+  test('returns ENOENT-style error when the spawn impl reports missing binary', () => {
+    const preState: CodaState = { ...createDefaultState(), tdd_gate: 'locked', last_test_exit_code: 7 };
+    persistState(preState, statePath);
+
+    const enoentError = Object.assign(new Error('spawn definitely-not-a-binary-xyz-55 ENOENT'), { code: 'ENOENT' });
+    const fakeSpawn = (_cmd: string, _args: string[], _opts: { cwd: string; timeout: number }) => ({
+      status: null,
+      stdout: Buffer.from(''),
+      stderr: Buffer.from(''),
+      error: enoentError,
+    });
+
+    const result = codaRunTests(
+      { mode: 'tdd' },
+      statePath,
+      { tdd_test_command: 'definitely-not-a-binary-xyz-55' },
+      { spawnImpl: fakeSpawn }
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/ENOENT|not found|cannot find/i);
+
+    // State must be unchanged on spawn failure.
+    const after = loadState(statePath);
+    expect(after?.tdd_gate).toBe('locked');
+    expect(after?.last_test_exit_code).toBe(7);
+  });
+
+  // Runtime-detection via globalThis.Bun masking is not feasible inside Bun's test harness:
+  // `globalThis.Bun` is a readonly property, so the module cannot be forced onto the Node branch
+  // without running the suite under a non-Bun runtime. The injection tests above exercise the
+  // Node code path directly via `spawnImpl`, which is the primary AC-1 signal. This placeholder
+  // preserves intent; upgrade to a real test if the suite is ever run under Node.
+  test.todo('Node path is selected when Bun global is unavailable (requires non-Bun test harness)');
+});

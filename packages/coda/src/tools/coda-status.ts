@@ -13,6 +13,7 @@ import { isLoopExhausted } from '../../../core/src/state/machine';
 import type { LoopIterationConfig } from '../../../core/src/state/types';
 import type { StatusResult } from './types';
 import type { CodaConfig } from '../forge/types';
+import { loadCodaConfig } from './coda-config';
 import { getDefaultConfig } from '../forge';
 import { resolveGateMode } from '../workflow/gate-automation';
 import { sortByNumericSuffix } from './sort-utils';
@@ -175,18 +176,7 @@ function resolvePlanReviewGateMode(codaRoot: string, issueType?: string): string
   return resolveGateMode('plan_review', issueType ?? 'feature', loadCodaConfig(codaRoot) ?? getDefaultConfig());
 }
 
-function loadCodaConfig(codaRoot: string): CodaConfig | null {
-  const configPath = join(codaRoot, 'coda.json');
-  if (!existsSync(configPath)) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(readFileSync(configPath, 'utf-8')) as CodaConfig;
-  } catch {
-    return null;
-  }
-}
+// `loadCodaConfig` is imported from `./coda-config` (Phase 55 dedupe).
 
 function loadActiveTask(
   codaRoot: string,

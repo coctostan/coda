@@ -5,10 +5,11 @@
  * Provides types and resolution logic for 3 configurable gate points:
  * `plan_review`, `build_review`, and `unify_review`. Each gate can be
  * set to `human`, `auto`, or `auto-unless-block` mode, with per-issue-type
- * overrides and backward compatibility with `human_review_default`.
+ * overrides. Legacy `human_review_default` configs migrate at load time in
+ * `tools/coda-config.ts`; this module only operates on the migrated shape.
  */
 
-import type { CodaConfig, GateConfig } from '../forge/types';
+import type { CodaConfig } from '../forge/types';
 
 /** Gate automation mode — controls whether a gate requires human interaction. */
 export type GateMode = 'human' | 'auto' | 'auto-unless-block';
@@ -44,8 +45,7 @@ export const DEFAULT_GATE_MODES: Record<GatePoint, GateMode> = {
  * Resolution order:
  * 1. `config.gate_overrides?.[issueType]?.[gate]` — per-issue-type override
  * 2. `config.gates?.[gate]` — project default
- * 3. Backward compat: if no `gates` but `human_review_default` present, derive `plan_review` mode
- * 4. Hardcoded fallback per gate
+ * 3. Hardcoded fallback per gate (`DEFAULT_GATE_MODES`)
  *
  * @param gate - The gate point to resolve
  * @param issueType - The issue type (feature, bugfix, etc.)
@@ -69,17 +69,7 @@ export function resolveGateMode(
     return projectDefault;
   }
 
-  // 3. Backward compat: derive plan_review from human_review_default
-  // Access via indexed lookup to avoid deprecation hint — this is intentional backward-compat.
-  const legacyGate = (config as unknown as Record<string, unknown>)['human_review_default'] as
-    | GateConfig
-    | undefined;
-  if (gate === 'plan_review' && !config.gates && legacyGate) {
-    const issueTypeEnabled = legacyGate[issueType as keyof GateConfig];
-    if (issueTypeEnabled !== undefined) {
-      return issueTypeEnabled ? 'human' : 'auto';
-    }
-  }
+  // 3. Hardcoded fallback.
 
   // 4. Hardcoded fallback
   return DEFAULT_GATE_MODES[gate];

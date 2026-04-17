@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ExtensionAPI, ExtensionCommandContext } from '@mariozechner/pi-coding-agent';
 import type { CodaConfig } from '../forge/types';
+import { loadCodaConfig } from '../tools/coda-config';
 import { getDefaultConfig } from '../forge';
 import { codaAdvance, codaBack, codaCreate, codaForge, codaKill, codaStatus } from '../tools';
 import type { AdvanceInput, StatusResult } from '../tools';
@@ -285,18 +286,7 @@ function parseCommandArgs(args: string): { subcommand: string; remainder: string
   };
 }
 
-function loadCodaConfig(codaRoot: string): CodaConfig | null {
-  const configPath = join(codaRoot, 'coda.json');
-  if (!existsSync(configPath)) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(readFileSync(configPath, 'utf-8')) as CodaConfig;
-  } catch {
-    return null;
-  }
-}
+// `loadCodaConfig` is imported from `../tools/coda-config` (Phase 55 dedupe).
 
 /** Parse `/coda new` arguments into an issue type and title. */
 function parseNewIssueArgs(args: string): { issueType: IssueType; title: string } {

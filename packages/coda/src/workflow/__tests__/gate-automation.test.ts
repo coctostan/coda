@@ -15,13 +15,8 @@ function makeConfig(overrides: Partial<CodaConfig> = {}): CodaConfig {
 describe('resolveGateMode', () => {
   test('returns hardcoded default when config has no gates or overrides', () => {
     const config = makeConfig();
-    // Remove gates field to test fallback (getDefaultConfig will have it after D3)
     delete (config as unknown as Record<string, unknown>)['gates'];
     delete (config as unknown as Record<string, unknown>)['gate_overrides'];
-    // Also remove human_review_default to prevent backward-compat path
-    delete (config as unknown as Record<string, unknown>)['human_review_default'];
-
-    expect(resolveGateMode('plan_review', 'feature', config)).toBe('human');
     expect(resolveGateMode('build_review', 'feature', config)).toBe('auto-unless-block');
     expect(resolveGateMode('unify_review', 'feature', config)).toBe('human');
   });
@@ -76,27 +71,31 @@ describe('resolveGateMode', () => {
     expect(resolveGateMode('build_review', 'feature', config)).toBe('auto-unless-block');
   });
 
-  test('derives plan_review from human_review_default when gates absent (backward compat)', () => {
+  test('legacy human_review_default is no longer consulted after migration', () => {
+    // Post-Phase-55: migration happens in loadCodaConfig (on disk read).
+    // If a config somehow still has `human_review_default` in memory after
+    // migration, resolveGateMode MUST ignore it and fall back to the hardcoded
+    // default (the legacy backward-compat branch has been removed).
     const config = makeConfig();
     delete (config as unknown as Record<string, unknown>)['gates'];
     delete (config as unknown as Record<string, unknown>)['gate_overrides'];
-    // human_review_default: feature=true, refactor=false (from getDefaultConfig)
+    (config as unknown as Record<string, unknown>)['human_review_default'] = {
+      feature: true, bugfix: true, refactor: false, chore: false, docs: false,
+    };
 
+    // Hardcoded default, not derived from the legacy field.
     expect(resolveGateMode('plan_review', 'feature', config)).toBe('human');
-    expect(resolveGateMode('plan_review', 'refactor', config)).toBe('auto');
+    expect(resolveGateMode('plan_review', 'refactor', config)).toBe('human');
   });
 
-  test('gates wins over human_review_default when both present', () => {
+  test('gates is the sole source of truth (no legacy fallback)', () => {
     const config = makeConfig({
       gates: {
         plan_review: 'auto',
         build_review: 'auto-unless-block',
         unify_review: 'human',
       },
-      // human_review_default has feature=true, which would say 'human'
-      // but gates says 'auto' — gates should win
     });
-
     expect(resolveGateMode('plan_review', 'feature', config)).toBe('auto');
   });
 });

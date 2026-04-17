@@ -35,6 +35,7 @@ import { sortByNumericSuffix } from './sort-utils';
 import { resolveGateMode, shouldRequireHuman } from '../workflow/gate-automation';
 import type { GateMode } from '../workflow/gate-automation';
 import type { CodaConfig } from '../forge/types';
+import { loadCodaConfig } from './coda-config';
 import { getCeremonyRules } from '../workflow/ceremony';
 
 type PersistedHookResult = {
@@ -648,21 +649,8 @@ function updateIssuePhase(codaRoot: string, issueSlug: string, targetPhase: Phas
   }
 }
 
-/**
- * Load the CodaConfig from coda.json, or null if not available.
- */
-function loadCodaConfig(codaRoot: string): CodaConfig | null {
-  const configPath = join(codaRoot, 'coda.json');
-  if (!existsSync(configPath)) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(readFileSync(configPath, 'utf-8')) as CodaConfig;
-  } catch {
-    return null;
-  }
-}
+// `loadCodaConfig` is imported from `./coda-config` (shared single source of
+// truth, handles legacy human_review_default migration on load). Phase 55 dedupe.
 
 /**
  * Extract the issue type from an issue record, or 'feature' as fallback.

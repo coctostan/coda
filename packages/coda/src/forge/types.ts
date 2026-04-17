@@ -67,11 +67,6 @@ export interface CodaConfig {
   max_verify_iterations: number;
   /** Which issue types enforce TDD gating. */
   tdd_gate: GateConfig;
-  /**
-   * Which issue types require human review by default.
-   * @deprecated Use `gates` and `gate_overrides` instead. Kept for backward compatibility.
-   */
-  human_review_default: GateConfig;
   /** Per-module enable/disable and block threshold overrides. Omitted modules use defaults. */
   modules?: Record<string, ModuleConfig>;
   /** Configurable gate automation modes for lifecycle transition points. */

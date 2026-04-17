@@ -6,18 +6,18 @@ Version: v0.10.0-dev
 **Current focus:** v0.10 Close the Agent Loop
 ## Current Position
 Milestone: v0.10 Close the Agent Loop
-Phase: 55 of 57 (Supporting Systems Repair) — Not started
-Plan: not started
-Status: Ready to plan Phase 55 (F6, F7 deeper hardening, deferred #1: remove human_review_default)
-Last activity: 2026-04-16 — Phase 54 complete, transitioned to Phase 55.
+Phase: 55 of 57 (Supporting Systems Repair) — APPLY complete
+Plan: 55-01 applied; awaiting UNIFY
+Status: APPLY complete (720 pass / 0 fail / 2140 expect); PR #23 open on phases/55-supporting-systems-repair; ready for UNIFY
+Last activity: 2026-04-16 — APPLY complete for Phase 55 Plan 01
 Progress:
-- v0.10 Close the Agent Loop: [████░░░░░░] 40% (2 of 5 phases complete: 53 + 54; 55–57 remaining)
-- Phase 55: [░░░░░░░░░░] 0% (not started)
+- v0.10 Close the Agent Loop: [████░░░░░░] 40% (2 of 5 phases shipped; Phase 55 mid-loop)
+- Phase 55: [██████░░░░] 66% (PLAN ✓, APPLY ✓, UNIFY ○)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Ready to plan Phase 55]
+  ✓        ✓        ○     [Plan 55-01 APPLY complete, ready for UNIFY]
 ```
 ## Accumulated Context
 ### Decisions
@@ -55,23 +55,29 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | DEC-54-3: Spec-delta enforcement is ceremony-independent | Relaxation covers empty artifacts only; declared spec_delta always enforces ref-system.md update or exemption | v0.10 P54 | Shipped |
 | Inline overlay-parser in gates.ts | Avoids L3→L2 dep cycle; ~30 lines duplicated by design | v0.10 P54 | Active |
 | 3 integration test fixtures updated to declare exemptions | New evidence gate correctly flagged feature-issue fixtures with empty artifacts; fix = add exemption stubs, not weaken gate | v0.10 P54 | Logged |
+| DEC-55-1: codaRunTests 4th-arg `overrides.spawnImpl` for test injection | Runtime-portable spawn without globalThis.Bun masking; production API unchanged | v0.10 P55 | Shipped |
+| DEC-55-2: Custom-tool default-deny with coda_* allow-list | Any non-coda_* tool_call whose input references .coda/ is blocked conservatively; operator allow-lists deferred | v0.10 P55 | Shipped |
+| DEC-55-3: Parent-dir realpath for symlink-safe write protection | Write targets typically don't exist pre-write; parent-realpath is the sound invariant | v0.10 P55 | Shipped |
+| DEC-55-4: Legacy human_review_default → gates migration uses coarse DEFAULT_GATE_MODES seed | Per-type/per-gate-point shapes aren't 1:1 isomorphic; operators add gate_overrides post-migration if legacy per-type semantics needed | v0.10 P55 | Shipped |
+| DEC-55-5: Shared loadCodaConfig lives in tools/coda-config.ts; 4 duplicate helpers deduped | workflow → tools direction already established; migration fires on every config read path | v0.10 P55 | Shipped |
+| DEC-55-6: Perimeter detectors extracted to pi/write-gate-perimeter.ts | Refined Phase 53's perimeter-vs-pure-gate split into dispatcher (hooks.ts) / detectors (write-gate-perimeter.ts) / pure gate (write-gate.ts) | v0.10 P55 | Shipped |
 
 ### Active Blockers / Follow-ups
-- `docs/coda-spec-v7.md` needs a section documenting `artifacts_produced` schema + evidence gate (deferred from P54 per plan; carry to milestone close).
-- `coda-advance.ts` at 681L exceeds 500L critical threshold (RUBY); candidate refactor = extract `handleUnifyReviewDecision` + `handleHumanReviewDecision` into a sibling file (Phase 55+).
-- Phase 55 scope reminder: F6 (coda_run_tests), F7 write-gate deeper hardening (symlink, bash-redirect, custom-tool bypass), and remove `human_review_default` in favor of gate automation (deferred #1).
+- `docs/coda-spec-v7.md` needs a section documenting `artifacts_produced` schema + evidence gate AND a refresh removing legacy `human_review_default` references (deferred from P54/P55 per plan; carry to milestone close).
+- `coda-advance.ts` at 669L (down from 681L after P55 dedupe) still exceeds 500L soft RUBY threshold; candidate refactor = extract `handleUnifyReviewDecision` + `handleHumanReviewDecision` into a sibling file (v0.11).
+- `codaRunTests` runtime-detection via `globalThis.Bun` masking is retained as `test.todo` (Bun global is readonly in the Bun test harness); future non-Bun test harness or integration test can promote it.
+- Custom-tool default-deny is conservative by design (DEC-55-2); if operators report false positives with third-party Pi extensions, consider adding a config-driven allow-list as a v0.11 follow-up.
 ### Git State
-Branch: main
+Branch: phases/55-supporting-systems-repair
 Remote: https://github.com/coctostan/coda.git
-Last commit: e67d012 feat(54-unify-produces-artifacts): evidence-based unify→done gate + runner prompt restructure (#22) (squash merged)
-PR: #22 MERGED — https://github.com/coctostan/coda/pull/22
-Feature branches merged: phases/54-unify-produces-artifacts (auto-deleted)
-Test baseline: 708 pass / 0 fail / 2092 expect / 55 files (post-P54 merge).
+Last commit: (pending merge) feat(55-supporting-systems-repair): F6 runtime-agnostic tests, F7 write-gate hardening, remove human_review_default
+PR: #23 OPEN — https://github.com/coctostan/coda/pull/23
+Test baseline (post-P55 APPLY): 720 pass / 1 todo / 0 fail / 2140 expect / 55 files.
 
 ## Session Continuity
-Last session: 2026-04-16 (Phase 54 shipped; merged to main)
-Stopped at: Phase 54 complete, transitioned; ready to plan Phase 55
-Next action: /paul:plan for Phase 55 (Supporting Systems Repair)
-Resume file: .paul/ROADMAP.md
+Last session: 2026-04-16 (Phase 55 APPLY complete; PR #23 open)
+Stopped at: Plan 55-01 APPLY complete; ready for UNIFY
+Next action: /paul:unify .paul/phases/55-supporting-systems-repair/55-01-PLAN.md
+Resume file: .paul/phases/55-supporting-systems-repair/55-01-PLAN.md
 ---
 *STATE.md — Updated after every significant action*
