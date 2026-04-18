@@ -129,6 +129,42 @@ describe('assembleUnifyContext', () => {
     expect(result.systemPrompt).toContain('Milestone');
   });
 
+  test('systemPrompt sequences the 5 actions with verification cues that mirror the evidence gate', () => {
+    setupIssue();
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('ACTION 1: Merge Spec Delta into ref-system.md');
+    expect(result.systemPrompt).toContain('ACTION 3b: Update Module Overlays for Compounding');
+    expect(result.systemPrompt).toContain('ACTION 5: Write Completion Record (LAST');
+    expect(result.systemPrompt).toContain('update `reference/ref-system.md`, or if no spec delta exists confirm that no spec change was needed');
+    expect(result.systemPrompt).toContain('produce at least one overlay update');
+    expect(result.systemPrompt).toContain('all other actions');
+  });
+
+  test('systemPrompt states that declared artifacts are verified on disk and empty exemptions are rejected', () => {
+    setupIssue();
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('artifacts_produced paths are verified on disk');
+    expect(result.systemPrompt).toContain('non-empty content');
+    expect(result.systemPrompt).toContain('Empty exemption strings will be rejected');
+  });
+
+  test('systemPrompt includes the current gate reason substrings verbatim', () => {
+    setupIssue();
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('no compounding artifacts produced and no exemption declared');
+    expect(result.systemPrompt).toContain('spec_delta declared but ref-system.md not updated');
+    expect(result.systemPrompt).toContain('exemption requires a non-empty reason');
+  });
+
   test('context includes issue, plan, and task summaries', () => {
     setupIssue();
     setupPlan();
@@ -290,6 +326,32 @@ describe('UNIFY review prompt and revision context', () => {
     expect(result.systemPrompt).toContain('ACTION 1:');
     expect(result.systemPrompt).not.toContain('revising your UNIFY output');
   });
+
+  test('revision prompt remains semantically stable for human re-review', () => {
+    setupIssue();
+    setupPlan();
+
+    const recordsDir = join(codaRoot, 'records');
+    mkdirSync(recordsDir, { recursive: true });
+    writeRecord<Record<string, unknown>>(join(recordsDir, 'test-issue-completion.md'), {
+      title: 'Completion Record',
+      issue: 'test-issue',
+      completed_at: '2026-04-14',
+      topics: ['state'],
+      system_spec_updated: true,
+      reference_docs_reviewed: true,
+      milestone_updated: true,
+      unify_review_status: 'changes-requested',
+    }, '## Summary\nDone.\n\n## UNIFY Review\nStatus: changes-requested\n\nFeedback:\nNeed stronger evidence.\n');
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('HUMAN REVIEW FEEDBACK:');
+    expect(result.systemPrompt).toContain('Need stronger evidence.');
+    expect(result.systemPrompt).toContain('coda_update');
+    expect(result.systemPrompt).toContain("unify_review_status");
+    expect(result.systemPrompt).toContain('The human will re-review your changes.');
+  });
 });
 
 describe('UNIFY prompt artifacts_produced schema', () => {
@@ -355,6 +417,31 @@ describe('UNIFY prompt artifacts_produced schema', () => {
     expect(result.systemPrompt).toContain('relaxed UNIFY ceremony');
     // No "strict" requirement for refactor
     expect(result.systemPrompt).not.toContain('at least one artifact is required');
+  });
+
+
+  test('refactor prompt keeps overlay production optional when there is no spec delta', () => {
+    const issueDir = join(codaRoot, 'issues');
+    mkdirSync(issueDir, { recursive: true });
+    writeRecord<IssueRecord>(join(issueDir, 'test-issue.md'), {
+      title: 'Test Issue',
+      issue_type: 'refactor',
+      status: 'active',
+      phase: 'unify',
+      priority: 3,
+      topics: ['state'],
+      acceptance_criteria: [{ id: 'AC-1', text: 'Gate enforces fields', status: 'met' }],
+      open_questions: [],
+      deferred_items: [],
+      human_review: false,
+    }, '## Description\nRefactor issue.\n');
+    setupPlan();
+
+    const result = assembleUnifyContext(codaRoot, 'test-issue');
+
+    expect(result.systemPrompt).toContain('relaxed UNIFY ceremony');
+    expect(result.systemPrompt).not.toContain('You MUST produce at least one overlay update');
+    expect(result.systemPrompt).not.toContain('update `.coda/modules/{module}.local.md` OR an exemption reason');
   });
 
   test('chore issue prompt mentions the issue is exempt from the evidence requirement', () => {

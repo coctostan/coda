@@ -80,7 +80,7 @@ export interface VerificationResult {
   acResults: VerifyAcResult[];
 }
 
-/** Options for running the verify runner. */
+/** Options for running the verify runner. `suitePassed` is optional; absence means "no explicit suite evidence supplied". */
 export interface VerifyRunnerOptions {
   max_verify_iterations?: number;
   verificationResult?: VerificationResult;

@@ -6,19 +6,16 @@ Version: v0.11.0-dev
 **Current focus:** v0.11 Six Fixes and Re-Validation
 ## Current Position
 Milestone: v0.11 Six Fixes and Re-Validation
-Phase: 59 of 60 (Lifecycle Integrity) — Not started
-Plan: Not started
-Status: Ready to plan Phase 59
-Last activity: 2026-04-18T00:00:00Z — Phase 58 complete, transitioned to Phase 59 (PR #25 merged squash → 08086c0, branch cleaned)
+Phase: 59 of 60 (Lifecycle Integrity) — APPLY complete
+Plan: 59-01 executed on feature/59-lifecycle-integrity
+Status: APPLY complete, ready for UNIFY
+Last activity: 2026-04-18T03:35:00Z — Executed .paul/phases/59-lifecycle-integrity/59-01-PLAN.md: hardened VERIFY fail-closed evidence defaults, strengthened VERIFY/UNIFY prompts with gate-text drift guards, added lifecycle-e2e coverage for dishonest VERIFY / empty UNIFY / honest DONE, verified targeted + full bun suites green, audit baseline unchanged, README drift still deferred
 Progress:
-- v0.11 Six Fixes and Re-Validation: [███░░░░░░░] 33% (1 of 3 phases complete)
-- Phase 59: [░░░░░░░░░░] 0% (not started)
+- v0.11 Six Fixes and Re-Validation: [██████░░░░] 67% (2 of 3 phases complete)
+- Phase 59: [██████░░░░] 67% (apply complete)
 ## Loop Position
 Current loop state:
-```
-PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Phase 59 awaiting PLAN]
-```
+```\nPLAN ──▶ APPLY ──▶ UNIFY\n  ✓        ✓        ○     [Apply complete, ready for UNIFY]\n```
 ## Accumulated Context
 ### Decisions
 | Decision | Phase | Impact |
@@ -74,7 +71,7 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | DEC-58-6: FORGE `next_action` wording names `coda_config` when test commands stay null | v0.11 P58 | Keeps the lifecycle entry path one-call ergonomic per the P56 pattern; no latent TDD trap |
 
 ### Active Blockers / Follow-ups
-- Phase 58 shipped on PR #25; waiting on merge before Phase 59 PLAN can start on a fresh base.
+- Phase 59 APPLY is complete on `feature/59-lifecycle-integrity`; UNIFY still owes the canonical SUMMARY, deviations/accepted-gap reconciliation, and lifecycle closeout before Phase 60's live rerun.
 - `docs/coda-spec-v7.md` needs a section documenting `artifacts_produced` schema + evidence gate AND a refresh removing legacy `human_review_default` references (deferred from P54/P55 per plan; carry to milestone close).
 - `coda-advance.ts` grew to 704L in Phase 58 (was 669L); still exceeds 500L soft RUBY threshold; candidate refactor = extract `handleUnifyReviewDecision` + `handleHumanReviewDecision` into a sibling file (v0.11).
 - `coda-advance.test.ts` grew to 857L (was 802L); test-side extract should follow any production-side split.
@@ -83,24 +80,24 @@ PLAN ──▶ APPLY ──▶ UNIFY
 - `README.md` drift remains after Phase 56 lifecycle-guidance changes; DOCS flagged it during APPLY and it stays deferred outside the current code-focused phase scope.
 - Phase 57 artifacts (`.paul/phases/57-e2e-re-validation/`, `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md`) remain uncommitted. Phase 57 transition/PR work still owes a follow-up commit; address during Phase 58 merge gate or alongside the Phase 59 plan.
 ### Git State
-Branch: main
+Branch: feature/59-lifecycle-integrity
 Remote: https://github.com/coctostan/coda.git
-Last commit: 45ab27b chore(58-transition): phase 58 complete → transition to phase 59 (#26)
-PRs merged this phase: #25 (feat 58-lifecycle-bug-fixes, 08086c0), #26 (chore 58-transition + Phase 57 carryover, 45ab27b)
+Last commit: current APPLY commit on `feature/59-lifecycle-integrity` (PR #29 head)
+Open PR: #29 https://github.com/coctostan/coda/pull/29
 Feature branches cleaned: feature/57-e2e-re-validation (merged via #25), feature/58-transition (merged via #26)
-Test baseline (post-P58 merge): 740 pass / 1 todo / 0 fail / 2234 expect / 55 files (pre-apply 722/2185/55).
+Test baseline (post-P59 APPLY): 751 pass / 1 todo / 0 fail / 2287 expect / 56 files (targeted workflow suite: 51 pass / 0 fail).
 DEAN baseline: 1 critical (protobufjs) + 3 high (basic-ftp); unchanged since 2026-04-17T00:54:41Z.
 
 ## Session Continuity
-Last session: 2026-04-18T01:50:00Z
-Stopped at: Phase 58 complete + transitioned to Phase 59; session paused before Phase 59 PLAN.
-Next action: Run /paul:plan for Phase 59 (Lifecycle Integrity) — addresses C4 (VERIFY truthfulness) and C5 (UNIFY artifact completeness).
-Resume file: .paul/HANDOFF-2026-04-18-phase-59-ready.md
+Last session: 2026-04-18T03:35:00Z
+Stopped at: Phase 59 APPLY complete, ready for UNIFY.
+Next action: Run `/paul:unify .paul/phases/59-lifecycle-integrity/59-01-PLAN.md` to reconcile Phase 59 implementation against the approved plan and capture the accepted VERIFY stale-exit-code gap.
+Resume file: .paul/phases/59-lifecycle-integrity/59-01-PLAN.md
 Resume context:
 - `.paul/HANDOFF-2026-04-18-phase-59-ready.md` is the active resume entry point with complete session context.
 - Phase 58 SUMMARY at `.paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md` is the canonical Phase 58 record.
 - Phase 59 owns lifecycle integrity: VERIFY must reject no-evidence success, UNIFY evidence gates must run on the reachable path.
 - Phase 60 is the live Script A re-run with a binary verdict on v0.11.
-- Main is clean and up-to-date with origin; all Phase 58 PRs (#25, #26, #27) merged.
+- Feature branch `feature/59-lifecycle-integrity` now carries the committed Phase 59 APPLY changes and open PR #29; next lifecycle step is UNIFY on this branch/head.
 ---
 *STATE.md — Updated after every significant action*

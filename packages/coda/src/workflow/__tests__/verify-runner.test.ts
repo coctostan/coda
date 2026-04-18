@@ -240,6 +240,53 @@ describe('Verify Runner', () => {
     expect(result.correctionTasks).toEqual([]);
   });
 
+  test('fails closed when tasks cover every AC but no explicit verification evidence is provided and last_test_exit_code is null', () => {
+    const result = runVerifyRunner(codaRoot, 'my-feature', createVerifyState({ last_test_exit_code: null }));
+
+    expect(result.outcome).toBe('corrections-required');
+    if (result.outcome !== 'corrections-required') throw new Error('Expected corrections-required outcome');
+
+    expect(result.failures).toHaveLength(2);
+    expect(result.failures[0]?.failedChecks).toEqual([
+      { type: 'test_failure', detail: 'Full regression suite failed or was not run during VERIFY' },
+    ]);
+    expect(readFileSync(join(codaRoot, 'issues', 'my-feature', 'verification-failures', 'AC-1.yaml'), 'utf-8')).toContain(
+      'type: test_failure'
+    );
+  });
+
+  test('fails closed when tasks cover every AC but the last test run failed', () => {
+    const result = runVerifyRunner(codaRoot, 'my-feature', createVerifyState({ last_test_exit_code: 1 }));
+
+    expect(result.outcome).toBe('corrections-required');
+    if (result.outcome !== 'corrections-required') throw new Error('Expected corrections-required outcome');
+
+    expect(result.failures).toHaveLength(2);
+    expect(result.failures[0]?.failedChecks).toEqual([
+      { type: 'test_failure', detail: 'Full regression suite failed or was not run during VERIFY' },
+    ]);
+  });
+
+  test('explicit met AC results still fail when suitePassed is explicitly false', () => {
+    const result = runVerifyRunner(codaRoot, 'my-feature', createVerifyState(), {
+      verificationResult: {
+        acResults: [
+          { acId: 'AC-1', status: 'met', sourceTasks: [1], relevantFiles: ['src/workflow.ts'] },
+          { acId: 'AC-2', status: 'met', sourceTasks: [2], relevantFiles: ['src/store.ts'] },
+        ],
+      },
+      suitePassed: false,
+    });
+
+    expect(result.outcome).toBe('corrections-required');
+    if (result.outcome !== 'corrections-required') throw new Error('Expected corrections-required outcome');
+
+    expect(result.failures).toHaveLength(2);
+    expect(result.failures[0]?.failedChecks).toEqual([
+      { type: 'test_failure', detail: 'Full regression suite failed after verify reported all ACs met' },
+    ]);
+  });
+
   test('returns exhausted when the verify loop has reached its configured limit', () => {
     writeFileSync(
       join(codaRoot, 'issues', 'my-feature', 'verification-failures', 'AC-2.yaml'),

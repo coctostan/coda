@@ -60,11 +60,13 @@ export function runVerifyRunner(
     throw new Error(`Verify runner requires verify or correct submode, received ${String(state.submode)}`);
   }
 
-  const acResults = normalizeAcResults(codaRoot, issueSlug, options.verificationResult?.acResults ?? []);
-  const suitePassed = options.suitePassed ?? true;
+  const explicitAcResults = options.verificationResult?.acResults ?? [];
+  const suiteEvidence = resolveSuiteEvidence(options, state);
+  const acResults = normalizeAcResults(codaRoot, issueSlug, explicitAcResults, suiteEvidence.suitePassed);
   let failures = acResults.filter((result) => result.status === 'not-met').map(toFailureArtifact);
-
-  if (failures.length === 0 && !suitePassed) {
+  if (explicitAcResults.length === 0 && suiteEvidence.shouldSynthesizeFailure) {
+    failures = synthesizeMissingVerificationEvidence(acResults, suiteEvidence.failureDetail);
+  } else if (failures.length === 0 && suiteEvidence.suitePassed === false) {
     failures = synthesizeSuiteFailure(acResults);
   }
 
@@ -120,17 +122,43 @@ function resolveLoopConfig(
   }
 }
 
+function resolveSuiteEvidence(
+  options: VerifyRunnerOptions,
+  state: CodaState
+): { suitePassed: boolean | undefined; shouldSynthesizeFailure: boolean; failureDetail: string } {
+  if (typeof options.suitePassed === 'boolean') {
+    return {
+      suitePassed: options.suitePassed,
+      shouldSynthesizeFailure: false,
+      failureDetail: 'Full regression suite failed or was not run during VERIFY',
+    };
+  }
+
+  if (state.last_test_exit_code === 0) {
+    return {
+      suitePassed: true,
+      shouldSynthesizeFailure: false,
+      failureDetail: 'Full regression suite failed or was not run during VERIFY',
+    };
+  }
+
+  return {
+    suitePassed: undefined,
+    shouldSynthesizeFailure: true,
+    failureDetail: 'Full regression suite failed or was not run during VERIFY',
+  };
+}
+
 function normalizeAcResults(
   codaRoot: string,
   issueSlug: string,
-  explicitResults: VerifyAcResult[]
-): VerifyAcResult[] {
+  explicitResults: VerifyAcResult[],
+  suitePassed: boolean | undefined
+  ): VerifyAcResult[] {
   const issue = loadIssue(codaRoot, issueSlug);
   const tasks = loadTasks(codaRoot, issueSlug).map((task) => task.frontmatter);
   const explicitById = new Map(explicitResults.map((result) => [result.acId, result]));
-
   if (!issue) return explicitResults;
-
   return issue.frontmatter.acceptance_criteria.map((ac) => {
     const explicit = explicitById.get(ac.id);
     if (explicit) {
@@ -139,14 +167,15 @@ function normalizeAcResults(
         failedChecks: explicit.failedChecks ?? [],
       };
     }
-
     const sourceTasks = tasks.filter((task) => task.covers_ac.includes(ac.id));
+    const hasCoverageEvidence = sourceTasks.length > 0 && suitePassed === true;
+
     return {
       acId: ac.id,
-      status: sourceTasks.length > 0 ? 'met' : 'not-met',
-      failedChecks: sourceTasks.length > 0
+      status: hasCoverageEvidence ? 'met' : 'not-met',
+      failedChecks: hasCoverageEvidence
         ? []
-        : [{ type: 'coverage_missing', detail: `${ac.id} is not covered by any task summary` }],
+        : [{ type: 'coverage_missing', detail: 'AC not proven — explicit verification evidence required' }],
       sourceTasks: sourceTasks.map((task) => task.id),
       relevantFiles: uniqueStrings(sourceTasks.flatMap((task) => task.files_to_modify)),
     };
@@ -187,6 +216,20 @@ function synthesizeSuiteFailure(results: VerifyAcResult[]): VerificationFailureA
     acId: result.acId,
     status: 'not-met',
     failedChecks: [{ type: 'test_failure', detail: 'Full regression suite failed after verify reported all ACs met' }],
+    sourceTasks: result.sourceTasks,
+    relevantFiles: result.relevantFiles,
+  }));
+}
+
+function synthesizeMissingVerificationEvidence(
+  results: VerifyAcResult[],
+  detail: string
+): VerificationFailureArtifact[] {
+  if (results.length === 0) return [];
+  return results.map((result) => ({
+    acId: result.acId,
+    status: 'not-met',
+    failedChecks: [{ type: 'test_failure', detail }],
     sourceTasks: result.sourceTasks,
     relevantFiles: result.relevantFiles,
   }));
