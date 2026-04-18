@@ -1,23 +1,23 @@
 # Project State
 ## Project Reference
 See: .paul/PROJECT.md (updated 2026-04-17)
-Version: v0.10.0-dev
+Version: v0.11.0-dev
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** v0.10 Close the Agent Loop
+**Current focus:** v0.11 Six Fixes and Re-Validation
 ## Current Position
-Milestone: v0.10 Close the Agent Loop
-Phase: 57 of 57 (E2E Re-Validation) — Not started
-Plan: not started
-Status: Ready to plan Phase 57 (prove the compounding engine actually compounds)
-Last activity: 2026-04-17 — Phase 56 complete (PR #24 squash-merged as 3e1f2cb); transitioned to Phase 57
+Milestone: v0.11 Six Fixes and Re-Validation
+Phase: 58 of 60 (Lifecycle Bug Fixes) — Complete
+Plan: 58-01 complete
+Status: Loop complete — ready for phase transition to Phase 59
+Last activity: 2026-04-18T00:00:00Z — Wrote .paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md
 Progress:
-- v0.10 Close the Agent Loop: [████████░░] 80% (4 of 5 phases complete: 53 + 54 + 55 + 56; 57 remaining)
-- Phase 57: [░░░░░░░░░░] 0% (not started)
+- v0.11 Six Fixes and Re-Validation: [███░░░░░░░] 33% (1 of 3 phases complete)
+- Phase 58: [██████████] 100% (SUMMARY written, tests green, PR #25 open)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Phase 56 closed; ready to plan Phase 57]
+  ✓        ✓        ✓     [Loop complete — ready for phase transition]
 ```
 ## Accumulated Context
 ### Decisions
@@ -65,29 +65,41 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | Keep lifecycle guidance inside existing prompt surfaces | v0.10 P56 | Steering failures were fixed by strengthening existing bootstrap/phase/build/next_action prompts instead of adding new infrastructure |
 | before_agent_start bootstraps unfocused sessions | v0.10 P56 | Unfocused agent starts now receive forge/create/focus guidance before production-code work begins |
 | next_action strings must name concrete CODA tools | v0.10 P56 | Status/focus/forge handoffs now reinforce one consistent issue-first lifecycle path |
+| Phase 57 live re-validation verdict = still broken | v0.10 P57 | UNIFY reconciled the live evidence: entry improved, but PLAN advancement, VERIFY truthfulness, and UNIFY artifact completion still block milestone close |
+| DEC-58-1: `replaceSection` is strict — throws `ReplaceSectionError` on miss or ambiguity | v0.11 P58 | Silent append-on-miss was the Phase 57 duplicate-heading root cause; callers must pass `create_if_missing: true` to append explicitly |
+| DEC-58-2: Heading normalization = trim + strip trailing colon + collapse whitespace + lowercase | v0.11 P58 | Conservative formatting equivalence only; no fuzzy substring matching |
+| DEC-58-3: Any duplication of equivalent headings is explicit ambiguity | v0.11 P58 | Tool refuses to guess when bodies are already corrupted; operator deduplicates first |
+| DEC-58-4: `normalizeIssueFrontmatter()` conservatively defaults missing fields | v0.11 P58 | Sparse SPECIFY frontmatter produces clean gate failure, not runtime TypeError; contained in one helper local to coda-advance.ts |
+| DEC-58-5: FORGE test-command detection is Bun-only, conservative | v0.11 P58 | `coda_run_tests` pattern semantics only known-compatible with `bun test <pattern>`; other runners stay unset rather than silently break |
+| DEC-58-6: FORGE `next_action` wording names `coda_config` when test commands stay null | v0.11 P58 | Keeps the lifecycle entry path one-call ergonomic per the P56 pattern; no latent TDD trap |
 
 ### Active Blockers / Follow-ups
+- Phase 58 shipped on PR #25; waiting on merge before Phase 59 PLAN can start on a fresh base.
 - `docs/coda-spec-v7.md` needs a section documenting `artifacts_produced` schema + evidence gate AND a refresh removing legacy `human_review_default` references (deferred from P54/P55 per plan; carry to milestone close).
-- `coda-advance.ts` at 669L (down from 681L after P55 dedupe) still exceeds 500L soft RUBY threshold; candidate refactor = extract `handleUnifyReviewDecision` + `handleHumanReviewDecision` into a sibling file (v0.11).
+- `coda-advance.ts` grew to 704L in Phase 58 (was 669L); still exceeds 500L soft RUBY threshold; candidate refactor = extract `handleUnifyReviewDecision` + `handleHumanReviewDecision` into a sibling file (v0.11).
+- `coda-advance.test.ts` grew to 857L (was 802L); test-side extract should follow any production-side split.
 - `codaRunTests` runtime-detection via `globalThis.Bun` masking is retained as `test.todo` (Bun global is readonly in the Bun test harness); future non-Bun test harness or integration test can promote it.
 - Custom-tool default-deny is conservative by design (DEC-55-2); if operators report false positives with third-party Pi extensions, consider adding a config-driven allow-list as a v0.11 follow-up.
 - `README.md` drift remains after Phase 56 lifecycle-guidance changes; DOCS flagged it during APPLY and it stays deferred outside the current code-focused phase scope.
+- Phase 57 artifacts (`.paul/phases/57-e2e-re-validation/`, `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md`) remain uncommitted. Phase 57 transition/PR work still owes a follow-up commit; address during Phase 58 merge gate or alongside the Phase 59 plan.
 ### Git State
-Branch: main
+Branch: feature/57-e2e-re-validation
 Remote: https://github.com/coctostan/coda.git
-Last commit: 3e1f2cb feat(56-lifecycle-first-prompts): strengthen lifecycle-first prompts (#24) (squash merged)
-PR: #24 MERGED — https://github.com/coctostan/coda/pull/24
-Feature branches merged: feature/56-lifecycle-first-prompts (squash-merged via PR #24; local branch deleted after sync)
-Test baseline (post-P56 merge): 722 pass / 1 todo / 0 fail / 2185 expect / 55 files.
+Last commit: 09fae41 feat(58-lifecycle-bug-fixes): harden SPECIFY→PLAN, replace_section, FORGE defaults
+PR: https://github.com/coctostan/coda/pull/25 (state: open; auto-generated Phase 58 PR)
+Feature branch: feature/57-e2e-re-validation (carried over from Phase 57; Phase 58 committed here per preflight "continue on current branch" rule — noted as deviation in 58-01-SUMMARY.md)
+Test baseline (post-P58 APPLY): 740 pass / 1 todo / 0 fail / 2234 expect / 55 files (pre-apply 722/2185/55).
+DEAN baseline: 1 critical (protobufjs) + 3 high (basic-ftp); unchanged since 2026-04-17T00:54:41Z.
 
 ## Session Continuity
-Last session: 2026-04-17 (Phase 56 shipped; merged to main)
-Stopped at: Phase 56 complete, transitioned; ready to plan Phase 57
-Next action: /paul:plan for Phase 57 (E2E Re-Validation)
-Resume file: .paul/ROADMAP.md
+Last session: 2026-04-18T00:00:00Z
+Stopped at: Phase 58 UNIFY complete — SUMMARY written, PR #25 open, waiting on merge gate and phase transition.
+Next action: Run Phase 58 merge gate (review/CI/merge PR #25, sync main, clean branch) then execute phase transition for Phase 58 → Phase 59; afterward run /paul:plan for Phase 59.
+Resume file: .paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md
 Resume context:
-- Phase 56 changes are merged on `main` via PR #24 (`3e1f2cb`) and summarized in `.paul/phases/56-lifecycle-first-prompts/56-01-SUMMARY.md`.
-- Phase 57 should plan the final Script A re-validation against the stronger forge/create/focus/bootstrap guidance.
-- Follow-ups carried forward: README drift, milestone-close spec sweep, acknowledged DEAN baseline (1 critical / 3 high).
+- `.paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md` is the canonical reconciliation for Phase 58.
+- PR #25 contains only Phase 58 production code (packages + new tests); Phase 57 artifacts still untracked.
+- Phase 59 will own lifecycle integrity (C4 VERIFY truthfulness + C5 UNIFY artifact completeness) per the v0.11 roadmap.
+- Phase 60 is the live Script A re-run with a binary verdict on v0.11.
 ---
 *STATE.md — Updated after every significant action*
