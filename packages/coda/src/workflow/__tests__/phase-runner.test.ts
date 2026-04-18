@@ -161,7 +161,7 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.systemPrompt).toContain('Stay inside the task protocol.');
   });
 
-  test('verify context includes issue + task summaries', () => {
+  test('verify context includes issue + task summaries and explicit runtime-evidence instructions', () => {
     const ctx = getPhaseContext('verify', codaRoot, 'my-feature', {
       version: 1, focus_issue: 'my-feature', phase: 'verify',
       submode: 'verify', loop_iteration: 0,
@@ -172,6 +172,8 @@ describe('Workflow Phase Runner', () => {
     expect(ctx.systemPrompt).toContain('verif');
     expect(ctx.context).toContain('My Feature');
     expect(ctx.context).toContain('Setup');
+    expect(ctx.systemPrompt).toContain('coda_run_tests');
+    expect(ctx.systemPrompt).toContain('failedChecks');
     expect(ctx.systemPrompt).toContain('use coda_advance to move into unify');
   });
 

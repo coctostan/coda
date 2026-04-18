@@ -11,7 +11,7 @@ Theme: "Fix the live lifecycle gaps, then prove compounding works."
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 58 | Lifecycle Bug Fixes | 1/1 | ✅ Complete | 2026-04-18 |
-| 59 | Lifecycle Integrity | TBD | Not started | - |
+| 59 | Lifecycle Integrity | 1 | Planning | - |
 | 60 | E2E Re-Validation | TBD | Not started | - |
 
 ### Phase 58: Lifecycle Bug Fixes
@@ -26,7 +26,7 @@ Focus: Make the live lifecycle trustworthy once Phase 58 unblocks it — VERIFY 
 Addresses: C4, C5
 Spec: `.paul/milestones/v0.11.0-ROADMAP.md`
 Depends: Phase 58
-Plans: TBD (defined during /paul:plan)
+Plans: 1 — `.paul/phases/59-lifecycle-integrity/59-01-PLAN.md`
 Outcome target: VERIFY rejects no-evidence success claims, existing UNIFY evidence gates are exercised in a real reachable path, and programmatic lifecycle coverage proves SPECIFY → PLAN → BUILD → VERIFY → UNIFY → DONE can complete honestly.
 
 ### Phase 60: E2E Re-Validation

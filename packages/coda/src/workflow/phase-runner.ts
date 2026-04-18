@@ -142,7 +142,7 @@ export function getPhaseContext(
       const plan = loadPlan(codaRoot, issueSlug);
       const findingsSummary = loadModuleFindingsSummary(codaRoot, issueSlug);
       return withMetadata({
-        systemPrompt: withLifecyclePrompt('You are verifying acceptance criteria against built artifacts.', 'When the acceptance criteria are satisfied, use coda_advance to move into unify.'),
+        systemPrompt: withLifecyclePrompt('You are verifying acceptance criteria against built artifacts. Run coda_run_tests before claiming any AC is met. Provide explicit per-AC verification evidence, and if any runtime or live check fails, report it as failedChecks rather than commentary. Missing verification evidence produces correction tasks instead of success.', 'When the acceptance criteria are satisfied, use coda_advance to move into unify.'),
         context: [
           issueContext,
           plan ? `## Plan\n${plan.body}` : '',

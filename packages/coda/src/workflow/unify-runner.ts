@@ -196,14 +196,17 @@ function buildEvidenceBlock(ceremony: CeremonyRules, hasSpecDelta: boolean): str
     : `- This issue type has relaxed UNIFY ceremony. If you legitimately have no compounding signal, leave artifacts_produced empty — no exemption needed — but if you DO have insight worth capturing, prefer an overlay update.`;
 
   const specDeltaClause = hasSpecDelta
-    ? `\n- spec_delta declared on issue: you MUST update \`reference/ref-system.md\` OR declare \`exemptions.system_spec\` with a concrete reason. The gate will block until one of these is true.`
-    : '';
-
+    ? `\n- spec_delta declared on issue: you MUST update \`reference/ref-system.md\` OR declare \`exemptions.system_spec\` with a concrete reason. If you skip both, the gate reason will be \`spec_delta declared but ref-system.md not updated\`.`
+    : `\n- If this issue declares spec_delta, you MUST update \`reference/ref-system.md\` OR declare \`exemptions.system_spec\` with a concrete reason. Otherwise the gate reason will be \`spec_delta declared but ref-system.md not updated\`.`;
   return `Before You Write the Completion Record — Collect Evidence
 - Before writing the completion record, list the paths of every overlay or reference doc you created or modified during this UNIFY pass.
 - Gather decision-record paths (anything you created via coda_create type:'decision').
 ${strictClause}${specDeltaClause}
-- The gate verifies every declared path exists on disk and contains non-empty content. Fake paths will be rejected. Empty exemption strings will be rejected.`;
+- Declared artifacts_produced paths are verified on disk for existence and non-empty content. Fake paths will be rejected.
+- If you try to advance without artifacts and without an exemption where one is required, the gate reason will be \`no compounding artifacts produced and no exemption declared\`.
+- If you provide an empty exemption string, the gate reason will be \`exemption requires a non-empty reason\`.
+- Empty exemption strings will be rejected.`;
+
 }
 
 /**
@@ -217,63 +220,71 @@ function buildUnifySystemPrompt(
 ): string {
   const hasSpecDelta = specDelta !== undefined && specDelta !== null;
   const evidenceBlock = buildEvidenceBlock(ceremony, hasSpecDelta);
+  const milestoneBlock = hasMilestone
+    ? '- This issue has a milestone field — check if a milestone record exists\n- If a milestone record exists: update its success criteria status\n- Verification cue: milestone_updated may only be true after you checked the milestone path and applied any needed update'
+    : '- This issue has no milestone field — this action is satisfied automatically\n- Verification cue: milestone_updated may still be true because there was no milestone work to perform';
+  const specDeltaBlock = hasSpecDelta
+    ? `\nSpec delta found on issue:\n${String(specDelta)}\n`
+    : '';
 
-  return `You are completing the UNIFY phase — CODA's compounding engine. Every completed issue should make future issues easier.
-
-You MUST perform all 5 mandatory actions in order:
-
-ACTION 1: Merge Spec Delta into ref-system.md
-- Read the spec delta from the issue (if present in frontmatter or body)
-- Compare the planned delta against what was actually built (check task summaries)
-- Produce the FINAL delta — adjusted for any deviations from the original plan
-- Use coda_edit_body to apply ADDED/MODIFIED/REMOVED changes to reference/ref-system
-- If no spec delta exists on the issue, confirm explicitly: no spec change needed
-- Remember whether you made changes (you will report this in the completion record)
-${hasSpecDelta ? `\nSpec delta found on issue:\n${String(specDelta)}\n` : ''}
-ACTION 2: Review and Update Other Reference Docs
-- Check which reference docs share topics with this issue
-- For each matching doc: does this issue change anything about the documented content?
-- If yes: use coda_edit_body to update the relevant sections
-- If no updates needed: confirm explicitly
-
-ACTION 3: Capture Knowledge for Compounding
-- Ask: "Would the system catch this automatically next time?"
-- New conventions → update ref-conventions (if it exists) via coda_edit_body
-- New patterns → create or update reference docs
-- New decisions → create decision records via coda_create type 'decision'
-- Lessons learned → update relevant ref doc sections
-
-ACTION 3b: Update Module Overlays for Compounding
-- If this issue revealed project-specific patterns relevant to any module (security, tdd, architecture, quality, knowledge), update the module overlay:
-  - Use coda_edit_body on .coda/modules/{module}.local.md to add entries under the appropriate section:
-    - "## Project Values" — high-level principles established by this work
-    - "## Validated Patterns" — conventions confirmed or established by this issue
-    - "## Known False Positives" — findings dismissed during this issue with context
-    - "## Recurring Issues" — problems flagged repeatedly that remain unresolved
-  - Create the overlay file if it doesn't exist yet (use coda_create type 'reference' or coda_edit_body)
-- If no module-relevant patterns were learned, skip this action
-
-ACTION 4: Update Milestone Progress
-${hasMilestone
-    ? '- This issue has a milestone field — check if a milestone record exists\n- If a milestone record exists: update its success criteria status'
-    : '- This issue has no milestone field — this action is satisfied automatically'}
-
-${evidenceBlock}
-
-ACTION 5: Write Completion Record (LAST — after all other actions)
-- Use coda_create with type 'record' to create the completion record
-- Include frontmatter: title, issue slug, completed_at (ISO date), topics (from issue),
-  system_spec_updated: true (if you merged changes OR confirmed no change),
-  reference_docs_reviewed: true (after completing Action 2),
-  milestone_updated: true (after completing Action 4 — even if no milestone exists),
-  unify_review_status: 'pending' (triggers human review before advancing to DONE)
-- Also include the following YAML schema describing the artifacts you produced:
-${ARTIFACTS_SCHEMA_BLOCK}
-- Include body sections: Summary, Verification Evidence (per-AC), Deviations,
-  Decisions, Patterns, Module Findings
-- The three boolean flags (system_spec_updated, reference_docs_reviewed, milestone_updated) MUST all be true before you can advance to DONE. The unify_review_status must be set to 'pending' — a human will review your UNIFY output and approve or request changes before DONE.
-Since you write the record LAST, all fields should reflect the actual outcomes
-of Actions 1-4.`;
+  return [
+    "You are completing the UNIFY phase — CODA's compounding engine. Every completed issue should make future issues easier.",
+    '',
+    'You MUST perform all 5 mandatory actions in order:',
+    '',
+    'ACTION 1: Merge Spec Delta into ref-system.md',
+    '- Read the spec delta from the issue (if present in frontmatter or body)',
+    '- Compare the planned delta against what was actually built (check task summaries)',
+    '- Produce the FINAL delta — adjusted for any deviations from the original plan',
+    '- Use coda_edit_body to apply ADDED/MODIFIED/REMOVED changes to reference/ref-system',
+    '- Verification cue: update `reference/ref-system.md`, or if no spec delta exists confirm that no spec change was needed',
+    '- Remember whether you made changes (you will report this in the completion record)',
+    specDeltaBlock,
+    'ACTION 2: Review and Update Other Reference Docs',
+    '- Check which reference docs share topics with this issue',
+    '- For each matching doc: does this issue change anything about the documented content?',
+    '- If yes: use coda_edit_body to update the relevant sections',
+    '- Verification cue: either update the relevant reference docs or confirm explicitly that no additional reference-doc changes were needed',
+    '',
+    'ACTION 3: Capture Knowledge for Compounding',
+    '- Ask: "Would the system catch this automatically next time?"',
+    '- New conventions → update ref-conventions (if it exists) via coda_edit_body',
+    '- New patterns → create or update reference docs',
+    "- New decisions → create decision records via coda_create type 'decision'",
+    '- Lessons learned → update relevant ref doc sections',
+    '- Verification cue: any knowledge you claim in the completion record must already exist on disk in the docs or decision records you wrote',
+    '',
+    'ACTION 3b: Update Module Overlays for Compounding',
+    '- If this issue revealed project-specific patterns relevant to any module (security, tdd, architecture, quality, knowledge), update the module overlay:',
+    '  - Use coda_edit_body on .coda/modules/{module}.local.md to add entries under the appropriate section:',
+    '    - "## Project Values" — high-level principles established by this work',
+    '    - "## Validated Patterns" — conventions confirmed or established by this issue',
+    '    - "## Known False Positives" — findings dismissed during this issue with context',
+    '    - "## Recurring Issues" — problems flagged repeatedly that remain unresolved',
+    "  - Create the overlay file if it doesn't exist yet (use coda_create type 'reference' or coda_edit_body)",
+    '- Verification cue: for strict ceremonies, either produce `.coda/modules/{module}.local.md` when you learned a reusable module-specific pattern or declare a concrete exemption reason in the completion record',
+    '',
+    'ACTION 4: Update Milestone Progress',
+    milestoneBlock,
+    '',
+    evidenceBlock,
+    '',
+    'ACTION 5: Write Completion Record (LAST — after all other actions)',
+    "- Use coda_create with type 'record' to create the completion record",
+    '- Include frontmatter: title, issue slug, completed_at (ISO date), topics (from issue),',
+    '  system_spec_updated: true (if you merged changes OR confirmed no change),',
+    '  reference_docs_reviewed: true (after completing Action 2),',
+    '  milestone_updated: true (after completing Action 4 — even if no milestone exists),',
+    "  unify_review_status: 'pending' (triggers human review before advancing to DONE)",
+    '- Also include the following YAML schema describing the artifacts you produced:',
+    ARTIFACTS_SCHEMA_BLOCK,
+    '- Include body sections: Summary, Verification Evidence (per-AC), Deviations,',
+    '  Decisions, Patterns, Module Findings',
+    '- Verification cue: write the completion record LAST, after all other actions, because artifacts_produced paths are verified on disk and must already exist with non-empty content',
+    "- The three boolean flags (system_spec_updated, reference_docs_reviewed, milestone_updated) MUST all be true before you can advance to DONE. The unify_review_status must be set to 'pending' — a human will review your UNIFY output and approve or request changes before DONE.",
+    'Since you write the record LAST, all fields should reflect the actual outcomes',
+    'of Actions 1-4.',
+  ].filter((part) => part.length > 0).join('\n');
 }
 
 /**
