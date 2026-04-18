@@ -8,7 +8,7 @@
 
 import { mkdirSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { readRecord, writeRecord, appendSection, replaceSection } from '@coda/core';
+import { readRecord, writeRecord, appendSection, replaceSection, ReplaceSectionError } from '@coda/core';
 import type { EditBodyInput, EditBodyResult } from './types';
 import { validateRecordPath } from './path-validation';
 
@@ -61,8 +61,28 @@ export function codaEditBody(input: EditBodyInput, codaRoot: string): EditBodyRe
         if (!input.section) {
           return { success: false, diff_summary: '', error: 'replace_section requires a section name' };
         }
-        newBody = replaceSection(body, input.section, input.content);
-        summary = `Replaced section "## ${input.section}"`;
+        try {
+          newBody = replaceSection(body, input.section, input.content);
+          summary = `Replaced section "## ${input.section}"`;
+        } catch (err) {
+          if (err instanceof ReplaceSectionError) {
+            if (err.kind === 'not_found') {
+              // Only explicit create_if_missing:true may fall back to append.
+              if (input.create_if_missing) {
+                newBody = appendSection(body, input.section, input.content);
+                summary = `Appended new section "## ${input.section}" (create_if_missing)`;
+                break;
+              }
+              return {
+                success: false,
+                diff_summary: '',
+                error: `replace_section: no "## ${input.section}" section found. Pass create_if_missing: true to append it.`,
+              };
+            }
+            return { success: false, diff_summary: '', error: `replace_section: ${err.message}` };
+          }
+          throw err;
+        }
         break;
       }
       case 'append_text': {

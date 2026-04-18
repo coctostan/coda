@@ -118,11 +118,61 @@ describe('replaceSection', () => {
     );
   });
 
-  test('appends section if heading not found', () => {
-    const result = replaceSection(sampleBody, 'Brand New', 'New content.');
-    expect(getSection(result, 'Brand New')).toBe('New content.');
-    // Original sections still intact
-    expect(getSection(result, 'Description')).not.toBeNull();
+  test('throws when heading is not found (callers must opt into append)', () => {
+    // Phase 58 C2: replace_section is strict. Silent append-on-miss caused
+    // duplicate headings in live use. Callers (e.g., coda_edit_body with
+    // create_if_missing) are responsible for explicit append fallback.
+    expect(() => replaceSection(sampleBody, 'Brand New', 'New content.')).toThrow(/not found|Brand New/i);
+  });
+
+  test('normalizes trivial heading differences (trailing whitespace and colons)', () => {
+    // Body has canonical "## Acceptance Criteria" — replace_section should
+    // match "## Acceptance Criteria:" (trailing colon) and "##   Acceptance Criteria"
+    // (extra spaces) as the SAME section instead of appending a duplicate.
+    const r1 = replaceSection(sampleBody, 'Acceptance Criteria:', 'Updated.');
+    expect(getSection(r1, 'Acceptance Criteria')).toBe('Updated.');
+    // No duplicate heading was appended.
+    const occurrences1 = r1.split('\n').filter((l) => l.trim() === '## Acceptance Criteria' || l.trim() === '## Acceptance Criteria:').length;
+    expect(occurrences1).toBe(1);
+
+    const r2 = replaceSection(sampleBody, '  Acceptance Criteria  ', 'Updated again.');
+    expect(getSection(r2, 'Acceptance Criteria')).toBe('Updated again.');
+  });
+
+  test('is case-insensitive for heading match during replace', () => {
+    const result = replaceSection(sampleBody, 'acceptance criteria', 'Lowercase match.');
+    expect(getSection(result, 'Acceptance Criteria')).toBe('Lowercase match.');
+    // Did not append a second ACs heading.
+    const count = result.split('\n').filter((l) => l.trim().toLowerCase() === '## acceptance criteria').length;
+    expect(count).toBe(1);
+  });
+
+  test('throws when multiple equivalent headings exist (ambiguity)', () => {
+    const dup = `## Requirements
+
+First block.
+
+## requirements
+
+Second block.
+`;
+    expect(() => replaceSection(dup, 'Requirements', 'Replaced.')).toThrow(/duplicate|ambiguous|multiple/i);
+  });
+
+  test('does not silently append duplicate heading for conservative-equivalent match', () => {
+    // Regression for Phase 57 live bug: repeated replace_section calls left
+    // duplicate ## Requirements headings in the issue record. After replace,
+    // calling replace again with a trivially-different heading form must
+    // update the existing section, not append a third copy.
+    let body = `## Requirements
+
+One.
+`;
+    body = replaceSection(body, 'Requirements', 'Two.');
+    body = replaceSection(body, 'Requirements:', 'Three.');
+    const headingOccurrences = body.split('\n').filter((l) => l.trim().replace(/:\s*$/, '').toLowerCase() === '## requirements').length;
+    expect(headingOccurrences).toBe(1);
+    expect(getSection(body, 'Requirements')).toBe('Three.');
   });
 });
 

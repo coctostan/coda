@@ -62,16 +62,80 @@ describe('codaEditBody', () => {
     expect(getSection(record.body, 'First')).toBe('First content.');
   });
 
-  test('replace_section on non-existent section appends it', () => {
+  test('replace_section on non-existent section returns an error (no silent append)', () => {
     const path = createTestRecord();
 
-    codaEditBody(
+    const result = codaEditBody(
       { record: path, op: 'replace_section', section: 'New', content: 'New content.' },
       codaRoot
     );
 
+    // Contract (coda-spec-v7.md, Phase 58 C2): replace_section on a missing
+    // heading without create_if_missing must be an explicit error, not a
+    // silent append that corrupts downstream reads.
+    expect(result.success).toBe(false);
+    expect(result.error ?? '').toMatch(/section|heading|not found/i);
+
+    const record = readRecord<Record<string, unknown>>(join(codaRoot, path));
+    expect(getSection(record.body, 'New')).toBeNull();
+  });
+
+  test('replace_section with create_if_missing:true appends a new section', () => {
+    const path = createTestRecord();
+
+    const result = codaEditBody(
+      { record: path, op: 'replace_section', section: 'New', content: 'New content.', create_if_missing: true },
+      codaRoot
+    );
+
+    expect(result.success).toBe(true);
     const record = readRecord<Record<string, unknown>>(join(codaRoot, path));
     expect(getSection(record.body, 'New')).toBe('New content.');
+  });
+
+  test('replace_section matches an existing heading with trivial formatting differences', () => {
+    const path = createTestRecord();
+
+    // Canonical body has "## Second" — replace_section with "Second:" (trailing colon)
+    // must update the existing section, not append a duplicate heading.
+    const result = codaEditBody(
+      { record: path, op: 'replace_section', section: 'Second:', content: 'Replaced content.' },
+      codaRoot
+    );
+
+    expect(result.success).toBe(true);
+    const record = readRecord<Record<string, unknown>>(join(codaRoot, path));
+    expect(getSection(record.body, 'Second')).toBe('Replaced content.');
+    // No duplicate heading should have been appended.
+    const bodyStr = record.body as string;
+    const occurrences = bodyStr.split('\n').filter((l) => l.trim().replace(/:\s*$/, '').toLowerCase() === '## second').length;
+    expect(occurrences).toBe(1);
+  });
+
+  test('replace_section returns an explicit error when heading appears multiple times', () => {
+    // Simulate the Phase 57 live regression: duplicated headings already on disk.
+    // The tool must refuse to guess and return an ambiguity error.
+    const path = createTestRecord();
+    const fullPath = join(codaRoot, path);
+
+    // Force-append a duplicate Second heading to mimic prior-corrupted state.
+    codaEditBody(
+      { record: path, op: 'append_section', section: 'Second', content: 'Duplicate block.' },
+      codaRoot
+    );
+
+    const result = codaEditBody(
+      { record: path, op: 'replace_section', section: 'Second', content: 'Attempted replacement.' },
+      codaRoot
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error ?? '').toMatch(/duplicate|ambiguous|multiple/i);
+
+    // Both duplicate headings remain unchanged (no silent mutation on ambiguity).
+    const record = readRecord<Record<string, unknown>>(fullPath);
+    const headingCount = (record.body as string).split('\n').filter((l) => l.trim() === '## Second').length;
+    expect(headingCount).toBe(2);
   });
 
   test('append_text appends raw text at end', () => {
