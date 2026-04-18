@@ -60,31 +60,93 @@ export function appendSection(body: string, heading: string, content: string): s
 }
 
 /**
- * Replace the content of an existing `## Heading` section, or append if not found.
+ * Normalize a `## Heading` name for conservative equivalence matching.
  *
- * @param body - The existing markdown body string
- * @param heading - The heading name to replace
- * @param content - The new content for the section
- * @returns The updated body string with the section replaced or appended
+ * Strips leading/trailing whitespace, trailing colons, and lowercases the
+ * result. Only conservative formatting noise is normalized — substrings,
+ * punctuation inside the heading, and semantic variations are NOT matched.
+ *
+ * Used for replace_section duplicate detection: `Requirements`, `requirements`,
+ * `Requirements:`, and `  Requirements  ` all collapse to the same key, but
+ * `Requirements (draft)` or `Acceptance Criteria` do not.
+ */
+export function normalizeHeading(heading: string): string {
+  return heading
+    .trim()
+    .replace(/:\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
+/**
+ * Error class thrown by `replaceSection` when it cannot unambiguously resolve
+ * the target heading. Callers (e.g., `codaEditBody`) translate these into
+ * typed tool errors so agents/operators never get silent duplicate-heading
+ * corruption.
+ */
+export class ReplaceSectionError extends Error {
+  public readonly kind: 'not_found' | 'ambiguous';
+  constructor(kind: 'not_found' | 'ambiguous', message: string) {
+    super(message);
+    this.name = 'ReplaceSectionError';
+    this.kind = kind;
+  }
+}
+
+/**
+ * Replace the content of an existing `## Heading` section.
+ *
+ * Resolution rules (Phase 58 C2):
+ * - Exact-match first: any `## {heading}` line with the caller's exact spelling.
+ * - Conservative-normalized match: strips trailing colons, collapses internal
+ *   whitespace, case-insensitive. `Requirements`, `requirements`,
+ *   `Requirements:` all match the same canonical section.
+ * - If no heading matches: throws `ReplaceSectionError('not_found', ...)`.
+ * - If multiple equivalent headings match: throws `ReplaceSectionError('ambiguous', ...)`.
+ *
+ * No fuzzy substring matching. No silent append — callers that want
+ * append-on-missing must catch `not_found` and call `appendSection`
+ * explicitly (see `codaEditBody`'s `create_if_missing` path).
+ *
+ * @throws ReplaceSectionError when the target heading is missing or ambiguous.
  */
 export function replaceSection(body: string, heading: string, content: string): string {
   const lines = body.split('\n');
-  const target = `## ${heading}`;
-  let startIndex = -1;
+  const exactTarget = `## ${heading}`;
+  const normalizedTarget = normalizeHeading(heading);
 
-  // Find the heading line
+  // Collect all heading lines and their indices so we can detect duplicates.
+  const headingMatches: { index: number; line: string; exact: boolean }[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line !== undefined && line.trim() === target) {
-      startIndex = i;
-      break;
+    if (line === undefined) continue;
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('## ')) continue;
+    const headingText = trimmed.slice(3);
+    if (trimmed === exactTarget) {
+      headingMatches.push({ index: i, line: trimmed, exact: true });
+    } else if (normalizeHeading(headingText) === normalizedTarget) {
+      headingMatches.push({ index: i, line: trimmed, exact: false });
     }
   }
 
-  // If not found, append
-  if (startIndex === -1) {
-    return appendSection(body, heading, content);
+  if (headingMatches.length === 0) {
+    throw new ReplaceSectionError('not_found', `No "## ${heading}" section found`);
   }
+
+  // Any duplication of equivalent headings — whether exact duplicates or one
+  // exact plus one normalized variant — is ambiguous. The Phase 57 live bug
+  // showed that once duplicates exist on disk, silent replacement just makes
+  // them harder to detect. Force the operator/agent to deduplicate first.
+  if (headingMatches.length > 1) {
+    throw new ReplaceSectionError(
+      'ambiguous',
+      `Multiple equivalent "## ${heading}" sections exist; refusing to guess. Deduplicate the record body first.`
+    );
+  }
+
+  const match = headingMatches[0]!;
+  const startIndex = match.index;
 
   // Find the end of this section (next ## heading or end of body)
   let endIndex = lines.length;
@@ -96,10 +158,11 @@ export function replaceSection(body: string, heading: string, content: string): 
     }
   }
 
-  // Build the replacement
+  // Build the replacement using the matched heading's canonical line so we
+  // never accidentally rewrite the heading spelling on replace.
   const before = lines.slice(0, startIndex);
   const after = lines.slice(endIndex);
-  const replacement = [`## ${heading}`, '', content, ''];
+  const replacement = [match.line, '', content, ''];
 
   return [...before, ...replacement, ...after].join('\n');
 }

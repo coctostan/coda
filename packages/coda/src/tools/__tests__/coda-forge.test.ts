@@ -82,6 +82,54 @@ describe('codaForge', () => {
     expect(existsSync(join(projectRoot, '.coda', 'coda.json'))).toBe(false);
   });
 
+  test('greenfield next_action explicitly tells the operator to configure test commands via coda_config when unset', () => {
+    // Phase 58 C3: when scaffold leaves tdd_test_command / full_suite_command null,
+    // the forge handoff must name coda_config as the concrete follow-up so the agent
+    // does not hit a latent TDD configuration trap later.
+    process.chdir(projectRoot);
+    const result = codaForge({}, process.cwd());
+
+    const config = JSON.parse(
+      readFileSync(join(projectRoot, '.coda', 'coda.json'), 'utf-8')
+    ) as { tdd_test_command: unknown; full_suite_command: unknown };
+    expect(config.tdd_test_command).toBeNull();
+    expect(config.full_suite_command).toBeNull();
+
+    expect(result.next_action).toMatch(/coda_config/);
+    expect(result.next_action).toMatch(/tdd_test_command|test command/i);
+  });
+
+  test('next_action omits the coda_config nag when scaffold could seed a safe default', () => {
+    // When bun.lock is present alongside package.json, scaffold seeds `bun test`
+    // for both commands. The next_action should NOT ask the agent to reconfigure
+    // test commands because nothing is actually missing.
+    writeFileSync(join(projectRoot, 'package.json'), JSON.stringify({ name: 'x' }), 'utf-8');
+    writeFileSync(join(projectRoot, 'bun.lock'), '', 'utf-8');
+
+    const result = codaForge({}, projectRoot);
+
+    const config = JSON.parse(
+      readFileSync(join(projectRoot, '.coda', 'coda.json'), 'utf-8')
+    ) as { tdd_test_command: unknown };
+    expect(config.tdd_test_command).toBe('bun test');
+    expect(result.next_action).not.toMatch(/configure.*tdd_test_command|configure.*test command/i);
+  });
+
+  test('brownfield next_action also names coda_config when test commands stay null', () => {
+    // Brownfield handoff uses a different wording but must still surface the
+    // missing test-command configuration so TDD does not silently break.
+    writeFileSync(join(projectRoot, 'package.json'), JSON.stringify({ name: 'x', scripts: {} }), 'utf-8');
+    mkdirSync(join(projectRoot, 'src'), { recursive: true });
+
+    const result = codaForge({}, projectRoot);
+
+    const config = JSON.parse(
+      readFileSync(join(projectRoot, '.coda', 'coda.json'), 'utf-8')
+    ) as { tdd_test_command: unknown };
+    expect(config.tdd_test_command).toBeNull();
+    expect(result.next_action).toMatch(/coda_config/);
+  });
+
   test('honors project_root explicitly and otherwise uses the provided default project root', () => {
     const explicitRoot = mkdtempSync(join(tmpdir(), 'coda-forge-explicit-'));
 

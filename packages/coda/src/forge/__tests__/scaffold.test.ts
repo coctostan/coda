@@ -159,4 +159,82 @@ describe('FORGE Scaffold', () => {
       expect(config.max_verify_iterations).toBe(3);
     });
   });
+
+  describe('conservative test-command detection (Phase 58 C3)', () => {
+    test('seeds `bun test` when a bun lockfile is present alongside package.json', () => {
+      const { writeFileSync } = require('fs');
+      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({ name: 'x' }), 'utf-8');
+      writeFileSync(join(tempDir, 'bun.lock'), '', 'utf-8');
+
+      scaffoldCoda(tempDir);
+      const config: CodaConfig = JSON.parse(
+        readFileSync(join(tempDir, '.coda', 'coda.json'), 'utf-8')
+      );
+      expect(config.tdd_test_command).toBe('bun test');
+      expect(config.full_suite_command).toBe('bun test');
+    });
+
+    test('seeds `bun test` when bun.lockb (binary) is present', () => {
+      const { writeFileSync } = require('fs');
+      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({ name: 'x' }), 'utf-8');
+      writeFileSync(join(tempDir, 'bun.lockb'), Buffer.from([0]));
+
+      scaffoldCoda(tempDir);
+      const config: CodaConfig = JSON.parse(
+        readFileSync(join(tempDir, '.coda', 'coda.json'), 'utf-8')
+      );
+      expect(config.tdd_test_command).toBe('bun test');
+      expect(config.full_suite_command).toBe('bun test');
+    });
+
+    test('seeds `bun test` when package.json explicitly declares a bun test script', () => {
+      const { writeFileSync } = require('fs');
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({ name: 'x', scripts: { test: 'bun test' } }),
+        'utf-8'
+      );
+
+      scaffoldCoda(tempDir);
+      const config: CodaConfig = JSON.parse(
+        readFileSync(join(tempDir, '.coda', 'coda.json'), 'utf-8')
+      );
+      expect(config.tdd_test_command).toBe('bun test');
+      expect(config.full_suite_command).toBe('bun test');
+    });
+
+    test('leaves commands null for npm-style projects (runner semantics not safe)', () => {
+      // npm passes patterns via `-- <pattern>`; coda_run_tests appends the
+      // pattern as a positional arg, which is not compatible. Leave unset.
+      const { writeFileSync } = require('fs');
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({ name: 'x', scripts: { test: 'jest' } }),
+        'utf-8'
+      );
+      writeFileSync(join(tempDir, 'package-lock.json'), '{}', 'utf-8');
+
+      scaffoldCoda(tempDir);
+      const config: CodaConfig = JSON.parse(
+        readFileSync(join(tempDir, '.coda', 'coda.json'), 'utf-8')
+      );
+      expect(config.tdd_test_command).toBeNull();
+      expect(config.full_suite_command).toBeNull();
+    });
+
+    test('leaves commands null for a greenfield project with no package.json', () => {
+      scaffoldCoda(tempDir);
+      const config: CodaConfig = JSON.parse(
+        readFileSync(join(tempDir, '.coda', 'coda.json'), 'utf-8')
+      );
+      expect(config.tdd_test_command).toBeNull();
+      expect(config.full_suite_command).toBeNull();
+    });
+
+    test('getDefaultConfig with no projectRoot returns nulls (conservative default)', () => {
+      const config = getDefaultConfig();
+      expect(config.tdd_test_command).toBeNull();
+      expect(config.full_suite_command).toBeNull();
+    });
+  });
 });

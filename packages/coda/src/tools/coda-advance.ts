@@ -90,11 +90,12 @@ function gatherGateData(
   let issueType = 'feature'; // fallback
   if (existsSync(issuePath)) {
     const { frontmatter } = readRecord<IssueRecord>(issuePath);
-    data.issueAcCount = frontmatter.acceptance_criteria.length;
-    data.humanReviewRequired = frontmatter.human_review;
-    data.allAcsMet = frontmatter.acceptance_criteria.length > 0
-      && frontmatter.acceptance_criteria.every((ac) => ac.status === 'met');
-    issueType = frontmatter.issue_type ?? 'feature';
+    const safe = normalizeIssueFrontmatter(frontmatter);
+    data.issueAcCount = safe.acceptance_criteria.length;
+    data.humanReviewRequired = safe.human_review;
+    data.allAcsMet = safe.acceptance_criteria.length > 0
+      && safe.acceptance_criteria.every((ac) => ac?.status === 'met');
+    issueType = safe.issue_type;
   }
   const planPath = getLatestPlanPath(codaRoot, issueSlug);
   if (planPath) {
@@ -169,6 +170,38 @@ function gatherGateData(
   }
   data.codaRoot = codaRoot;
   return { gateData: data, issueType };
+}
+
+/**
+ * Conservatively normalize an issue record's frontmatter so downstream gate
+ * reads tolerate sparse/malformed documents. Missing arrays default to empty,
+ * missing booleans/strings default conservatively (readiness stays off),
+ * and invalid acceptance_criteria entries are filtered out instead of throwing.
+ *
+ * This keeps the gate semantics honest: malformed readiness data produces a
+ * clean gate failure, never a runtime TypeError and never a silent pass.
+ */
+function normalizeIssueFrontmatter(frontmatter: Partial<IssueRecord> | undefined | null): {
+  acceptance_criteria: IssueRecord['acceptance_criteria'];
+  open_questions: string[];
+  deferred_items: string[];
+  topics: string[];
+  human_review: boolean;
+  issue_type: string;
+} {
+  const fm = (frontmatter ?? {}) as Partial<IssueRecord>;
+  const acs = Array.isArray(fm.acceptance_criteria)
+    ? fm.acceptance_criteria.filter((ac): ac is IssueRecord['acceptance_criteria'][number] =>
+        Boolean(ac) && typeof ac === 'object')
+    : [];
+  return {
+    acceptance_criteria: acs,
+    open_questions: Array.isArray(fm.open_questions) ? fm.open_questions : [],
+    deferred_items: Array.isArray(fm.deferred_items) ? fm.deferred_items : [],
+    topics: Array.isArray(fm.topics) ? fm.topics : [],
+    human_review: fm.human_review === true,
+    issue_type: typeof fm.issue_type === 'string' ? fm.issue_type : 'feature',
+  };
 }
 
 /**
@@ -368,6 +401,7 @@ function handleHumanReviewDecision(
       op: 'replace_section',
       section: 'Human Review',
       content: `Status: changes-requested\n\nFeedback:\n${reviewFeedback}`,
+      create_if_missing: true,
     }, codaRoot);
 
     if (!editResult.success) {
@@ -450,6 +484,7 @@ function handleUnifyReviewDecision(
       op: 'replace_section',
       section: 'UNIFY Review',
       content: `Status: changes-requested\n\nFeedback:\n${feedback}`,
+      create_if_missing: true,
     }, codaRoot);
 
     if (!editResult.success) {

@@ -30,7 +30,7 @@ export type {
 export { readRecord, writeRecord, updateFrontmatter } from './records';
 
 // Section operations
-export { getSection, appendSection, replaceSection, getSectionsByTopics, getSectionHeadings } from './sections';
+export { getSection, appendSection, replaceSection, normalizeHeading, ReplaceSectionError, getSectionsByTopics, getSectionHeadings } from './sections';
 
 // Directory operations
 export { listRecords } from './directory';

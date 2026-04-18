@@ -280,6 +280,69 @@ describe('codaAdvance', () => {
     expect(record.frontmatter['phase']).toBe('specify');
   });
 
+  test('does not crash when issue frontmatter omits acceptance_criteria', () => {
+    const issuePath = join(codaRoot, 'issues', 'test-issue.md');
+    writeRecord<Partial<IssueRecord>>(issuePath, {
+      title: 'Sparse Issue',
+      issue_type: 'feature',
+      status: 'proposed',
+      phase: 'specify',
+      priority: 3,
+      topics: [],
+      // acceptance_criteria, open_questions, human_review intentionally omitted
+    } as IssueRecord, '## Description\n\nSparse frontmatter test.\n');
+
+    persistState({
+      ...createDefaultState(),
+      focus_issue: 'test-issue',
+      phase: 'specify',
+    }, statePath);
+
+    const result = codaAdvance({ target_phase: 'plan' }, codaRoot, statePath);
+
+    // Must not throw nor leak a JS runtime TypeError. Phase 57 live crash was
+    // "Cannot read properties of undefined (reading 'length')" on acceptance_criteria.
+    expect(result.success).toBe(false);
+    const errText = `${result.error ?? ''} ${result.reason ?? ''}`;
+    expect(errText).not.toMatch(/Cannot read propert(y|ies) of undefined/);
+    expect(errText).not.toMatch(/undefined is not an object/);
+    expect(errText).not.toMatch(/acceptance_criteria\./);
+    // Should be a real gate failure, not a runtime error.
+    expect(result.reason ?? '').toMatch(/acceptance criterion|gate|plan/i);
+
+    // Issue phase and state must not mutate on a failed advance.
+    const issue = readRecord<Record<string, unknown>>(issuePath);
+    expect(issue.frontmatter['phase']).toBe('specify');
+    expect(loadState(statePath)?.phase).toBe('specify');
+  });
+
+  test('does not crash when issue frontmatter omits optional fields entirely', () => {
+    const issuePath = join(codaRoot, 'issues', 'test-issue.md');
+    writeRecord<Partial<IssueRecord>>(issuePath, {
+      title: 'Minimal Issue',
+      issue_type: 'feature',
+      status: 'proposed',
+      phase: 'specify',
+      priority: 3,
+      // topics, acceptance_criteria, open_questions, deferred_items, human_review all missing
+    } as IssueRecord, '## Description\n\nMinimal frontmatter test.\n');
+
+    persistState({
+      ...createDefaultState(),
+      focus_issue: 'test-issue',
+      phase: 'specify',
+    }, statePath);
+
+    const result = codaAdvance({ target_phase: 'plan' }, codaRoot, statePath);
+
+    expect(result.success).toBe(false);
+    const errText = `${result.error ?? ''} ${result.reason ?? ''}`;
+    expect(errText).not.toMatch(/Cannot read propert(y|ies) of undefined/);
+    expect(errText).not.toMatch(/undefined is not an object/);
+    expect(errText).not.toMatch(/acceptance_criteria\.|open_questions\.|human_review\./);
+    expect(loadState(statePath)?.phase).toBe('specify');
+  });
+
   test('fails with invalid target phase', () => {
     setupIssue(2);
 

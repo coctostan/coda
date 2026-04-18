@@ -8,7 +8,7 @@
  */
 
 import { createDefaultState, persistState } from '@coda/core';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { ForgeBackdrop, CodaConfig } from './types';
 
@@ -47,12 +47,20 @@ export function detectBackdrop(projectRoot: string): ForgeBackdrop {
 /**
  * Return the default coda.json configuration object.
  *
- * @returns A CodaConfig with v0.2 defaults
+ * When `projectRoot` is provided, scaffold inspects conservative toolchain
+ * signals (Bun lockfile or an explicit `bun test` script) and seeds
+ * `tdd_test_command` / `full_suite_command` with `bun test`. Otherwise the
+ * commands stay null so the operator configures them via `coda_config`
+ * before relying on TDD. Phase 58 C3: no guessing for ambiguous toolchains.
+ *
+ * @param projectRoot - Optional project root for detection. Omit for defaults-only.
+ * @returns A CodaConfig with v0.2 defaults, optionally with seeded test commands
  */
-export function getDefaultConfig(): CodaConfig {
+export function getDefaultConfig(projectRoot?: string): CodaConfig {
+  const detected = projectRoot ? detectTestCommand(projectRoot) : null;
   return {
-    tdd_test_command: null,
-    full_suite_command: null,
+    tdd_test_command: detected,
+    full_suite_command: detected,
     verification_commands: [],
     max_review_iterations: 3,
     max_verify_iterations: 3,
@@ -73,6 +81,45 @@ export function getDefaultConfig(): CodaConfig {
       unify_review: 'human',
     },
   };
+}
+
+/**
+ * Detect a safe default test command from project-root signals.
+ *
+ * Returns `'bun test'` only when the toolchain signal is unambiguous AND
+ * compatible with `coda_run_tests` pattern semantics (positional arg append):
+ * - A Bun lockfile (`bun.lock` or `bun.lockb`) alongside `package.json`, OR
+ * - An explicit `scripts.test` entry equal to `bun test` in package.json.
+ *
+ * Other toolchains (npm/yarn/pnpm with jest/vitest/mocha) are deliberately
+ * NOT inferred: npm-style runners pass patterns via `-- <pattern>` which
+ * coda_run_tests does not format. Returning null keeps `coda_config` as the
+ * explicit follow-up path instead of a latent TDD-breakage trap.
+ */
+function detectTestCommand(projectRoot: string): string | null {
+  const packageJsonPath = join(projectRoot, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return null;
+  }
+
+  const hasBunLock =
+    existsSync(join(projectRoot, 'bun.lock')) ||
+    existsSync(join(projectRoot, 'bun.lockb'));
+
+  let packageJson: { scripts?: Record<string, string> } = {};
+  try {
+    packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as typeof packageJson;
+  } catch {
+    return null;
+  }
+
+  const explicitBunTestScript = packageJson.scripts?.test?.trim() === 'bun test';
+
+  if (hasBunLock || explicitBunTestScript) {
+    return 'bun test';
+  }
+
+  return null;
 }
 
 /**
@@ -97,7 +144,7 @@ export function scaffoldCoda(projectRoot: string): string {
   mkdirSync(join(codaRoot, 'issues'), { recursive: true });
   mkdirSync(join(codaRoot, 'milestones'), { recursive: true });
 
-  const config = getDefaultConfig();
+  const config = getDefaultConfig(projectRoot);
   writeFileSync(
     join(codaRoot, 'coda.json'),
     JSON.stringify(config, null, 2),
