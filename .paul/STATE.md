@@ -85,9 +85,9 @@ PLAN ──▶ APPLY ──▶ UNIFY
 ### Git State
 Branch: main
 Remote: https://github.com/coctostan/coda.git
-Last commit: 08086c0 feat(58-lifecycle-bug-fixes): harden SPECIFY→PLAN, replace_section, FORGE defaults (#25)
-PR: https://github.com/coctostan/coda/pull/25 (state: MERGED; squash)
-Feature branch: feature/57-e2e-re-validation (carried over from Phase 57; Phase 58 committed there per preflight "continue on current branch" rule — branch now deleted local + remote after merge)
+Last commit: 45ab27b chore(58-transition): phase 58 complete → transition to phase 59 (#26)
+PRs merged this phase: #25 (feat 58-lifecycle-bug-fixes, 08086c0), #26 (chore 58-transition + Phase 57 carryover, 45ab27b)
+Feature branches cleaned: feature/57-e2e-re-validation (merged via #25), feature/58-transition (merged via #26)
 Test baseline (post-P58 merge): 740 pass / 1 todo / 0 fail / 2234 expect / 55 files (pre-apply 722/2185/55).
 DEAN baseline: 1 critical (protobufjs) + 3 high (basic-ftp); unchanged since 2026-04-17T00:54:41Z.
 
@@ -100,6 +100,6 @@ Resume context:
 - Phase 58 SUMMARY at `.paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md` is the canonical record.
 - Phase 59 owns lifecycle integrity: VERIFY must reject no-evidence success, UNIFY evidence gates must run on the reachable path.
 - Phase 60 is the live Script A re-run with a binary verdict on v0.11.
-- Phase 57 artifacts (`.paul/phases/57-e2e-re-validation/`, `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md`, Phase 57 archived handoffs, `.paul/milestones/v0.11.0-ROADMAP.md`, and several `.paul/*` v0.10/v0.11 doc updates) remain uncommitted on main; fold them into the Phase 59 PLAN commit or a dedicated v0.10-closure commit before Phase 59 APPLY.
+- Phase 57 artifacts were folded into the Phase 58 transition commit (PR #26, 45ab27b); no outstanding uncommitted artifacts remain on main.
 ---
 *STATE.md — Updated after every significant action*
