@@ -1,21 +1,24 @@
 # Project State
 ## Project Reference
-See: .paul/PROJECT.md (updated 2026-04-17)
+See: .paul/PROJECT.md (updated 2026-04-18)
 Version: v0.11.0-dev
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
 **Current focus:** v0.11 Six Fixes and Re-Validation
 ## Current Position
 Milestone: v0.11 Six Fixes and Re-Validation
-Phase: 59 of 60 (Lifecycle Integrity) — APPLY complete
-Plan: 59-01 executed on feature/59-lifecycle-integrity
-Status: APPLY complete, ready for UNIFY
-Last activity: 2026-04-18T03:35:00Z — Executed .paul/phases/59-lifecycle-integrity/59-01-PLAN.md: hardened VERIFY fail-closed evidence defaults, strengthened VERIFY/UNIFY prompts with gate-text drift guards, added lifecycle-e2e coverage for dishonest VERIFY / empty UNIFY / honest DONE, verified targeted + full bun suites green, audit baseline unchanged, README drift still deferred
+Phase: 60 of 60 (E2E Re-Validation) — ready to plan
+Plan: Not started
+Status: Ready for PLAN
+Last activity: 2026-04-18T12:12:07-04:00 — Unified .paul/phases/59-lifecycle-integrity/59-01-PLAN.md into 59-01-SUMMARY.md, recorded post-unify quality/codegraph history, documented the accepted stale-VERIFY-exit-code gap, and transitioned v0.11 to Phase 60 planning after PR #29 merged.
 Progress:
-- v0.11 Six Fixes and Re-Validation: [██████░░░░] 67% (2 of 3 phases complete)
-- Phase 59: [██████░░░░] 67% (apply complete)
+- v0.11 Six Fixes and Re-Validation: [████████░░] 67% (2 of 3 phases complete)
+- Phase 60: [░░░░░░░░░░] 0% (not started)
 ## Loop Position
 Current loop state:
-```\nPLAN ──▶ APPLY ──▶ UNIFY\n  ✓        ✓        ○     [Apply complete, ready for UNIFY]\n```
+```
+PLAN ──▶ APPLY ──▶ UNIFY
+  ✓        ✓        ✓     [Loop complete - ready for next PLAN]
+```
 ## Accumulated Context
 ### Decisions
 | Decision | Phase | Impact |
@@ -69,35 +72,39 @@ Current loop state:
 | DEC-58-4: `normalizeIssueFrontmatter()` conservatively defaults missing fields | v0.11 P58 | Sparse SPECIFY frontmatter produces clean gate failure, not runtime TypeError; contained in one helper local to coda-advance.ts |
 | DEC-58-5: FORGE test-command detection is Bun-only, conservative | v0.11 P58 | `coda_run_tests` pattern semantics only known-compatible with `bun test <pattern>`; other runners stay unset rather than silently break |
 | DEC-58-6: FORGE `next_action` wording names `coda_config` when test commands stay null | v0.11 P58 | Keeps the lifecycle entry path one-call ergonomic per the P56 pattern; no latent TDD trap |
+| DEC-59-1: VERIFY evidence defaults are fail-closed | v0.11 P59 | Missing explicit verification evidence now blocks success; task coverage alone is advisory only |
+| DEC-59-2: `runVerifyRunner` reads `state.last_test_exit_code` directly | v0.11 P59 | Reachable-path hardening landed without widening `VerifyRunnerOptions` or touching `hooks.ts` |
+| DEC-59-3: UNIFY prompt embeds literal gate reasons | v0.11 P59 | Prompt/gate drift now fails tests instead of silently diverging |
+| DEC-59-4: Reachable-path lifecycle proof is mandatory | v0.11 P59 | `lifecycle-e2e.test.ts` is now the acceptance bar for honest VERIFY/UNIFY behavior |
 
 ### Active Blockers / Follow-ups
-- Phase 59 APPLY is complete on `feature/59-lifecycle-integrity`; UNIFY still owes the canonical SUMMARY, deviations/accepted-gap reconciliation, and lifecycle closeout before Phase 60's live rerun.
+- Phase 60 still owes the live Script A rerun and binary milestone verdict for v0.11. The next plan must use the same success criteria as Phase 57's live run, not softened ones.
+- Accepted Phase 59 limitation: `state.last_test_exit_code` is still a single global slot. VERIFY now fails closed on missing evidence and the prompt requires a fresh `coda_run_tests` run, but a stale BUILD-phase success can still mask a missing VERIFY rerun if the agent ignores that prompt.
 - `docs/coda-spec-v7.md` needs a section documenting `artifacts_produced` schema + evidence gate AND a refresh removing legacy `human_review_default` references (deferred from P54/P55 per plan; carry to milestone close).
 - `coda-advance.ts` grew to 704L in Phase 58 (was 669L); still exceeds 500L soft RUBY threshold; candidate refactor = extract `handleUnifyReviewDecision` + `handleHumanReviewDecision` into a sibling file (v0.11).
 - `coda-advance.test.ts` grew to 857L (was 802L); test-side extract should follow any production-side split.
 - `codaRunTests` runtime-detection via `globalThis.Bun` masking is retained as `test.todo` (Bun global is readonly in the Bun test harness); future non-Bun test harness or integration test can promote it.
 - Custom-tool default-deny is conservative by design (DEC-55-2); if operators report false positives with third-party Pi extensions, consider adding a config-driven allow-list as a v0.11 follow-up.
 - `README.md` drift remains after Phase 56 lifecycle-guidance changes; DOCS flagged it during APPLY and it stays deferred outside the current code-focused phase scope.
-- Phase 57 artifacts (`.paul/phases/57-e2e-re-validation/`, `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md`) remain uncommitted. Phase 57 transition/PR work still owes a follow-up commit; address during Phase 58 merge gate or alongside the Phase 59 plan.
+- Phase 57 artifacts (`.paul/phases/57-e2e-re-validation/`, `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md`) remain uncommitted. Phase 57 transition/PR work still owes a follow-up commit.
 ### Git State
-Branch: feature/59-lifecycle-integrity
+Branch: feature/59-lifecycle-integrity (PR merged; local closeout still on feature branch)
 Remote: https://github.com/coctostan/coda.git
-Last commit: current APPLY commit on `feature/59-lifecycle-integrity` (PR #29 head)
-Open PR: #29 https://github.com/coctostan/coda/pull/29
+Last commit: PR #29 merge commit on `main` = `5f9babb53af7a43dc23bc1585cf2e800f7b309ef`
+PR: #29 https://github.com/coctostan/coda/pull/29 (MERGED)
 Feature branches cleaned: feature/57-e2e-re-validation (merged via #25), feature/58-transition (merged via #26)
-Test baseline (post-P59 APPLY): 751 pass / 1 todo / 0 fail / 2287 expect / 56 files (targeted workflow suite: 51 pass / 0 fail).
+Test baseline (post-P59 UNIFY): 751 pass / 1 todo / 0 fail / 2287 expect / 56 files (targeted workflow suite: 51 pass / 0 fail).
 DEAN baseline: 1 critical (protobufjs) + 3 high (basic-ftp); unchanged since 2026-04-17T00:54:41Z.
 
 ## Session Continuity
-Last session: 2026-04-18T03:35:00Z
-Stopped at: Phase 59 APPLY complete, ready for UNIFY.
-Next action: Run `/paul:unify .paul/phases/59-lifecycle-integrity/59-01-PLAN.md` to reconcile Phase 59 implementation against the approved plan and capture the accepted VERIFY stale-exit-code gap.
-Resume file: .paul/phases/59-lifecycle-integrity/59-01-PLAN.md
+Last session: 2026-04-18T12:12:07-04:00
+Stopped at: Phase 59 complete; SUMMARY written; Phase 60 is next.
+Next action: Run `/paul:plan` for Phase 60 (E2E Re-Validation). Sync to `main` first if you want the next phase to start from the merged base instead of the still-open local feature branch.
+Resume file: .paul/ROADMAP.md
 Resume context:
-- `.paul/HANDOFF-2026-04-18-phase-59-ready.md` is the active resume entry point with complete session context.
-- Phase 58 SUMMARY at `.paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md` is the canonical Phase 58 record.
-- Phase 59 owns lifecycle integrity: VERIFY must reject no-evidence success, UNIFY evidence gates must run on the reachable path.
-- Phase 60 is the live Script A re-run with a binary verdict on v0.11.
-- Feature branch `feature/59-lifecycle-integrity` now carries the committed Phase 59 APPLY changes and open PR #29; next lifecycle step is UNIFY on this branch/head.
+- Phase 59 is canonically summarized at `.paul/phases/59-lifecycle-integrity/59-01-SUMMARY.md`.
+- PR #29 is merged; VERIFY now fails closed on missing explicit evidence, UNIFY prompts are gate-aligned, and `packages/coda/src/workflow/__tests__/lifecycle-e2e.test.ts` proves dishonest VERIFY / empty UNIFY blocking plus honest DONE success.
+- Post-unify history has been updated in `.paul/quality-history.md` and `.paul/CODI-HISTORY.md`.
+- The accepted stale-`state.last_test_exit_code` limitation, README drift, spec-doc refresh, and Phase 57 artifact cleanup remain open carry-forward items for milestone close / live rerun context.
 ---
 *STATE.md — Updated after every significant action*

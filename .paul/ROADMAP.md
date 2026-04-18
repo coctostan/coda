@@ -11,8 +11,8 @@ Theme: "Fix the live lifecycle gaps, then prove compounding works."
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 58 | Lifecycle Bug Fixes | 1/1 | ✅ Complete | 2026-04-18 |
-| 59 | Lifecycle Integrity | 1 | Planning | - |
-| 60 | E2E Re-Validation | TBD | Not started | - |
+| 59 | Lifecycle Integrity | 1/1 | ✅ Complete | 2026-04-18 |
+| 60 | E2E Re-Validation | TBD | 🔵 Ready to plan | - |
 
 ### Phase 58: Lifecycle Bug Fixes
 Focus: Fix the concrete code-path bugs surfaced by Phase 57 — nil-unsafe SPECIFY → PLAN advance, duplicate section replacement behavior, and missing/unclear test-command defaults during scaffold.
@@ -199,4 +199,4 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-17 — v0.11 created as the new current milestone after v0.10 closed as a documented failure*
+*Roadmap updated: 2026-04-18 — Phase 59 completed; Phase 60 is next for live re-validation*

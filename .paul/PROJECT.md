@@ -9,7 +9,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Attribute | Value |
 |-----------|-------|
 | Version | 0.11.0-dev |
-| Status | v0.11 Six Fixes and Re-Validation — Phase 58 Lifecycle Bug Fixes complete; ready to plan Phase 59 (Lifecycle Integrity) |
+| Status | v0.11 Six Fixes and Re-Validation — Phase 59 Lifecycle Integrity complete; ready to plan Phase 60 (E2E Re-Validation) |
 | Last Updated | 2026-04-18 |
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
@@ -22,13 +22,14 @@ Enabling developers to build durable, maintainable software through disciplined 
 - Module Overlay Infrastructure shipped in Phase 49: two-layer prompt model (default + `.coda/modules/*.local.md` overlay), overlay-aware dispatcher, UNIFY compounding instruction (ACTION 3b), FORGE overlay seeding in SYNTHESIZE context
 - Gate Automation shipped in Phase 50: configurable gate modes (human/auto/auto-unless-block) for 3 lifecycle transitions, per-issue-type overrides, backward compat with `human_review_default`
 - E2E Validation shipped in Phase 51: 11 cross-feature E2E tests proving v0.8 features compose correctly, `/coda new`/review-runner/coda-status aligned with gate automation
-- 722 tests passing, 1 todo, TypeScript strict clean, no `any` types in source, zero external deps in core
+- 751 tests passing, 1 todo, TypeScript strict clean, no `any` types in source, zero external deps in core
 - Phase 53 (Agent Entry Points) shipped 2026-04-16: `coda_forge` + `coda_focus` as agent tools (tool count 10→12), slash commands refactored to thin wrappers, F7 write-gate integration guard + `DEBUG=coda:*` diagnostic
 - Phase 54 (UNIFY Produces Artifacts) shipped 2026-04-16: evidence-based `unify→done` gate with `artifacts_produced` schema on `CompletionRecord`, ceremony-aware relaxation for `refactor`/`chore`/`docs`, spec-delta enforcement regardless of ceremony, UNIFY runner prompt restructured to emit artifacts_produced YAML schema + explicit path-collection instruction (708 tests)
 - Phase 55 shipped 2026-04-16: runtime-portable `coda_run_tests`, deeper write-gate hardening, and `human_review_default` removal with on-load gates migration (720 pass / 1 todo)
 - Phase 56 shipped 2026-04-17: `before_agent_start` now bootstraps unfocused sessions into forge/create/focus, phase/build prompts reinforce lifecycle-local next steps, and `coda_status`/`coda_focus`/`coda_forge` now return concrete tool-first handoffs (722 pass / 1 todo)
 - v0.10 closed 2026-04-17 as a documented failure: the live Script A rerun proved entry is better (`coda_forge`, `coda_focus`, configured `coda_run_tests`), but live SPECIFY → PLAN advance, VERIFY truthfulness, and UNIFY artifact/completion behavior still fail
 - Phase 58 shipped 2026-04-18: `codaAdvance` survives sparse SPECIFY frontmatter (normalizeIssueFrontmatter), `replaceSection` is strict with typed `ReplaceSectionError`, `coda_edit_body` only appends on explicit `create_if_missing`, FORGE scaffold seeds `bun test` only when Bun signals are unambiguous and otherwise directs the agent to `coda_config` (740 pass / 1 todo)
+- Phase 59 shipped 2026-04-18: VERIFY now fails closed on missing explicit evidence, VERIFY/UNIFY prompts are gate-aligned, and reachable-path lifecycle coverage proves dishonest VERIFY / empty UNIFY block while honest VERIFY + real artifacts advance to `done` (751 pass / 1 todo)
 
 ## Scope Snapshot
 ### Validated
@@ -93,9 +94,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Phase 55 — Supporting Systems Repair: runtime-agnostic `coda_run_tests` via injectable `SpawnImpl`; write-gate hardened against symlink/bash-compound/custom-tool bypass (parent-realpath + `coda_*` allow-list); `human_review_default` removed from `CodaConfig` with idempotent legacy→`gates` migration at load time; 4 duplicate `loadCodaConfig` helpers consolidated to one shared export (Phase 55 — v0.10)
 - [x] Phase 56 — Lifecycle-First Prompts: unfocused-session bootstrap guidance, lifecycle-local phase/build prompts, and aligned tool-first `next_action` wording across forge/focus/status (Phase 56 — v0.10)
 - [x] Phase 57 — E2E Re-Validation: re-run Script A and capture a binary live verdict; result = `still broken` because live phase advancement, verification, and UNIFY artifact completion remain incomplete (Phase 57 — v0.10)
+- [x] Phase 58 — Lifecycle Bug Fixes: nil-safe SPECIFY → PLAN advance, strict `replaceSection` behavior, and conservative Bun-only scaffold test defaults (Phase 58 — v0.11)
+- [x] Phase 59 — Lifecycle Integrity: fail-closed VERIFY evidence defaults, gate-aligned VERIFY/UNIFY prompts, and reachable-path lifecycle proof for honest artifact-producing DONE advancement (Phase 59 — v0.11)
 ### Planned
-- [ ] v0.11 Phase 58 — Lifecycle Bug Fixes: nil-safe SPECIFY → PLAN advance, duplicate section replacement protection, and conservative scaffold test-command defaults.
-- [ ] v0.11 Phase 59 — Lifecycle Integrity: explicit VERIFY evidence and reachable UNIFY artifact production.
 - [ ] v0.11 Phase 60 — E2E Re-Validation: re-run Script A with binary success/failure criteria.
 - [ ] Brownfield Onboarding Test remains deferred until greenfield compounding works in live use.
 ### Out of Scope
@@ -118,12 +119,12 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Milestone v0.8 progress | 5 phases complete | 5 of 5 complete ✅ |
 | Milestone v0.9 progress | 1 phase shipped (1 deferred) | 1 of 1 complete ✅ (Phase 53 deferred to v0.11+) |
 | Milestone v0.10 progress | 5 phases (53-57) | 5 of 5 planned phases complete ⚠️ — closed as documented failure after Phase 57 |
-| Milestone v0.11 progress | 3 phases (58-60) | 0 of 3 complete 🚧 |
-| Test suite | Green | 722 passing, 0 failing (1 todo documented) |
+| Milestone v0.11 progress | 3 phases (58-60) | 2 of 3 complete 🚧 |
+| Test suite | Green | 751 passing, 0 failing (1 todo documented) |
 | TypeScript | Clean build | `bun test` green (de-facto type check via Bun TS loader; repo has no installed tsc) |
 | Pi tools | 12 registered | 12/12 ✅ (Phase 53 added `coda_forge` + `coda_focus`) |
 | Modules | 5 modules active + overlays | security, tdd, architecture, quality, knowledge + overlay infrastructure ✅ |
-| UNIFY runner | 5 mandatory actions wired | Phase 47 PASS ✅; Phase 54 made artifact production evidence-based (F5 fixed) ✅ |
+| UNIFY runner | 5 mandatory actions wired | Phase 47 PASS ✅; Phase 54 made artifact production evidence-based (F5 fixed) ✅; Phase 59 hardened reachable-path integrity ✅ |
 | UNIFY review gate | Human approval before DONE | Phase 48 PASS ✅ |
 | Module overlays | Two-layer prompt model | Phase 49 PASS ✅; Phase 54 ensures overlays have real content via evidence gate ✅ |
 | Gate automation | Configurable gate modes | Phase 50 PASS ✅ |
@@ -178,6 +179,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 | `before_agent_start` bootstraps unfocused sessions | Empty hook output invited build-first behavior; explicit forge/create/focus guidance redirects agents before production-code work starts | 2026-04-17 | Shipped (Phase 56) |
 | `next_action` strings must name concrete CODA tools | Generic prose was too weak to steer autonomous agents; explicit tool names now align entry and lifecycle handoffs | 2026-04-17 | Shipped (Phase 56) |
 | Phase 57 binary verdict remains `still broken` until live PLAN advancement, VERIFY truthfulness, and UNIFY artifact completion all hold | Entry improved, but the milestone contract failed in the real Script A rerun and same-session memory cannot be credited as compounding | 2026-04-17 | Active |
+| VERIFY evidence defaults are fail-closed | Task coverage plus missing suite evidence cannot be trusted after the Phase 57 live over-claim; missing explicit evidence must block success | 2026-04-18 | Shipped (Phase 59, DEC-59-1) |
+| `runVerifyRunner` reads `state.last_test_exit_code` directly | Reachable-path hardening was needed without widening `VerifyRunnerOptions` or reopening `packages/coda/src/pi/hooks.ts` | 2026-04-18 | Shipped (Phase 59, DEC-59-2) |
+| UNIFY prompt/gate drift must fail tests, not operators | The evidence gate already had the right rules; the reachable path needed literal gate-reason parity plus explicit action sequencing | 2026-04-18 | Shipped (Phase 59, DEC-59-3) |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -186,4 +190,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-17 — v0.11 created as the active milestone after v0.10 closed as a documented failure*
+*Last updated: 2026-04-18 — Phase 59 completed and v0.11 now points at the Phase 60 live re-validation plan*
