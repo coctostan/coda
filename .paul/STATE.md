@@ -6,18 +6,18 @@ Version: v0.11.0-dev
 **Current focus:** v0.11 Six Fixes and Re-Validation
 ## Current Position
 Milestone: v0.11 Six Fixes and Re-Validation
-Phase: 58 of 60 (Lifecycle Bug Fixes) — Complete
-Plan: 58-01 complete
-Status: Loop complete — ready for phase transition to Phase 59
-Last activity: 2026-04-18T00:00:00Z — Wrote .paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md
+Phase: 59 of 60 (Lifecycle Integrity) — Not started
+Plan: Not started
+Status: Ready to plan Phase 59
+Last activity: 2026-04-18T00:00:00Z — Phase 58 complete, transitioned to Phase 59 (PR #25 merged squash → 08086c0, branch cleaned)
 Progress:
 - v0.11 Six Fixes and Re-Validation: [███░░░░░░░] 33% (1 of 3 phases complete)
-- Phase 58: [██████████] 100% (SUMMARY written, tests green, PR #25 open)
+- Phase 59: [░░░░░░░░░░] 0% (not started)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Loop complete — ready for phase transition]
+  ○        ○        ○     [Phase 59 awaiting PLAN]
 ```
 ## Accumulated Context
 ### Decisions
@@ -83,23 +83,23 @@ PLAN ──▶ APPLY ──▶ UNIFY
 - `README.md` drift remains after Phase 56 lifecycle-guidance changes; DOCS flagged it during APPLY and it stays deferred outside the current code-focused phase scope.
 - Phase 57 artifacts (`.paul/phases/57-e2e-re-validation/`, `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md`) remain uncommitted. Phase 57 transition/PR work still owes a follow-up commit; address during Phase 58 merge gate or alongside the Phase 59 plan.
 ### Git State
-Branch: feature/57-e2e-re-validation
+Branch: main
 Remote: https://github.com/coctostan/coda.git
-Last commit: 09fae41 feat(58-lifecycle-bug-fixes): harden SPECIFY→PLAN, replace_section, FORGE defaults
-PR: https://github.com/coctostan/coda/pull/25 (state: open; auto-generated Phase 58 PR)
-Feature branch: feature/57-e2e-re-validation (carried over from Phase 57; Phase 58 committed here per preflight "continue on current branch" rule — noted as deviation in 58-01-SUMMARY.md)
-Test baseline (post-P58 APPLY): 740 pass / 1 todo / 0 fail / 2234 expect / 55 files (pre-apply 722/2185/55).
+Last commit: 08086c0 feat(58-lifecycle-bug-fixes): harden SPECIFY→PLAN, replace_section, FORGE defaults (#25)
+PR: https://github.com/coctostan/coda/pull/25 (state: MERGED; squash)
+Feature branch: feature/57-e2e-re-validation (carried over from Phase 57; Phase 58 committed there per preflight "continue on current branch" rule — branch now deleted local + remote after merge)
+Test baseline (post-P58 merge): 740 pass / 1 todo / 0 fail / 2234 expect / 55 files (pre-apply 722/2185/55).
 DEAN baseline: 1 critical (protobufjs) + 3 high (basic-ftp); unchanged since 2026-04-17T00:54:41Z.
 
 ## Session Continuity
 Last session: 2026-04-18T00:00:00Z
-Stopped at: Phase 58 UNIFY complete — SUMMARY written, PR #25 open, waiting on merge gate and phase transition.
-Next action: Run Phase 58 merge gate (review/CI/merge PR #25, sync main, clean branch) then execute phase transition for Phase 58 → Phase 59; afterward run /paul:plan for Phase 59.
-Resume file: .paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md
+Stopped at: Phase 58 complete, transitioned to Phase 59 (Lifecycle Integrity).
+Next action: Run /paul:plan for Phase 59 (Lifecycle Integrity) — addresses C4 (VERIFY truthfulness) and C5 (UNIFY artifact completeness).
+Resume file: .paul/ROADMAP.md
 Resume context:
-- `.paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md` is the canonical reconciliation for Phase 58.
-- PR #25 contains only Phase 58 production code (packages + new tests); Phase 57 artifacts still untracked.
-- Phase 59 will own lifecycle integrity (C4 VERIFY truthfulness + C5 UNIFY artifact completeness) per the v0.11 roadmap.
+- Phase 58 SUMMARY at `.paul/phases/58-lifecycle-bug-fixes/58-01-SUMMARY.md` is the canonical record.
+- Phase 59 owns lifecycle integrity: VERIFY must reject no-evidence success, UNIFY evidence gates must run on the reachable path.
 - Phase 60 is the live Script A re-run with a binary verdict on v0.11.
+- Phase 57 artifacts (`.paul/phases/57-e2e-re-validation/`, `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md`, Phase 57 archived handoffs, `.paul/milestones/v0.11.0-ROADMAP.md`, and several `.paul/*` v0.10/v0.11 doc updates) remain uncommitted on main; fold them into the Phase 59 PLAN commit or a dedicated v0.10-closure commit before Phase 59 APPLY.
 ---
 *STATE.md — Updated after every significant action*

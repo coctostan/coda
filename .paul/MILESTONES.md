@@ -13,6 +13,53 @@ Completed milestone log for this project.
 | v0.7 Brownfield & Context | 2026-04-03 | ~6 hours | 11 phases, 11 plans, 573 tests |
 | v0.8 The Compounding Engine | 2026-04-15 | 2 days | 5 phases, 5 plans, 655 tests |
 | v0.9 Live Compounding Validation | 2026-04-16 | 1 day | 1 phase, 1 plan, 8 findings (3 critical, 4 high, 1 medium) |
+| v0.10 Close the Agent Loop | 2026-04-17 | ~1 day | 5 phases, 5 plans, closed as documented failure |
+
+---
+
+## ⚠️ v0.10 Close the Agent Loop
+
+**Completed:** 2026-04-17
+**Version:** v0.10.0
+**Duration:** ~1 day (2026-04-16 to 2026-04-17)
+**Outcome:** Closed as documented failure after Phase 57 live re-validation
+
+### Stats
+
+| Metric | Value |
+|--------|-------|
+| Phases | 5 shipped (53–57) |
+| Plans | 5 |
+| Tests | 722 passing / 1 todo |
+| New tools | 12 total (`coda_forge`, `coda_focus` added in Phase 53) |
+| Key docs | `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md` |
+| Milestone verdict | `still broken` |
+
+### Key Accomplishments
+
+- Landed agent-callable lifecycle entry via `coda_forge` and `coda_focus`, plus real Pi-dispatch write-gate regression coverage.
+- Made `unify→done` evidence-based: `artifacts_produced` + exemptions schema, disk-backed artifact verification, and ceremony-aware enforcement.
+- Repaired supporting systems around live use: runtime-portable `coda_run_tests`, deeper write-gate hardening, and legacy `human_review_default` migration into `gates`.
+- Strengthened session-start and phase-local prompts so unfocused agents are steered into forge/create/focus and tool-first lifecycle behavior.
+- Re-ran Script A against shipped v0.10 behavior and produced an authoritative findings report that refused to credit same-session memory or pseudo-UNIFY output as compounding.
+
+### Key Decisions
+
+- `coda_focus` keeps VCS branch creation by default with `create_branch: false` as the escape hatch.
+- `unify→done` evidence uses a hybrid model: agent-declared `artifacts_produced` plus gate-side disk verification.
+- Custom mutation tools default-deny on `.coda/` references unless they are explicit `coda_*` tools.
+- Lifecycle guidance stayed inside existing prompt surfaces rather than adding a new prompt framework.
+- v0.10 was closed as a documented failure once Phase 57 proved live SPECIFY → PLAN advancement, VERIFY truthfulness, and UNIFY artifact completion still did not hold end-to-end.
+
+### Conclusion
+
+v0.10 improved lifecycle entry and guardrails, but it did not meet its success definition. The compounding engine still failed in live use because the real lifecycle stalled before compounding could be demonstrated. The next milestone must fix live phase advancement, explicit verification evidence, and end-to-end UNIFY artifact production before another re-validation.
+
+### Archive
+
+- Roadmap snapshot: `.paul/milestones/v0.10.0-ROADMAP.md`
+- Findings report: `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md`
+- Phase 57 summary: `.paul/phases/57-e2e-re-validation/57-01-SUMMARY.md`
 
 ---
 

@@ -4,57 +4,53 @@
 A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
-**v0.10 Close the Agent Loop** (v0.10.0)
+**v0.11 Six Fixes and Re-Validation** (v0.11.0)
 Status: 🚧 In Progress
-Started: 2026-04-16
-Theme: "The compounding engine actually compounds."
-
+Started: 2026-04-17
+Theme: "Fix the live lifecycle gaps, then prove compounding works."
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
-| 53 | Agent Entry Points | 1/1 | ✅ Complete | 2026-04-16 |
-| 54 | UNIFY Actually Produces Artifacts | 1/1 | ✅ Complete | 2026-04-16 |
-| 55 | Supporting Systems Repair | 1/1 | ✅ Complete | 2026-04-16 |
-| 56 | Lifecycle-First Prompts | 1/1 | ✅ Complete | 2026-04-17 |
-| 57 | E2E Re-Validation | 0/TBD | 🔵 Ready to plan | — |
+| 58 | Lifecycle Bug Fixes | 1/1 | ✅ Complete | 2026-04-18 |
+| 59 | Lifecycle Integrity | TBD | Not started | - |
+| 60 | E2E Re-Validation | TBD | Not started | - |
 
-### Phase 53: Agent Entry Points — ✅ Complete 2026-04-16
-Focus: Make FORGE and focus-issue agent-callable — `coda_forge` and `coda_focus` tools; F7 write-gate regression guard
-Addresses: F1 (forge not agent-callable), F2 (no focus tool), F7 (write-gate regression)
-Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
-Plans: 1 — `.paul/phases/53-agent-entry-points/53-01-PLAN.md` → `53-01-SUMMARY.md`
-Outcome: 2 new agent-callable tools (`coda_forge`, `coda_focus`), shared `focusIssue()` helper, slash-command refactor (byte-identical notify strings), bare-workspace E2E, Pi mutation tool surface audit, F7 integration guard, `DEBUG=coda:*` diagnostic. Tests 655→673 (+18, 0 fail). Merged as squash `65a9df7` on main via PR #21.
+### Phase 58: Lifecycle Bug Fixes
+Focus: Fix the concrete code-path bugs surfaced by Phase 57 — nil-unsafe SPECIFY → PLAN advance, duplicate section replacement behavior, and missing/unclear test-command defaults during scaffold.
+Addresses: C1, C2, C3
+Spec: `.paul/milestones/v0.11.0-ROADMAP.md`
+Plans: 1 — `.paul/phases/58-lifecycle-bug-fixes/58-01-PLAN.md`
+Outcome target: `coda_advance` fails cleanly instead of crashing, `coda_edit_body` does not create duplicate headings on replace, and scaffold seeds detectable test defaults or an explicit follow-up when detection is not possible.
 
-### Phase 54: UNIFY Actually Produces Artifacts — ✅ Complete 2026-04-16
-Focus: Make UNIFY generate overlays and reference doc updates, not just completion records — the headline F5 fix
-Addresses: F5 (UNIFY produces zero artifacts)
-Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
-Depends: Phase 53 (need focus tool to run UNIFY in a test)
-Plans: 1 — `.paul/phases/54-unify-produces-artifacts/54-01-PLAN.md` → `54-01-SUMMARY.md`
-Outcome: Evidence-based `unify→done` gate — `CompletionRecord` gains `artifacts_produced` + `exemptions`; gate verifies declared paths exist on disk with non-empty content; ceremony-aware relaxation for `refactor`/`chore`/`docs`; spec_delta enforcement ceremony-independent. UNIFY runner prompt carries `artifacts_produced` YAML schema + explicit path-collection instruction + ceremony-aware strict/relaxed wording. New 10-case integration test (`unify-artifacts-e2e.test.ts`). Tests 673→708 (+35, 0 fail). Merged as squash `e67d012` on main via PR #22. **F5 headline fix landed.**
-
-### Phase 55: Supporting Systems Repair — ✅ Complete 2026-04-16
-Focus: Fix `coda_run_tests`, strengthen write gate, remove legacy `human_review_default` field
-Addresses: F6, F7 (deeper write-gate hardening beyond Phase 53), deferred item #1
-Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
-Depends: Phase 53 shipped; Phase 54 shipped
-Plans: 1 — `.paul/phases/55-supporting-systems-repair/55-01-PLAN.md` → `55-01-SUMMARY.md`
-Outcome: Runtime-portable `coda_run_tests` (injectable `SpawnImpl` + Bun-fast-path-preserved `detectDefaultSpawn`); F7 deeper hardening closed three bypass vectors (parent-dir realpath for symlinks, bash compound/subshell/here-doc + `sh -c`/`bash -c` wrappers, custom-tool default-deny with `coda_*` allow-list); `human_review_default` removed from `CodaConfig` with on-load idempotent migration to `gates`; 4 duplicate `loadCodaConfig` helpers consolidated to one shared export. `pi/write-gate-perimeter.ts` extracted during REFACTOR (hooks.ts 474L→458L). Tests 708→720 (+12, 0 fail, 1 todo). Merged as squash `0199f27` on main via PR #23.
-
-### Phase 56: Lifecycle-First Prompts — ✅ Complete 2026-04-17
-Focus: Strengthen CODA-injected prompts so agent creates an issue before building; add tool manifest and lifecycle overview to session-start
-Addresses: F3 (agent builds first), F4 (agent reads source to understand tools)
-Spec: `.paul/milestones/v0.10.0-ROADMAP.md`
-Depends: Phase 53 (prompts reference new tools)
-Plans: 1 — `.paul/phases/56-lifecycle-first-prompts/56-01-PLAN.md` → `56-01-SUMMARY.md`
-Outcome: `before_agent_start` now bootstraps unfocused sessions into forge/create/focus, phase/build prompts reinforce lifecycle-local next steps plus anti-spelunking guidance, and `coda_status`/`coda_focus`/`coda_forge` now return concrete tool-first handoffs. Tests 720→722 (+2, 0 fail, 1 todo). Merged as squash `3e1f2cb` on main via PR #24.
-
-### Phase 57: E2E Re-Validation — 🔵 Ready to plan
-Focus: Re-run Script A with v0.10 code; prove compounding engine actually compounds
-Spec: `.paul/milestones/v0.10.0-ROADMAP.md`, `explorations/cmux-v08-test-scripts.md` (Script A)
-Depends: Phases 53–56
+### Phase 59: Lifecycle Integrity
+Focus: Make the live lifecycle trustworthy once Phase 58 unblocks it — VERIFY must require explicit evidence, and UNIFY must actually execute its artifact-producing actions in the reachable lifecycle path.
+Addresses: C4, C5
+Spec: `.paul/milestones/v0.11.0-ROADMAP.md`
+Depends: Phase 58
 Plans: TBD (defined during /paul:plan)
+Outcome target: VERIFY rejects no-evidence success claims, existing UNIFY evidence gates are exercised in a real reachable path, and programmatic lifecycle coverage proves SPECIFY → PLAN → BUILD → VERIFY → UNIFY → DONE can complete honestly.
 
+### Phase 60: E2E Re-Validation
+Focus: Re-run Script A against the shipped v0.11 code and prove whether compounding now works in practice.
+Addresses: C6 and milestone validation
+Spec: `.paul/milestones/v0.11.0-ROADMAP.md`, `/Users/maxwellnewman/pi/workspace/thinkingSpace/plans/v0.11-six-fixes-and-revalidation.md`
+Depends: Phases 58–59
+Plans: TBD (defined during /paul:plan)
+Outcome target: Phase 57's failure modes are either gone with evidence or precisely re-documented without moving the goalposts.
 ## Completed Milestones
+<details>
+<summary>v0.10 Close the Agent Loop — 2026-04-17 (5 phases, 5 plans, documented failure)</summary>
+
+| Phase | Name | Plans | Completed |
+|-------|------|-------|-----------|
+| 53 | Agent Entry Points | 1/1 | 2026-04-16 |
+| 54 | UNIFY Actually Produces Artifacts | 1/1 | 2026-04-16 |
+| 55 | Supporting Systems Repair | 1/1 | 2026-04-16 |
+| 56 | Lifecycle-First Prompts | 1/1 | 2026-04-17 |
+| 57 | E2E Re-Validation | 1/1 | 2026-04-17 |
+
+Outcome: v0.10 closed as a documented failure. Entry improved (`coda_forge`, `coda_focus`, configured `coda_run_tests`), but live SPECIFY → PLAN advancement, VERIFY truthfulness, and UNIFY artifact/completion behavior remained broken in Script A. See `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md` and `.paul/phases/57-e2e-re-validation/57-01-SUMMARY.md`.
+
+</details>
 <details>
 <summary>v0.9 Live Compounding Validation — 2026-04-16 (1 phase shipped, 1 deferred)</summary>
 
@@ -198,8 +194,9 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - v0.7 archive: `.paul/milestones/v0.7.0-ROADMAP.md`
 - v0.8 archive: `.paul/milestones/v0.8.0-ROADMAP.md`
 - v0.9 archive: `.paul/milestones/v0.9.0-ROADMAP.md`
-- v0.10 vision: `.paul/milestones/v0.10.0-ROADMAP.md`
+- v0.10 archive: `.paul/milestones/v0.10.0-ROADMAP.md`
+- v0.11 vision: `.paul/milestones/v0.11.0-ROADMAP.md`
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-17 — Phase 56 completed via PR #24 (`3e1f2cb` squash merge); v0.10 is 4 of 5 phases complete and Phase 57 is ready to plan*
+*Roadmap updated: 2026-04-17 — v0.11 created as the new current milestone after v0.10 closed as a documented failure*
