@@ -42,3 +42,5 @@
 | 2026-04-17 | 56-lifecycle-first-prompts | 722 pass / 0 fail | N/A | clean (ESLint advisory check clean) | N/A | ↑ improving (+2 tests; lifecycle-first prompt guidance and next_action coverage expanded) |
 | 2026-04-17 | 57-e2e-re-validation | 722 pass / 0 fail (1 todo) | N/A | clean (validation-only phase; bun test remained green, no CODA source changes) | N/A | → stable (planned phases exhausted; milestone verdict remains still broken) |
 | 2026-04-18 | 58-lifecycle-bug-fixes | 740 pass / 0 fail (1 todo) | N/A | clean (bun test as de-facto type check) | N/A | ↑ improving (+18 regression tests: 2 sparse-frontmatter, 4 section-normalization, 3 strict-replace, 6 toolchain-detection, 3 forge-next-action; C1/C2/C3 lifecycle blockers fixed) |
+| 2026-04-18 | 59-lifecycle-integrity | 751 pass / 0 fail (1 todo) | N/A | clean (bun test as de-facto type check) | N/A | ↑ improving (+11 tests; VERIFY/UNIFY lifecycle integrity hardened) |
+| 2026-04-27 | 60-e2e-re-validation | 751 pass / 0 fail (1 todo); external workspace 60 pass / 0 fail | N/A | clean (bun test as de-facto type check) | N/A | → stable (validation-only phase; binary verdict still broken) |

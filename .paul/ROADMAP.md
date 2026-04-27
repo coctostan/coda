@@ -5,14 +5,16 @@ A suite of Pi extensions for disciplined, agent-assisted software development.
 
 ## Current Milestone
 **v0.11 Six Fixes and Re-Validation** (v0.11.0)
-Status: 🚧 In Progress
+Status: ⚠️ Complete — documented failure (`still broken`)
 Started: 2026-04-17
 Theme: "Fix the live lifecycle gaps, then prove compounding works."
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 58 | Lifecycle Bug Fixes | 1/1 | ✅ Complete | 2026-04-18 |
-| 59 | Lifecycle Integrity | 1 | Planning | - |
-| 60 | E2E Re-Validation | TBD | Not started | - |
+| 59 | Lifecycle Integrity | 1/1 | ✅ Complete | 2026-04-18 |
+| 60 | E2E Re-Validation | 1/1 | ✅ Complete | 2026-04-27 |
+
+Outcome: v0.11 fixed several bounded regressions (sparse frontmatter crash, strict section replacement, Bun test defaults, fail-closed VERIFY evidence, reachable-path UNIFY tests), but the live Script A rerun still failed the milestone proof: SPECIFY → PLAN falsely blocked on visible ACs, planner fallback bypassed state advancement, and no durable UNIFY compounding artifacts were produced.
 
 ### Phase 58: Lifecycle Bug Fixes
 Focus: Fix the concrete code-path bugs surfaced by Phase 57 — nil-unsafe SPECIFY → PLAN advance, duplicate section replacement behavior, and missing/unclear test-command defaults during scaffold.
@@ -34,7 +36,7 @@ Focus: Re-run Script A against the shipped v0.11 code and prove whether compound
 Addresses: C6 and milestone validation
 Spec: `.paul/milestones/v0.11.0-ROADMAP.md`, `/Users/maxwellnewman/pi/workspace/thinkingSpace/plans/v0.11-six-fixes-and-revalidation.md`
 Depends: Phases 58–59
-Plans: TBD (defined during /paul:plan)
+Plans: 1 — `.paul/phases/60-e2e-re-validation/60-01-PLAN.md`
 Outcome target: Phase 57's failure modes are either gone with evidence or precisely re-documented without moving the goalposts.
 ## Completed Milestones
 <details>
@@ -195,8 +197,8 @@ Resolved Decisions: D1 ('none' threshold), D2 (two-method API), D3 (security+tdd
 - v0.8 archive: `.paul/milestones/v0.8.0-ROADMAP.md`
 - v0.9 archive: `.paul/milestones/v0.9.0-ROADMAP.md`
 - v0.10 archive: `.paul/milestones/v0.10.0-ROADMAP.md`
-- v0.11 vision: `.paul/milestones/v0.11.0-ROADMAP.md`
+- v0.11 result: `.paul/milestones/v0.11.0-ROADMAP.md` and `docs/v0.11/E2E-COMPOUNDING-FINDINGS.md`
 - Milestone history: `.paul/MILESTONES.md`
 
 ---
-*Roadmap updated: 2026-04-17 — v0.11 created as the new current milestone after v0.10 closed as a documented failure*
+*Roadmap updated: 2026-04-27 — Phase 60 complete; v0.11 closed as documented failure (`still broken`)*
