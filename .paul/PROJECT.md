@@ -1,7 +1,7 @@
 # Project: coda-ecosystem
 
 ## Description
-- v0.8 The Compounding Engine COMPLETE (51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean). v0.9 Live Compounding Validation COMPLETE (scoped down — Phase 52 shipped 8-finding E2E report, Phase 53 Brownfield deferred to v0.11+). v0.10 Close the Agent Loop closed as a documented failure after Phase 57. v0.11 Six Fixes and Re-Validation is now the active milestone, targeting the remaining live SPECIFY → PLAN, VERIFY, and UNIFY gaps before another Script A proof run.
+- v0.8 The Compounding Engine COMPLETE (51 phases, 655 tests, 10 tools, 5 modules + overlays + gate automation + UNIFY runner + review gate, tsc clean). v0.9 Live Compounding Validation COMPLETE (scoped down — Phase 52 shipped 8-finding E2E report, Phase 53 Brownfield deferred). v0.10 Close the Agent Loop closed as a documented failure after Phase 57. v0.11 Six Fixes and Re-Validation is now complete as a documented failure: bounded regressions improved, but live SPECIFY → PLAN and durable UNIFY compounding artifacts still fail in Script A.
 ## Core Value
 Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows — bridging the gap between vibe coding speed and production-quality outcomes.
 
@@ -9,8 +9,8 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Attribute | Value |
 |-----------|-------|
 | Version | 0.11.0-dev |
-| Status | v0.11 Six Fixes and Re-Validation — Phase 59 Lifecycle Integrity complete; ready to plan Phase 60 (E2E Re-Validation) |
-| Last Updated | 2026-04-18 |
+| Status | v0.11 Six Fixes and Re-Validation complete — binary verdict `still broken`; next milestone pending |
+| Last Updated | 2026-04-27 |
 **Current system summary:**
 - Monorepo scaffolded with 5 packages (`core`, `coda`, `muse`, `lens`, `helm`)
 - `@coda/core` ships the L1/L2 foundation: markdown data layer, gated state engine, topic-based section retrieval, and dependency-aware carry-forward primitives
@@ -30,6 +30,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 - v0.10 closed 2026-04-17 as a documented failure: the live Script A rerun proved entry is better (`coda_forge`, `coda_focus`, configured `coda_run_tests`), but live SPECIFY → PLAN advance, VERIFY truthfulness, and UNIFY artifact/completion behavior still fail
 - Phase 58 shipped 2026-04-18: `codaAdvance` survives sparse SPECIFY frontmatter (normalizeIssueFrontmatter), `replaceSection` is strict with typed `ReplaceSectionError`, `coda_edit_body` only appends on explicit `create_if_missing`, FORGE scaffold seeds `bun test` only when Bun signals are unambiguous and otherwise directs the agent to `coda_config` (740 pass / 1 todo)
 - Phase 59 shipped 2026-04-18: VERIFY now fails closed on missing explicit evidence, VERIFY/UNIFY prompts are gate-aligned, and reachable-path lifecycle coverage proves dishonest VERIFY / empty UNIFY block while honest VERIFY + real artifacts advance to `done` (751 pass / 1 todo)
+- Phase 60 closed 2026-04-27 as a documented failure: the live Script A rerun entered naturally and seeded Bun test defaults, and the final external app passed independent shorten / redirect / stats / persistence checks, but live `coda_advance` still falsely blocked SPECIFY → PLAN and no real UNIFY overlays, reference docs, completion record, or `done` transition were produced.
 
 ## Scope Snapshot
 ### Validated
@@ -96,8 +97,9 @@ Enabling developers to build durable, maintainable software through disciplined 
 - [x] Phase 57 — E2E Re-Validation: re-run Script A and capture a binary live verdict; result = `still broken` because live phase advancement, verification, and UNIFY artifact completion remain incomplete (Phase 57 — v0.10)
 - [x] Phase 58 — Lifecycle Bug Fixes: nil-safe SPECIFY → PLAN advance, strict `replaceSection` behavior, and conservative Bun-only scaffold test defaults (Phase 58 — v0.11)
 - [x] Phase 59 — Lifecycle Integrity: fail-closed VERIFY evidence defaults, gate-aligned VERIFY/UNIFY prompts, and reachable-path lifecycle proof for honest artifact-producing DONE advancement (Phase 59 — v0.11)
+- [x] Phase 60 — E2E Re-Validation: Script A rerun against shipped v0.11; verdict `still broken` because live SPECIFY → PLAN and UNIFY artifact production remain incomplete despite functional generated app success (Phase 60 — v0.11)
 ### Planned
-- [ ] v0.11 Phase 60 — E2E Re-Validation: re-run Script A with binary success/failure criteria.
+- [ ] Next milestone — fix live SPECIFY → PLAN false gate failure and prove real UNIFY artifact-mediated carry-forward.
 - [ ] Brownfield Onboarding Test remains deferred until greenfield compounding works in live use.
 ### Out of Scope
 - MUSE, LENS, HELM extensions — post-CODA
@@ -119,7 +121,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | Milestone v0.8 progress | 5 phases complete | 5 of 5 complete ✅ |
 | Milestone v0.9 progress | 1 phase shipped (1 deferred) | 1 of 1 complete ✅ (Phase 53 deferred to v0.11+) |
 | Milestone v0.10 progress | 5 phases (53-57) | 5 of 5 planned phases complete ⚠️ — closed as documented failure after Phase 57 |
-| Milestone v0.11 progress | 3 phases (58-60) | 2 of 3 complete 🚧 |
+| Milestone v0.11 progress | 3 phases (58-60) | 3 of 3 complete ⚠️ — closed as documented failure after Phase 60 |
 | Test suite | Green | 751 passing, 0 failing (1 todo documented) |
 | TypeScript | Clean build | `bun test` green (de-facto type check via Bun TS loader; repo has no installed tsc) |
 | Pi tools | 12 registered | 12/12 ✅ (Phase 53 added `coda_forge` + `coda_focus`) |
@@ -131,6 +133,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | E2E validation | Cross-feature composition | Phase 51 PASS ✅ |
 | Live E2E (v0.9) | Compounding proven in practice | ❌ Not proven — drives v0.10 |
 | Live E2E (v0.10) | Compounding proven in practice | ❌ Still broken — Phase 57 documented live SPECIFY → PLAN, VERIFY, and UNIFY gaps |
+| Live E2E (v0.11) | Compounding proven in practice | ❌ Still broken — Phase 60 showed better entry/TDD and functional app success, but SPECIFY → PLAN and UNIFY artifacts still fail live |
 ## Key Decisions
 | Decision | Rationale | Date | Status |
 |----------|-----------|------|--------|
@@ -182,6 +185,7 @@ Enabling developers to build durable, maintainable software through disciplined 
 | VERIFY evidence defaults are fail-closed | Task coverage plus missing suite evidence cannot be trusted after the Phase 57 live over-claim; missing explicit evidence must block success | 2026-04-18 | Shipped (Phase 59, DEC-59-1) |
 | `runVerifyRunner` reads `state.last_test_exit_code` directly | Reachable-path hardening was needed without widening `VerifyRunnerOptions` or reopening `packages/coda/src/pi/hooks.ts` | 2026-04-18 | Shipped (Phase 59, DEC-59-2) |
 | UNIFY prompt/gate drift must fail tests, not operators | The evidence gate already had the right rules; the reachable path needed literal gate-reason parity plus explicit action sequencing | 2026-04-18 | Shipped (Phase 59, DEC-59-3) |
+| Phase 60 verdict stays `still broken` despite functional generated app success | Live Script A evidence showed natural entry and usable TDD defaults, but official lifecycle state stayed in `specify`, no completion record existed, and no overlay/ref-system artifacts mediated Issue 2 | 2026-04-27 | Active |
 
 ## Links
 - `PRD.md` — deeper product-definition context
@@ -190,4 +194,4 @@ Enabling developers to build durable, maintainable software through disciplined 
 - `.paul/codebase/` — brownfield evidence and codebase map artifacts
 
 ---
-*Last updated: 2026-04-18 — Phase 59 completed and v0.11 now points at the Phase 60 live re-validation plan*
+*Last updated: 2026-04-27 — Phase 60 UNIFY closed v0.11 as documented failure (`still broken`)*

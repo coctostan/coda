@@ -1,23 +1,23 @@
 # Project State
 ## Project Reference
-See: .paul/PROJECT.md (updated 2026-04-18)
+See: .paul/PROJECT.md (updated 2026-04-27)
 Version: v0.11.0-dev
 **Core value:** Enabling developers to build durable, maintainable software through disciplined agent-assisted workflows
-**Current focus:** v0.11 Six Fixes and Re-Validation
+**Current focus:** v0.11 Six Fixes and Re-Validation complete; next milestone pending
 ## Current Position
-Milestone: v0.11 Six Fixes and Re-Validation
-Phase: 60 of 60 (E2E Re-Validation) — ready to plan
-Plan: Not started
-Status: Ready for PLAN
-Last activity: 2026-04-18T12:12:07-04:00 — Unified .paul/phases/59-lifecycle-integrity/59-01-PLAN.md into 59-01-SUMMARY.md, recorded post-unify quality/codegraph history, documented the accepted stale-VERIFY-exit-code gap, and transitioned v0.11 to Phase 60 planning after PR #29 merged.
+Milestone: v0.11 Six Fixes and Re-Validation — complete (documented failure)
+Phase: 60 of 60 (E2E Re-Validation) — complete
+Plan: 60-01 complete on feature/60-e2e-re-validation
+Status: Milestone complete; ready for next milestone planning
+Last activity: 2026-04-27T01:37:56Z — Completed UNIFY for `.paul/phases/60-e2e-re-validation/60-01-PLAN.md`, finalized `.paul/phases/60-e2e-re-validation/60-01-SUMMARY.md`, appended post-unify WALT/CODI records, and closed v0.11 with binary verdict `still broken`.
 Progress:
-- v0.11 Six Fixes and Re-Validation: [████████░░] 67% (2 of 3 phases complete)
-- Phase 60: [░░░░░░░░░░] 0% (not started)
+- v0.11 Six Fixes and Re-Validation: [██████████] 100% (3 of 3 phases complete; verdict `still broken`)
+- Phase 60: [██████████] 100% (UNIFY complete)
 ## Loop Position
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Loop complete - ready for next PLAN]
+  ✓        ✓        ✓     [Loop complete - milestone closed]
 ```
 ## Accumulated Context
 ### Decisions
@@ -76,35 +76,35 @@ PLAN ──▶ APPLY ──▶ UNIFY
 | DEC-59-2: `runVerifyRunner` reads `state.last_test_exit_code` directly | v0.11 P59 | Reachable-path hardening landed without widening `VerifyRunnerOptions` or touching `hooks.ts` |
 | DEC-59-3: UNIFY prompt embeds literal gate reasons | v0.11 P59 | Prompt/gate drift now fails tests instead of silently diverging |
 | DEC-59-4: Reachable-path lifecycle proof is mandatory | v0.11 P59 | `lifecycle-e2e.test.ts` is now the acceptance bar for honest VERIFY/UNIFY behavior |
+| Phase 60 live re-validation verdict = still broken | v0.11 P60 | Entry and TDD usability improved, and the generated app worked, but live SPECIFY → PLAN, real UNIFY artifacts, and artifact-mediated carry-forward still failed |
 
 ### Active Blockers / Follow-ups
-- Phase 60 still owes the live Script A rerun and binary milestone verdict for v0.11. The next plan must use the same success criteria as Phase 57's live run, not softened ones.
+- v0.11 closed as a documented failure: independent shorten / redirect / stats / persistence checks passed in the external workspace, but the official lifecycle never advanced past `specify`.
+- Next milestone must fix `coda_advance` falsely blocking live SPECIFY → PLAN with `Issue must have at least one acceptance criterion` even when issue-body ACs are present.
+- Planner fallback still writes plan/task artifacts without moving lifecycle state; future work should remove or constrain that bypass so failures stay explicit.
+- `.coda/reference/` stayed empty, `.coda/modules/` never existed, and no completion record was written during either issue; durable UNIFY artifact production and artifact-mediated carry-forward remain unproven.
 - Accepted Phase 59 limitation: `state.last_test_exit_code` is still a single global slot. VERIFY now fails closed on missing evidence and the prompt requires a fresh `coda_run_tests` run, but a stale BUILD-phase success can still mask a missing VERIFY rerun if the agent ignores that prompt.
-- `docs/coda-spec-v7.md` needs a section documenting `artifacts_produced` schema + evidence gate AND a refresh removing legacy `human_review_default` references (deferred from P54/P55 per plan; carry to milestone close).
-- `coda-advance.ts` grew to 704L in Phase 58 (was 669L); still exceeds 500L soft RUBY threshold; candidate refactor = extract `handleUnifyReviewDecision` + `handleHumanReviewDecision` into a sibling file (v0.11).
-- `coda-advance.test.ts` grew to 857L (was 802L); test-side extract should follow any production-side split.
-- `codaRunTests` runtime-detection via `globalThis.Bun` masking is retained as `test.todo` (Bun global is readonly in the Bun test harness); future non-Bun test harness or integration test can promote it.
-- Custom-tool default-deny is conservative by design (DEC-55-2); if operators report false positives with third-party Pi extensions, consider adding a config-driven allow-list as a v0.11 follow-up.
-- `README.md` drift remains after Phase 56 lifecycle-guidance changes; DOCS flagged it during APPLY and it stays deferred outside the current code-focused phase scope.
-- Phase 57 artifacts (`.paul/phases/57-e2e-re-validation/`, `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md`) remain uncommitted. Phase 57 transition/PR work still owes a follow-up commit.
+- `docs/coda-spec-v7.md` still needs the deferred artifact-evidence + gate refresh and legacy `human_review_default` cleanup.
+- `README.md` drift from Phase 56 remains a repo-side follow-up outside the completed Phase 60 validation scope.
+- `docs/v0.10/E2E-COMPOUNDING-FINDINGS-v2.md` remains the read-only comparison baseline; Phase 60 evidence is in `docs/v0.11/E2E-COMPOUNDING-FINDINGS.md`.
 ### Git State
-Branch: feature/59-lifecycle-integrity (PR merged; local closeout still on feature branch)
+Branch: feature/60-e2e-re-validation
 Remote: https://github.com/coctostan/coda.git
-Last commit: PR #29 merge commit on `main` = `5f9babb53af7a43dc23bc1585cf2e800f7b309ef`
-PR: #29 https://github.com/coctostan/coda/pull/29 (MERGED)
-Feature branches cleaned: feature/57-e2e-re-validation (merged via #25), feature/58-transition (merged via #26)
-Test baseline (post-P59 UNIFY): 751 pass / 1 todo / 0 fail / 2287 expect / 56 files (targeted workflow suite: 51 pass / 0 fail).
+Last commit: phase 60 closeout (current branch HEAD; run `git rev-parse HEAD` for exact hash)
+PR: none yet
+Base sync: 0 behind / 3 ahead of origin/main after Phase 60 transition commit
+Test baseline (post-P60 UNIFY): 751 pass / 1 todo / 0 fail / 2287 expect / 56 files; targeted workflow suite 151 pass / 1 todo / 0 fail; external workspace 60 pass / 0 fail.
 DEAN baseline: 1 critical (protobufjs) + 3 high (basic-ftp); unchanged since 2026-04-17T00:54:41Z.
 
 ## Session Continuity
-Last session: 2026-04-18T12:12:07-04:00
-Stopped at: Phase 59 complete; SUMMARY written; Phase 60 is next.
-Next action: Run `/paul:plan` for Phase 60 (E2E Re-Validation). Sync to `main` first if you want the next phase to start from the merged base instead of the still-open local feature branch.
-Resume file: .paul/ROADMAP.md
+Last session: 2026-04-27T01:37:56Z
+Stopped at: v0.11 milestone closed as documented failure after Phase 60 UNIFY.
+Next action: Start next milestone planning from the Phase 60 blockers (`/paul:milestone` or `/paul:plan` after milestone scope is chosen).
+Resume file: .paul/phases/60-e2e-re-validation/60-01-SUMMARY.md
 Resume context:
-- Phase 59 is canonically summarized at `.paul/phases/59-lifecycle-integrity/59-01-SUMMARY.md`.
-- PR #29 is merged; VERIFY now fails closed on missing explicit evidence, UNIFY prompts are gate-aligned, and `packages/coda/src/workflow/__tests__/lifecycle-e2e.test.ts` proves dishonest VERIFY / empty UNIFY blocking plus honest DONE success.
-- Post-unify history has been updated in `.paul/quality-history.md` and `.paul/CODI-HISTORY.md`.
-- The accepted stale-`state.last_test_exit_code` limitation, README drift, spec-doc refresh, and Phase 57 artifact cleanup remain open carry-forward items for milestone close / live rerun context.
+- Phase 60 findings and UNIFY summary are complete: `docs/v0.11/E2E-COMPOUNDING-FINDINGS.md` and `.paul/phases/60-e2e-re-validation/60-01-SUMMARY.md`.
+- Fresh external workspace preserved at `~/pi/workspace/coda-test-shortener-v011`; independent runtime rerun passed shorten / redirect / stats / persistence.
+- Binary verdict remains `still broken` because live SPECIFY → PLAN still fails and no real UNIFY artifacts (`.coda/reference/`, `.coda/modules/`, completion record, done transition) were produced.
+- Consumed handoff archived to `.paul/handoffs/archive/HANDOFF-2026-04-20-phase-60-unify.md`.
 ---
 *STATE.md — Updated after every significant action*
