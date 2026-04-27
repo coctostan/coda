@@ -91,7 +91,7 @@ PLAN ──▶ APPLY ──▶ UNIFY
 Branch: feature/60-e2e-re-validation
 Remote: https://github.com/coctostan/coda.git
 Last commit: phase 60 closeout (current branch HEAD; run `git rev-parse HEAD` for exact hash)
-PR: none yet
+PR: https://github.com/coctostan/coda/pull/30 (OPEN)
 Base sync: 0 behind / 3 ahead of origin/main after Phase 60 transition commit
 Test baseline (post-P60 UNIFY): 751 pass / 1 todo / 0 fail / 2287 expect / 56 files; targeted workflow suite 151 pass / 1 todo / 0 fail; external workspace 60 pass / 0 fail.
 DEAN baseline: 1 critical (protobufjs) + 3 high (basic-ftp); unchanged since 2026-04-17T00:54:41Z.
