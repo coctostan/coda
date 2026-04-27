@@ -8,7 +8,7 @@ Version: v0.11.0-dev
 Milestone: v0.11 Six Fixes and Re-Validation — complete (documented failure)
 Phase: 60 of 60 (E2E Re-Validation) — complete
 Plan: 60-01 complete on feature/60-e2e-re-validation
-Status: Milestone complete; ready for next milestone planning
+Status: Milestone complete; PR open before next milestone planning
 Last activity: 2026-04-27T01:37:56Z — Completed UNIFY for `.paul/phases/60-e2e-re-validation/60-01-PLAN.md`, finalized `.paul/phases/60-e2e-re-validation/60-01-SUMMARY.md`, appended post-unify WALT/CODI records, and closed v0.11 with binary verdict `still broken`.
 Progress:
 - v0.11 Six Fixes and Re-Validation: [██████████] 100% (3 of 3 phases complete; verdict `still broken`)
@@ -92,14 +92,14 @@ Branch: feature/60-e2e-re-validation
 Remote: https://github.com/coctostan/coda.git
 Last commit: phase 60 closeout (current branch HEAD; run `git rev-parse HEAD` for exact hash)
 PR: https://github.com/coctostan/coda/pull/30 (OPEN)
-Base sync: 0 behind / 3 ahead of origin/main after Phase 60 transition commit
+Base sync: feature branch is ahead of origin/main with no behind commits at last check; use `git rev-list --left-right --count origin/main...HEAD` for exact count.
 Test baseline (post-P60 UNIFY): 751 pass / 1 todo / 0 fail / 2287 expect / 56 files; targeted workflow suite 151 pass / 1 todo / 0 fail; external workspace 60 pass / 0 fail.
 DEAN baseline: 1 critical (protobufjs) + 3 high (basic-ftp); unchanged since 2026-04-17T00:54:41Z.
 
 ## Session Continuity
 Last session: 2026-04-27T01:37:56Z
 Stopped at: v0.11 milestone closed as documented failure after Phase 60 UNIFY.
-Next action: Start next milestone planning from the Phase 60 blockers (`/paul:milestone` or `/paul:plan` after milestone scope is chosen).
+Next action: Wait for PR checks if needed, then merge https://github.com/coctostan/coda/pull/30 before starting next milestone planning.
 Resume file: .paul/phases/60-e2e-re-validation/60-01-SUMMARY.md
 Resume context:
 - Phase 60 findings and UNIFY summary are complete: `docs/v0.11/E2E-COMPOUNDING-FINDINGS.md` and `.paul/phases/60-e2e-re-validation/60-01-SUMMARY.md`.
